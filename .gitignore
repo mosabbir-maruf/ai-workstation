@@ -31,3 +31,4 @@ yarn-error.log*
 .Spotlight-V100
 .Trashes
 Thumbs.db
+*.backup

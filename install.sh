@@ -119,9 +119,9 @@ echo "✓ PyJWT ready"
 
 echo "Installing ai CLI..."
 
-sudo install -m 0755 \
-    "$ROOT/scripts/ai" \
-    /usr/local/bin/ai
+sudo ln -sfn     "$ROOT/scripts/ai"     /usr/local/bin/ai
+
+sudo chmod 0755 "$ROOT/scripts/ai"
 
 echo "✓ ai CLI installed"
 
@@ -143,6 +143,9 @@ echo "Running validation..."
 
 [[ -d "$ROOT/runtime/dsh" ]] ||
     die "runtime/dsh missing."
+
+[[ -d "$ROOT/runtime/app" ]] ||
+    die "runtime/app missing."
 
 [[ -d "$ROOT/runtime/npm-global" ]] ||
     die "runtime/npm-global missing."

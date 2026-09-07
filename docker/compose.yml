@@ -18,6 +18,7 @@ services:
       - ${ACTIVE_PROJECT_PATH:-/tmp}:/workspace
       - ${AI_WORKSTATION_ROOT:-/home/mosabbir/ai-workstation}/runtime/npm-global:/home/sandbox/.npm-global
       - ${AI_WORKSTATION_ROOT:-/home/mosabbir/ai-workstation}/runtime/dsh:/home/sandbox/.dsh
+      - ${AI_WORKSTATION_ROOT:-/home/mosabbir/ai-workstation}/runtime/app:/run/ai-workstation/app
       - ${AI_WORKSTATION_ROOT:-/home/mosabbir/ai-workstation}/runtime/github-broker:/run/ai-github-broker
     ports:
       - "127.0.0.1:3000:3000"

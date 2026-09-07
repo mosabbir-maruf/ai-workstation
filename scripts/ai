@@ -18,9 +18,19 @@ die() {
 load_env() {
     [[ -f "$ENV_FILE" ]] || cp "$ROOT/.env.example" "$ENV_FILE"
 
+    local env_image="${IMAGE:-}"
+    local env_dsh_version="${DSH_VERSION:-}"
+    local env_root="${AI_WORKSTATION_ROOT:-}"
+
     set -a
     source "$ENV_FILE"
     set +a
+
+    [[ -n "$env_image" ]] && IMAGE="$env_image"
+    [[ -n "$env_dsh_version" ]] && DSH_VERSION="$env_dsh_version"
+    [[ -n "$env_root" ]] && AI_WORKSTATION_ROOT="$env_root"
+
+    export IMAGE DSH_VERSION AI_WORKSTATION_ROOT
 }
 
 save_env() {
@@ -187,12 +197,228 @@ cmd_start() {
 }
 
 cmd_stop() {
+    cmd_app_stop || true
     compose down
+    rm -f "$APP_PID_FILE"
     echo "Workstation stopped."
 }
 
 cmd_restart() {
     compose restart
+}
+
+APP_RUNTIME_DIR="$RUNTIME_DIR/app"
+APP_PID_FILE="$APP_RUNTIME_DIR/pid"
+
+app_container_pid() {
+    docker exec ai-workstation sh -lc '
+        if [ -f /run/ai-workstation/app/pid ]; then
+            cat /run/ai-workstation/app/pid
+        fi
+    ' 2>/dev/null || true
+}
+
+app_running() {
+    local pid
+    pid="$(app_container_pid)"
+
+    [[ "$pid" =~ ^[0-9]+$ ]] || return 1
+
+    docker exec ai-workstation sh -lc \
+        "kill -0 $pid 2>/dev/null"
+}
+
+detect_package_manager() {
+    require_active
+
+    if [[ -f "$ACTIVE_PROJECT_PATH/package-lock.json" ]]; then
+        echo "npm"
+    elif [[ -f "$ACTIVE_PROJECT_PATH/pnpm-lock.yaml" ]]; then
+        echo "pnpm"
+    elif [[ -f "$ACTIVE_PROJECT_PATH/yarn.lock" ]]; then
+        echo "yarn"
+    elif [[ -f "$ACTIVE_PROJECT_PATH/bun.lockb" || -f "$ACTIVE_PROJECT_PATH/bun.lock" ]]; then
+        echo "bun"
+    else
+        die "Could not detect package manager."
+    fi
+}
+
+cmd_run() {
+    require_active
+
+    docker ps --format '{{.Names}}' |
+        grep -qx ai-workstation ||
+        die "Workstation is not running. Run: ai start"
+
+    if app_running; then
+        echo "Project already running."
+        echo "PID: $(app_container_pid)"
+        return 0
+    fi
+
+    local manager
+    manager="$(detect_package_manager)"
+
+    local command
+    case "$manager" in
+        npm)  command='npm run dev' ;;
+        pnpm) command='pnpm dev' ;;
+        yarn) command='yarn dev' ;;
+        bun)  command='bun run dev' ;;
+        *) die "Unsupported package manager: $manager" ;;
+    esac
+
+    mkdir -p "$APP_RUNTIME_DIR"
+    chmod 700 "$APP_RUNTIME_DIR"
+
+    rm -f "$APP_PID_FILE"
+
+    echo "Checking dependencies..."
+
+    if ! docker exec ai-workstation sh -lc '
+        test -d /workspace/node_modules
+    '; then
+        echo "Dependencies missing. Installing from lockfile..."
+
+        case "$manager" in
+            npm)
+                docker exec ai-workstation                     sh -lc 'cd /workspace && npm ci'
+                ;;
+            pnpm)
+                docker exec ai-workstation                     sh -lc 'cd /workspace && pnpm install --frozen-lockfile'
+                ;;
+            yarn)
+                docker exec ai-workstation                     sh -lc 'cd /workspace && yarn install --immutable'
+                ;;
+            bun)
+                docker exec ai-workstation                     sh -lc 'cd /workspace && bun install --frozen-lockfile'
+                ;;
+            *)
+                die "Unsupported package manager: $manager"
+                ;;
+        esac
+
+        echo "Dependencies installed."
+    else
+        echo "Dependencies: ready"
+    fi
+
+    echo "Starting $ACTIVE_PROJECT..."
+    echo "Package manager: $manager"
+    echo "Command: $command"
+
+    docker exec -d ai-workstation \
+        /usr/local/bin/app-runner.sh \
+        bash -lc "$command" >/dev/null
+
+    local ready=0
+    local i
+
+    for i in {1..20}; do
+        if app_running; then
+            ready=1
+            break
+        fi
+        sleep 0.25
+    done
+
+    if [[ "$ready" -ne 1 ]]; then
+        echo "Project failed to start." >&2
+        echo >&2
+        echo "Recent logs:" >&2
+
+        docker exec ai-workstation \
+            sh -lc 'tail -n 80 /run/ai-workstation/app/app.log' >&2 || true
+
+        rm -f "$APP_PID_FILE"
+        return 1
+    fi
+
+    echo "Project started."
+    echo "PID: $(app_container_pid)"
+    echo "Logs: ai app logs"
+}
+
+cmd_app_stop() {
+    if ! docker ps --format '{{.Names}}' |
+        grep -qx ai-workstation; then
+        echo "Workstation is not running."
+        return 0
+    fi
+
+    local pid
+    local pgid
+    local remaining
+
+    pid="$(app_container_pid)"
+
+    if [[ ! "$pid" =~ ^[0-9]+$ ]]; then
+        rm -f "$APP_PID_FILE" "$APP_RUNTIME_DIR/pgid"
+        echo "Project is not running."
+        return 0
+    fi
+
+    pgid="$(
+        docker exec ai-workstation sh -lc '
+            cat /run/ai-workstation/app/pgid 2>/dev/null || true
+        ' 2>/dev/null || true
+    )"
+
+    if [[ "$pgid" =~ ^[0-9]+$ ]] && [[ "$pgid" != "1" ]]; then
+        docker exec ai-workstation sh -lc "
+            kill -TERM -- -$pgid 2>/dev/null || true
+            sleep 1
+
+            remaining=\$(ps -eo pid=,pgid= | awk -v g='$pgid' '\$2 == g {print \$1}')
+
+            if [ -n \"\$remaining\" ]; then
+                kill -KILL \$remaining 2>/dev/null || true
+            fi
+
+            kill -TERM $pid 2>/dev/null || true
+            sleep 0.25
+            kill -KILL $pid 2>/dev/null || true
+        " >/dev/null 2>&1 || true
+    else
+        docker exec ai-workstation sh -lc "
+            kill -TERM $pid 2>/dev/null || true
+            sleep 1
+            kill -KILL $pid 2>/dev/null || true
+        " >/dev/null 2>&1 || true
+    fi
+
+    rm -f "$APP_PID_FILE" "$APP_RUNTIME_DIR/pgid"
+
+    echo "Project stopped."
+}
+cmd_app_restart() {
+    require_active
+    cmd_app_stop
+    cmd_run
+}
+
+cmd_app_status() {
+    load_env
+
+    echo "=== Project ==="
+    echo "Project: ${ACTIVE_PROJECT:-none}"
+
+    if app_running; then
+        echo "Status: running"
+        echo "PID: $(app_container_pid)"
+    else
+        echo "Status: stopped"
+    fi
+}
+
+cmd_app_logs() {
+    docker ps --format '{{.Names}}' |
+        grep -qx ai-workstation ||
+        die "Workstation is not running."
+
+    docker exec ai-workstation \
+        sh -lc 'tail -n 100 -f /run/ai-workstation/app/app.log'
 }
 
 cmd_status() {
@@ -390,6 +616,11 @@ Runtime:
   ai status
   ai logs
   ai shell
+  ai run
+  ai app stop
+  ai app restart
+  ai app status
+  ai app logs
   ai preview
 
 DSH:
@@ -427,6 +658,27 @@ case "${1:-}" in
     status) cmd_status ;;
     logs) cmd_logs ;;
     shell) cmd_shell ;;
+    run) cmd_run ;;
+    app)
+        shift
+        case "${1:-}" in
+            stop)
+                cmd_app_stop
+                ;;
+            restart)
+                cmd_app_restart
+                ;;
+            status)
+                cmd_app_status
+                ;;
+            logs)
+                cmd_app_logs
+                ;;
+            *)
+                die "Usage: ai app {stop|restart|status|logs}"
+                ;;
+        esac
+        ;;
     preview) cmd_preview ;;
     dsh)
         shift

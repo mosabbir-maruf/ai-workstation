@@ -38,10 +38,10 @@ USER sandbox
 
 
 COPY --chown=sandbox:sandbox docker/entrypoint.sh /usr/local/bin/entrypoint.sh
-
+COPY --chown=sandbox:sandbox docker/app-runner.sh /usr/local/bin/app-runner.sh
 COPY --chown=sandbox:sandbox docker/github-app-credential-helper /usr/local/bin/github-app-credential-helper
 
-RUN chmod +x /usr/local/bin/github-app-credential-helper
+RUN chmod +x /usr/local/bin/app-runner.sh /usr/local/bin/github-app-credential-helper
 
 USER sandbox
 

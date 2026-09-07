@@ -512,14 +512,28 @@ cmd_shell() {
 }
 
 cmd_preview() {
-    echo "Mac SSH tunnel:"
+    echo "=== Preview ==="
     echo
-    echo "ssh -L 3000:127.0.0.1:3000 \\"
-    echo "    -L 3001:127.0.0.1:3001 \\"
-    echo "    -L 8000:127.0.0.1:8000 \\"
-    echo "    -L 4090:127.0.0.1:4090 \\"
-    echo "    mosabbir-cloud"
+
+    if ! docker ps --format '{{.Names}}' | grep -qx ai-workstation; then
+        echo "Workstation: stopped"
+        echo "Run: ./scripts/ai start"
+        return 1
+    fi
+
+    echo "Workstation: running"
     echo
+
+    echo "SSH tunnel command:"
+    echo
+    echo "ssh -N \\"
+    echo "  -L 3000:127.0.0.1:3000 \\"
+    echo "  -L 3001:127.0.0.1:3001 \\"
+    echo "  -L 8000:127.0.0.1:8000 \\"
+    echo "  -L 4090:127.0.0.1:4090 \\"
+    echo "  mosabbir-cloud"
+    echo
+    echo "URLs:"
     echo "Client : http://127.0.0.1:3000"
     echo "Admin  : http://127.0.0.1:3001"
     echo "Backend: http://127.0.0.1:8000"

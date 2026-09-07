@@ -600,67 +600,347 @@ cmd_upgrade() {
 
 cmd_doctor() {
     echo "=== AI Workstation Doctor ==="
+    echo
 
-    command -v docker >/dev/null ||
-        die "Docker not installed."
+    local failures=0
+    local container_id=""
+    local container_status=""
+    local image=""
+    local workspace=""
+    local dsh_version=""
+    local broker_socket=""
 
-    docker info >/dev/null ||
-        die "Docker daemon unavailable."
+    check_ok() {
+        echo "✓ $1"
+    }
 
-    [[ -f "$ENV_FILE" ]] ||
-        die ".env missing."
+    check_warn() {
+        echo "! $1"
+    }
+
+    check_fail() {
+        echo "✗ $1"
+        failures=$((failures + 1))
+    }
+
+    # Docker
+    if command -v docker >/dev/null 2>&1; then
+        check_ok "Docker installed"
+    else
+        check_fail "Docker not installed"
+    fi
+
+    if docker info >/dev/null 2>&1; then
+        check_ok "Docker daemon available"
+    else
+        check_fail "Docker daemon unavailable"
+    fi
+
+    # Configuration
+    if [[ -f "$ENV_FILE" ]]; then
+        check_ok "Configuration file exists"
+    else
+        check_fail "Configuration file missing: $ENV_FILE"
+    fi
 
     load_env
 
-    echo "Docker: OK"
-    echo "Config: OK"
+    if [[ -n "${ACTIVE_PROJECT:-}" ]]; then
+        check_ok "Active project configured: ${ACTIVE_PROJECT}"
+    else
+        check_fail "Active project is not configured"
+    fi
 
     if [[ -n "${ACTIVE_PROJECT_PATH:-}" ]] &&
        [[ -d "${ACTIVE_PROJECT_PATH:-}" ]]; then
-        echo "Project: OK"
-        echo "Project: ${ACTIVE_PROJECT:-unknown}"
+        check_ok "Project directory exists: ${ACTIVE_PROJECT_PATH}"
     else
-        echo "Project: none selected"
+        check_fail "Project directory missing: ${ACTIVE_PROJECT_PATH:-none}"
     fi
 
-    if docker ps --format '{{.Names}}' |
-       grep -qx ai-workstation; then
-        echo "Container: running"
+    if [[ -n "${ACTIVE_PROJECT_PATH:-}" ]] &&
+       [[ -d "${ACTIVE_PROJECT_PATH:-}/.git" ]]; then
+        check_ok "Project is a Git repository"
     else
-        echo "Container: stopped"
+        check_warn "Active project is not detected as a Git repository"
     fi
 
     echo
-    echo "Doctor complete."
+    echo "=== Workstation ==="
+
+    if docker ps --format '{{.Names}}' |
+       grep -qx ai-workstation; then
+        container_id="$(docker ps -q -f name=^ai-workstation$)"
+        container_status="$(docker inspect -f '{{.State.Status}}' "$container_id")"
+        image="$(docker inspect -f '{{.Config.Image}}' "$container_id")"
+
+        check_ok "Container running"
+        check_ok "Container status: $container_status"
+        check_ok "Image: $image"
+    else
+        check_warn "Container is stopped"
+    fi
+
+    if [[ -n "$container_id" ]]; then
+        local user
+        local memory
+        local cpus
+        local pids
+        local privileged
+        local security_opt
+        local cap_drop
+
+        user="$(docker inspect -f '{{.Config.User}}' "$container_id")"
+        memory="$(docker inspect -f '{{.HostConfig.Memory}}' "$container_id")"
+        cpus="$(docker inspect -f '{{.HostConfig.NanoCpus}}' "$container_id")"
+        pids="$(docker inspect -f '{{.HostConfig.PidsLimit}}' "$container_id")"
+        privileged="$(docker inspect -f '{{.HostConfig.Privileged}}' "$container_id")"
+        security_opt="$(docker inspect -f '{{join .HostConfig.SecurityOpt ","}}' "$container_id")"
+        cap_drop="$(docker inspect -f '{{join .HostConfig.CapDrop ","}}' "$container_id")"
+
+        [[ "$user" == "sandbox" ]] &&
+            check_ok "Container user: sandbox" ||
+            check_fail "Container user is not sandbox: $user"
+
+        [[ "$memory" == "536870912" ]] &&
+            check_ok "Memory limit: 512 MB" ||
+            check_warn "Memory limit differs from expected 512 MB: $memory"
+
+        [[ "$cpus" == "1500000000" ]] &&
+            check_ok "CPU limit: 1.5" ||
+            check_warn "CPU limit differs from expected 1.5: $cpus"
+
+        [[ "$pids" == "256" ]] &&
+            check_ok "PID limit: 256" ||
+            check_warn "PID limit differs from expected 256: $pids"
+
+        [[ "$privileged" == "false" ]] &&
+            check_ok "Privileged: false" ||
+            check_fail "Container is privileged"
+
+        [[ "$security_opt" == *"no-new-privileges:true"* ]] &&
+            check_ok "No-new-privileges: enabled" ||
+            check_fail "No-new-privileges is not enabled"
+
+        [[ "$cap_drop" == *"ALL"* ]] &&
+            check_ok "Capabilities: ALL dropped" ||
+            check_fail "Capabilities are not fully dropped"
+
+        workspace="$(docker inspect -f '{{range .Mounts}}{{if eq .Destination "/workspace"}}{{.Source}}{{end}}{{end}}' "$container_id")"
+
+        if [[ "$workspace" == "${ACTIVE_PROJECT_PATH:-}" ]]; then
+            check_ok "Workspace mount matches active project"
+        else
+            check_fail "Workspace mount mismatch: ${workspace:-none}"
+        fi
+    fi
+
+    echo
+    echo "=== DSH / Harness ==="
+
+    if [[ -n "$container_id" ]]; then
+        if dsh_version="$(
+            docker exec "$container_id" \
+                node /home/sandbox/.npm-global/node_modules/@deepseek-ai/dsh/lib/bin.js \
+                --version 2>/dev/null
+        )"; then
+            check_ok "DSH installed: $dsh_version"
+        else
+            check_fail "DSH is unavailable"
+        fi
+
+        if docker exec "$container_id" \
+            test -d /home/sandbox/.dsh; then
+            check_ok "DSH runtime directory mounted"
+        else
+            check_fail "DSH runtime directory unavailable"
+        fi
+
+        if docker exec "$container_id" \
+            /usr/local/bin/harness.sh status >/dev/null 2>&1; then
+            check_ok "Harness DSH + bridge running"
+        else
+            check_warn "Harness is not fully running"
+        fi
+    else
+        check_warn "DSH checks skipped: workstation stopped"
+    fi
+
+    echo
+    echo "=== GitHub Broker ==="
+
+    broker_socket="$RUNTIME_DIR/github-broker.sock"
+
+    if [[ -S "$broker_socket" ]]; then
+        check_ok "GitHub broker socket exists"
+    else
+        check_warn "GitHub broker socket unavailable"
+    fi
+
+    if [[ -n "$container_id" ]] &&
+       docker exec "$container_id" test -x /usr/local/bin/github-app-credential-helper; then
+        check_ok "GitHub credential helper installed"
+    else
+        check_fail "GitHub credential helper missing"
+    fi
+
+    echo
+    echo "=== Runtime State ==="
+
+    if [[ -d "$RUNTIME_DIR/dsh" ]]; then
+        check_ok "DSH persistent state exists"
+    else
+        check_fail "DSH persistent state missing"
+    fi
+
+    if [[ -d "$RUNTIME_DIR/harness" ]]; then
+        check_ok "Harness runtime directory exists"
+    else
+        check_warn "Harness runtime directory missing"
+    fi
+
+    if [[ -d "$RUNTIME_DIR/npm-global" ]]; then
+        local npm_size
+        npm_size="$(du -sh "$RUNTIME_DIR/npm-global" 2>/dev/null | cut -f1)"
+        check_ok "Persistent npm runtime exists: $npm_size"
+    else
+        check_warn "Persistent npm runtime missing"
+    fi
+
+    echo
+    if [[ "$failures" -eq 0 ]]; then
+        echo "Doctor complete: PASS"
+        return 0
+    fi
+
+    echo "Doctor complete: $failures check(s) failed."
+    return 1
 }
 
 cmd_state_export() {
     mkdir -p "$HOME/ai-state-backups"
 
+    local timestamp
     local output
-    output="$HOME/ai-state-backups/ai-state-$(date +%Y%m%d-%H%M%S).tar.gz"
+    local staging
+    local manifest
+
+    timestamp="$(date +%Y%m%d-%H%M%S)"
+    output="$HOME/ai-state-backups/ai-state-${timestamp}.tar.gz"
+    staging="$(mktemp -d)"
+    manifest="$staging/manifest"
+
+    trap 'rm -rf "$staging"' RETURN
+
+    mkdir -p "$staging/dsh"
+
+    [[ -f "$ENV_FILE" ]] ||
+        die ".env missing."
+
+    [[ -d "$RUNTIME_DIR/dsh" ]] ||
+        die "DSH state directory missing: $RUNTIME_DIR/dsh"
+
+    cp "$ENV_FILE" "$staging/.env"
+    cp -a "$RUNTIME_DIR/dsh/." "$staging/dsh/"
+
+    cat > "$manifest" <<EOF
+AI Workstation State Backup
+Format: 1
+Created: $(date --iso-8601=seconds)
+DSH Version: ${DSH_VERSION:-unknown}
+
+Included:
+- .env
+- runtime/dsh
+
+Excluded:
+- runtime/npm-global
+- runtime/app
+- runtime/harness
+- runtime/github-broker
+- runtime/github-broker.sock
+- GitHub App private key
+- project repositories
+EOF
 
     tar -czf "$output" \
-        -C "$ROOT" \
-        runtime \
-        .env
+        -C "$staging" \
+        manifest \
+        .env \
+        dsh
 
     chmod 600 "$output"
 
     echo "State exported:"
     echo "$output"
+    echo
+    echo "Size: $(du -h "$output" | cut -f1)"
 }
 
 cmd_state_import() {
     local archive="${1:-}"
+    local staging
+    local member
+    local safe=1
+
     [[ -f "$archive" ]] ||
         die "Usage: ai state import <archive>"
 
+    command -v tar >/dev/null ||
+        die "tar is required."
+
+    staging="$(mktemp -d)"
+
+    cleanup_state_import() {
+        rm -rf "$staging"
+    }
+    trap cleanup_state_import RETURN
+
+    tar -tzf "$archive" >/dev/null 2>&1 ||
+        die "Invalid or corrupted state archive."
+
+    while IFS= read -r member; do
+        case "$member" in
+            manifest|.env|dsh|dsh/*)
+                ;;
+            *)
+                safe=0
+                echo "Unexpected archive entry: $member" >&2
+                ;;
+        esac
+    done < <(tar -tzf "$archive")
+
+    [[ "$safe" -eq 1 ]] ||
+        die "State archive contains unexpected files."
+
+    tar -xzf "$archive" -C "$staging"
+
+    [[ -f "$staging/manifest" ]] ||
+        die "Invalid state archive: manifest missing."
+
+    [[ -f "$staging/.env" ]] ||
+        die "Invalid state archive: .env missing."
+
+    [[ -d "$staging/dsh" ]] ||
+        die "Invalid state archive: DSH state missing."
+
+    echo "Stopping workstation..."
     compose down >/dev/null 2>&1 || true
 
-    tar -xzf "$archive" -C "$ROOT"
+    cp "$staging/.env" "$ENV_FILE"
+
+    rm -rf "$RUNTIME_DIR/dsh"
+    mkdir -p "$RUNTIME_DIR/dsh"
+    cp -a "$staging/dsh/." "$RUNTIME_DIR/dsh/"
+
+    chmod 700 "$RUNTIME_DIR/dsh"
+    chmod 600 "$RUNTIME_DIR/dsh/.credentials.yaml" 2>/dev/null || true
+    chmod 600 "$RUNTIME_DIR/dsh/settings.yaml" 2>/dev/null || true
+    chmod 700 "$RUNTIME_DIR/dsh/storages" 2>/dev/null || true
+    chmod 600 "$RUNTIME_DIR/dsh/storages/workspace.json" 2>/dev/null || true
 
     echo "State imported."
+    echo "Run: ./scripts/ai start"
 }
 
 cmd_github() {

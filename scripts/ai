@@ -83,13 +83,28 @@ cmd_add() {
     local url="${1:-}"
     [[ -n "$url" ]] || die "Usage: ai add <github-url>"
 
-    local name
-    name="$(basename "${url%.git}")"
+    [[ "$url" =~ ^https://github\.com/[^/]+/[^/]+/?(\.git)?$ ]] ||
+        die "Only valid GitHub HTTPS repository URLs are supported."
 
-    [[ ! -e "$PROJECTS_DIR/$name" ]] ||
+    local name
+    name="$(basename "${url%/}")"
+    name="${name%.git}"
+
+    [[ "$name" != "." && "$name" != ".." ]] ||
+        die "Invalid repository name."
+
+    [[ "$name" =~ ^[A-Za-z0-9._-]+$ ]] ||
+        die "Invalid repository name: $name"
+
+    local destination="$PROJECTS_DIR/$name"
+
+    [[ ! -e "$destination" ]] ||
         die "Project already exists: $name"
 
-    git clone "$url" "$PROJECTS_DIR/$name"
+    if ! git clone "$url" "$destination"; then
+        rm -rf -- "$destination"
+        die "Failed to clone repository: $name"
+    fi
 
     echo "Project added: $name"
     echo "Run: ai use $name"
@@ -99,16 +114,34 @@ cmd_remove() {
     local name="${1:-}"
     [[ -n "$name" ]] || die "Usage: ai remove <project>"
 
+    [[ "$name" != "." && "$name" != ".." ]] ||
+        die "Invalid project name."
+
+    [[ "$name" =~ ^[A-Za-z0-9._-]+$ ]] ||
+        die "Invalid project name: $name"
+
+    local destination="$PROJECTS_DIR/$name"
+
+    [[ -d "$destination" ]] ||
+        die "Project not found: $name"
+
+    [[ -d "$destination/.git" ]] ||
+        die "Not a Git project: $name"
+
     load_env
 
     if [[ "${ACTIVE_PROJECT:-}" == "$name" ]]; then
+        echo "Stopping workstation..."
+
         compose down >/dev/null 2>&1 || true
+
         ACTIVE_PROJECT=""
         ACTIVE_PROJECT_PATH=""
         save_env
     fi
 
-    rm -rf -- "$PROJECTS_DIR/$name"
+    rm -rf -- "$destination"
+
     echo "Removed: $name"
 }
 
@@ -194,6 +227,35 @@ cmd_push() {
     if git diff --cached --quiet; then
         echo "Nothing to commit."
         return
+    fi
+
+    local sensitive_files=""
+    sensitive_files="$(
+        git diff --cached --name-only --diff-filter=ACM |
+        while IFS= read -r file; do
+            case "$file" in
+                .env|.env.*)
+                    [[ "$file" == ".env.example" ]] || echo "$file"
+                    ;;
+                *.pem|*.key|*.p12|*.pfx)
+                    echo "$file"
+                    ;;
+                credentials.json|service-account*.json)
+                    echo "$file"
+                    ;;
+            esac
+        done
+    )"
+
+    if [[ -n "$sensitive_files" ]]; then
+        git reset >/dev/null
+
+        echo "ERROR: Potentially sensitive files detected:" >&2
+        printf '  %s\n' "$sensitive_files" >&2
+        echo >&2
+        echo "Nothing was committed or pushed." >&2
+
+        return 1
     fi
 
     git commit -m "$message"

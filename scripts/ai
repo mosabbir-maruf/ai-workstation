@@ -594,8 +594,11 @@ cmd_shell() {
 }
 
 cmd_preview() {
+    require_active
+
     echo "=== Preview ==="
     echo
+    echo "Project: $ACTIVE_PROJECT"
 
     if ! docker ps --format '{{.Names}}' | grep -qx ai-workstation; then
         echo "Workstation: stopped"
@@ -604,22 +607,123 @@ cmd_preview() {
     fi
 
     echo "Workstation: running"
+
+    local container_ip
+    container_ip="$(
+        docker inspect ai-workstation \
+            --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' \
+            2>/dev/null
+    )"
+
+    [[ "$container_ip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]] ||
+        die "Could not determine workstation container IP."
+
+    echo "Container: $container_ip"
     echo
 
+    local app_ports=""
+    if app_running; then
+        app_ports="$(
+            docker exec ai-workstation node -e '
+                const fs = require("fs");
+
+                const files = ["/proc/net/tcp", "/proc/net/tcp6"];
+                const ports = new Set();
+
+                function hexToNumber(value) {
+                    return parseInt(value, 16);
+                }
+
+                for (const file of files) {
+                    let content;
+
+                    try {
+                        content = fs.readFileSync(file, "utf8");
+                    } catch {
+                        continue;
+                    }
+
+                    for (const line of content.trim().split("\n").slice(1)) {
+                        const fields = line.trim().split(/\s+/);
+
+                        if (fields.length < 4)
+                            continue;
+
+                        const localAddress = fields[1];
+                        const state = fields[3];
+
+                        if (state !== "0A")
+                            continue;
+
+                        const parts = localAddress.split(":");
+
+                        if (parts.length !== 2)
+                            continue;
+
+                        const address = parts[0];
+                        const port = hexToNumber(parts[1]);
+
+                        const allInterfaces =
+                            address === "00000000" ||
+                            address === "00000000000000000000000000000000";
+
+                        if (!allInterfaces)
+                            continue;
+
+                        if (port < 1024 || port > 65535)
+                            continue;
+
+                        if (port === 4090 || port === 4091)
+                            continue;
+
+                        ports.add(port);
+                    }
+                }
+
+                process.stdout.write(
+                    [...ports].sort((a, b) => a - b).join(" ")
+                );
+            '
+        )"
+    fi
+
+    if [[ -z "$app_ports" ]]; then
+        echo "App: stopped"
+        echo
+        echo "Run:"
+        echo "  ./scripts/ai run"
+        echo
+        echo "Then run:"
+        echo "  ./scripts/ai preview"
+        echo
+        echo "DSH tunnel:"
+        echo "  ssh -N -L 4090:${container_ip}:4091 mosabbir-cloud"
+        return 0
+    fi
+
+    echo "Detected app port(s): $app_ports"
+    echo
     echo "SSH tunnel command:"
     echo
-    echo "ssh -N \\"
-    echo "  -L 3000:127.0.0.1:3000 \\"
-    echo "  -L 3001:127.0.0.1:3001 \\"
-    echo "  -L 8000:127.0.0.1:8000 \\"
-    echo "  -L 4090:127.0.0.1:4090 \\"
-    echo "  mosabbir-cloud"
+
+    local port
+    printf 'ssh -N \\\n'
+
+    for port in $app_ports; do
+        printf '  -L %s:%s:%s \\\n' "$port" "$container_ip" "$port"
+    done
+
+    printf '  -L 4090:%s:4091 \\\n' "$container_ip"
+    printf '  mosabbir-cloud\n'
+
     echo
     echo "URLs:"
-    echo "Client : http://127.0.0.1:3000"
-    echo "Admin  : http://127.0.0.1:3001"
-    echo "Backend: http://127.0.0.1:8000"
-    echo "DSH    : http://127.0.0.1:4090"
+
+    for port in $app_ports; do
+        echo "  App : http://127.0.0.1:$port"
+    done
+
+    echo "  DSH : http://127.0.0.1:4090"
 }
 
 cmd_dsh_update() {

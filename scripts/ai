@@ -596,6 +596,7 @@ cmd_update() {
 cmd_upgrade() {
     cmd_update
     compose up -d
+    cmd_harness_start
 }
 
 cmd_doctor() {

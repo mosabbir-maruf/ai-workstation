@@ -7,17 +7,26 @@ export PATH=/home/sandbox/.npm-global/bin:/usr/local/bin:/usr/local/sbin:/usr/sb
 
 DSH_VERSION="${DSH_VERSION:-0.1.2-rc.1}"
 DSH_BIN="/home/sandbox/.npm-global/node_modules/@deepseek-ai/dsh/lib/bin.js"
+DSH_LINK="/home/sandbox/.npm-global/bin/dsh"
+
+mkdir -p "$NPM_CONFIG_PREFIX/bin"
 
 if [[ ! -f "$DSH_BIN" ]]; then
     echo "Installing DeepSeek Harness ${DSH_VERSION}..."
+
     npm install --prefix "$NPM_CONFIG_PREFIX" \
         "@deepseek-ai/dsh@${DSH_VERSION}"
 fi
+
+# npm may install the package without creating the global executable.
+# Always ensure the DSH CLI is available as `dsh`.
+ln -sf "$DSH_BIN" "$DSH_LINK"
+chmod +x "$DSH_BIN"
 
 git config --global --unset-all credential.helper 2>/dev/null || true
 git config --global credential.helper /usr/local/bin/github-app-credential-helper
 git config --global credential.useHttpPath true
 
-echo "DSH runtime: $(node "$DSH_BIN" --version 2>/dev/null || node "$DSH_BIN" --version)"
+echo "DSH runtime: $(node "$DSH_BIN" --version)"
 
 exec "$@"

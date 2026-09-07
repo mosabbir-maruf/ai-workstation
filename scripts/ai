@@ -766,12 +766,108 @@ cmd_cache() {
 }
 
 cmd_cache_clear() {
+    local include_deps=0
+    local assume_yes=0
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --deps)
+                include_deps=1
+                ;;
+            --yes|-y)
+                assume_yes=1
+                ;;
+            --help|-h)
+                cat <<EOF
+Usage:
+  ai cache clear
+  ai cache clear --deps
+  ai cache clear --deps --yes
+
+Safe cleanup:
+  - Docker builder cache
+  - npm cache
+
+With --deps:
+  - project node_modules directories
+
+Never removes:
+  - DSH state
+  - DSH installation
+  - .env
+  - Git repositories
+  - Docker volumes
+  - Docker images
+  - Docker containers
+EOF
+                return 0
+                ;;
+            *)
+                die "Unknown cache option: $1"
+                ;;
+        esac
+        shift
+    done
+
+    if [[ "$include_deps" -eq 1 && "$assume_yes" -ne 1 ]]; then
+        echo "WARNING: --deps will remove node_modules from all projects."
+        echo
+
+        if docker ps --format '{{.Names}}' |
+            grep -qx ai-workstation; then
+            echo "WARNING: ai-workstation is currently running."
+            echo "The active app may stop working until dependencies are reinstalled."
+            echo
+        fi
+
+        read -r -p "Continue? [y/N] " answer
+
+        case "$answer" in
+            y|Y|yes|YES)
+                ;;
+            *)
+                echo "Cancelled. Nothing was removed."
+                return 0
+                ;;
+        esac
+    fi
+
+    echo "=== Cleaning Docker builder cache ==="
     docker builder prune -af
+
+    echo
+    echo "=== Cleaning npm cache ==="
 
     if docker ps --format '{{.Names}}' |
         grep -qx ai-workstation; then
-        docker exec ai-workstation npm cache clean --force || true
+        docker exec ai-workstation npm cache clean --force
+    else
+        echo "Workstation is not running; npm cache cleanup skipped."
     fi
+
+    if [[ "$include_deps" -eq 1 ]]; then
+        echo
+        echo "=== Removing project dependencies ==="
+
+        local removed=0
+        local dir
+
+        while IFS= read -r -d '' dir; do
+            echo "Removing: $dir"
+            rm -rf -- "$dir"
+            removed=1
+        done < <(
+            find "$PROJECTS_DIR"                 -type d                 -name node_modules                 -prune                 -print0 2>/dev/null
+        )
+
+        if [[ "$removed" -eq 0 ]]; then
+            echo "No node_modules directories found."
+        fi
+    fi
+
+    echo
+    echo "Cache cleanup complete."
+    echo "Run: ai cache"
 }
 
 cmd_update() {
@@ -1334,11 +1430,20 @@ case "${1:-}" in
         esac
         ;;
     cache)
-        if [[ "${2:-}" == "clear" ]]; then
-            cmd_cache_clear
-        else
-            cmd_cache
-        fi
+        shift
+
+        case "${1:-}" in
+            clear)
+                shift
+                cmd_cache_clear "$@"
+                ;;
+            --help|-h|"")
+                cmd_cache
+                ;;
+            *)
+                die "Usage: ai cache [clear [--deps] [--yes]]"
+                ;;
+        esac
         ;;
     update) cmd_update ;;
     upgrade) cmd_upgrade ;;

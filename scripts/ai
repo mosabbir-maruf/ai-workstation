@@ -1052,7 +1052,7 @@ cmd_doctor() {
     echo
     echo "=== GitHub Broker ==="
 
-    broker_socket="$RUNTIME_DIR/github-broker.sock"
+    broker_socket="$RUNTIME_DIR/github-broker/github.sock"
 
     if [[ -S "$broker_socket" ]]; then
         check_ok "GitHub broker socket exists"

@@ -1,0 +1,69 @@
+name: Feature Request
+description: Propose a new feature, enhancement, or workflow improvement
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Propose an Enhancement to AI Workstation
+
+        Thank you for helping make AI Workstation better!
+        Please describe your proposal clearly, keeping in mind the project's security and isolation principles.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What limitation or pain point are you encountering?
+      placeholder: A clear description of what the problem is. e.g., "I'm always frustrated when..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the solution you would like to see implemented.
+      placeholder: Detailed description of the feature or improvement.
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use Case and Rationale
+      description: Explain how this feature fits into a remote AI workstation workflow.
+      placeholder: Why is this feature needed and who will benefit from it?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Describe any alternative solutions or workarounds you've evaluated.
+      placeholder: What other approaches did you consider and why were they insufficient?
+
+  - type: textarea
+    id: security
+    attributes:
+      label: Security Considerations
+      description: Does this proposed feature impact container isolation, volume mounts, credentials, or network boundaries?
+      placeholder: Explain any security implications or how existing boundaries will be maintained.
+    validations:
+      required: true
+
+  - type: textarea
+    id: compatibility
+    attributes:
+      label: Compatibility Considerations
+      description: Will this work across Linux ARM64, Docker Compose v2, and standard Ubuntu VPS setups?
+      placeholder: Note any platform, architecture, or dependency constraints.
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Add any other context, references, or mockups here.
+

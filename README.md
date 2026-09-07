@@ -5,6 +5,9 @@
 [![Platform](https://img.shields.io/badge/platform-linux%2Farm64-informational)](https://github.com/mosabbir-maruf/ai-workstation)
 [![Runtime](https://img.shields.io/badge/runtime-Docker-blue)](https://www.docker.com/)
 [![AI Runtime](https://img.shields.io/badge/AI%20runtime-DeepSeek%20Harness-black)](https://github.com/deepseek-ai/deepseek-harness)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Contributing](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![Security Policy](https://img.shields.io/badge/security-policy-red.svg)](SECURITY.md)
 [![Maintainer](https://img.shields.io/badge/maintainer-Mosabbir%20Maruf-181717?logo=github)](https://github.com/mosabbir-maruf)
 
 ## Table of Contents
@@ -33,6 +36,9 @@
 - [Security Checklist](#security-checklist)
 - [Design Decisions](#design-decisions)
 - [Quick Reference](#quick-reference)
+- [Contributing](#contributing)
+- [Security](#security)
+- [License](#license)
 - [Maintainer](#maintainer)
 
 ---
@@ -54,9 +60,9 @@ The system has four major boundaries:
 
 ---
 
-# Architecture
+## Architecture
 
-## High-level architecture
+### High-level architecture
 
 ```text
                                   INTERNET
@@ -116,7 +122,7 @@ The system has four major boundaries:
 └────────────────────────────────────────────────────────────────────────────┘
 ```
 
-## Data flow
+### Data flow
 
 ```text
 Mac / operator
@@ -144,7 +150,7 @@ Docker workstation
      └── GitHub broker socket
 ```
 
-## Component responsibilities
+### Component responsibilities
 
 | Component | Responsibility | Persistence |
 |---|---|---|
@@ -168,11 +174,11 @@ Docker workstation
 
 ---
 
-# Security Model
+## Security Model
 
 The workstation is intentionally isolated from sensitive host capabilities.
 
-## Container security
+### Container security
 
 The current runtime is configured to:
 
@@ -189,7 +195,7 @@ The current runtime is configured to:
 - avoid mounting the host `~/.ssh`;
 - mount only the active project at `/workspace`.
 
-## Credential boundary
+### Credential boundary
 
 GitHub credentials do not need to be copied into the workstation.
 
@@ -214,7 +220,7 @@ GitHub
 
 The credential helper does not persist GitHub tokens through Git's credential store.
 
-## Secret locations
+### Secret locations
 
 Sensitive files are host-only:
 
@@ -237,49 +243,55 @@ Never commit private keys, tokens, credentials, or `.env`.
 
 ---
 
-# Repository Structure
+## Repository Structure
 
 ```text
 ai-workstation/
-├── .env.example
-├── .gitignore
-├── README.md
-├── install.sh
-├── update.sh
+├── .env.example                     # Environment template
+├── .gitignore                       # Ignored secrets, runtime, and OS files
+├── CONTRIBUTING.md                  # Contributor guidelines
+├── LICENSE                          # MIT License
+├── README.md                        # Primary architecture & user documentation
+├── SECURITY.md                      # Security policy and disclosure process
+├── install.sh                       # Host installation and validation script
+├── update.sh                        # Fast-forward update and upgrade script
 │
 ├── .github/
-│   └── workflows/
-│       └── image.yml
+│   ├── ISSUE_TEMPLATE/
+│   │   ├── bug_report.yml           # Structured bug report form
+│   │   ├── feature_request.yml      # Structured feature request form
+│   │   └── config.yml               # Issue template configuration
+│   ├── workflows/
+│   │   └── image.yml                # ARM64 GHCR build & publish workflow
+│   └── pull_request_template.md     # PR submission template
 │
 ├── broker/
-│   └── ...                         # Host-side GitHub broker
+│   └── github_broker.py             # Host-side GitHub App credential broker
 │
 ├── config/
-│   └── ...                         # Configuration/support files
+│   └── projects.yml                 # Project configuration registry
 │
 ├── docker/
-│   ├── Dockerfile                  # Base ARM64 workstation image
+│   ├── Dockerfile                   # Base ARM64 workstation image
 │   ├── compose.yml                 # Runtime/security configuration
-│   ├── entrypoint.sh               # Container bootstrap
+│   ├── entrypoint.sh               # Container bootstrap & DSH setup
 │   ├── app-runner.sh               # App process runner
 │   ├── harness.sh                  # DSH + bridge lifecycle
 │   └── github-app-credential-helper# Container-side credential helper
 │
-├── scripts/
-│   ├── ai                          # Main CLI
-│   ├── github-app-credential-helper# Host-side credential helper
-│   └── lib/
-│       └── github.sh               # GitHub App/broker helpers
-│
-└── secrets/
-    └── github-app.pem              # Local-only secret
+└── scripts/
+    ├── ai                           # Main CLI
+    ├── github-app-credential-helper # Host-side credential helper
+    └── lib/
+        └── github.sh                # GitHub App/broker helpers
 ```
 
-> `runtime/`, `.env`, `.venv/`, project checkouts, and other host runtime data are intentionally not part of the source tree.
+> [!NOTE]
+> `runtime/`, `.env`, `.venv/`, `secrets/`, and project checkouts under `~/projects/` are local host runtime paths and are intentionally excluded from version control.
 
 ---
 
-# Host Runtime Structure
+## Host Runtime Structure
 
 ```text
 ~/
@@ -305,9 +317,9 @@ Only the selected project is mounted into `/workspace`.
 
 ---
 
-# Requirements
+## Requirements
 
-## Host
+### Host
 
 - Linux host with Docker.
 - Docker Compose support.
@@ -319,7 +331,7 @@ Only the selected project is mounted into `/workspace`.
 
 The included installer validates Docker, Git, Python 3, Docker daemon access, and Python virtual-environment support.
 
-## Recommended server posture
+### Recommended server posture
 
 - SSH key authentication.
 - Password authentication disabled.
@@ -330,7 +342,7 @@ The included installer validates Docker, Git, Python 3, Docker daemon access, an
 
 ---
 
-# Installation
+## Installation
 
 ```bash
 cd ~/ai-workstation
@@ -359,7 +371,7 @@ ai github test
 
 ---
 
-# Configuration
+## Configuration
 
 `.env.example` currently contains:
 
@@ -372,7 +384,7 @@ ACTIVE_PROJECT_PATH=
 
 The CLI also maintains GitHub App/broker-related values locally when configured.
 
-## Rules
+### Rules
 
 - Keep `.env` private.
 - Never commit `.env`.
@@ -382,7 +394,7 @@ The CLI also maintains GitHub App/broker-related values locally when configured.
 
 ---
 
-# GitHub Authentication
+## GitHub Authentication
 
 Use:
 
@@ -415,39 +427,39 @@ GitHub authentication: READY ✓
 
 ---
 
-# Daily Workflow
+## Daily Workflow
 
-## Start
+### Start
 
 ```bash
 ai start
 ```
 
-## Check
+### Check
 
 ```bash
 ai status
 ```
 
-## Start active project
+### Start active project
 
 ```bash
 ai run
 ```
 
-## Preview
+### Preview
 
 ```bash
 ai preview
 ```
 
-## Stop project
+### Stop project
 
 ```bash
 ai app stop
 ```
 
-## Stop workstation
+### Stop workstation
 
 ```bash
 ai stop
@@ -472,7 +484,7 @@ ai stop
 
 ---
 
-# CLI Reference
+## CLI Reference
 
 Run:
 
@@ -482,7 +494,7 @@ ai
 
 for the built-in command list.
 
-## Projects
+### Projects
 
 ```bash
 ai add <github-url>
@@ -495,7 +507,7 @@ ai use <project>
 
 `ai use` selects which project is mounted at `/workspace`.
 
-## Git
+### Git
 
 ```bash
 ai pull
@@ -506,7 +518,7 @@ ai push "commit message"
 
 `ai push` checks staged filenames for common sensitive-file patterns before committing/pushing.
 
-## Workstation
+### Workstation
 
 ```bash
 ai start
@@ -519,7 +531,7 @@ ai run
 ai preview
 ```
 
-## App
+### App
 
 ```bash
 ai app stop
@@ -528,7 +540,7 @@ ai app status
 ai app logs
 ```
 
-## Harness
+### Harness
 
 ```bash
 ai harness start
@@ -537,7 +549,7 @@ ai harness restart
 ai harness status
 ```
 
-## DSH
+### DSH
 
 ```bash
 ai dsh version
@@ -545,7 +557,7 @@ ai dsh update
 ai dsh update <version>
 ```
 
-## Maintenance
+### Maintenance
 
 ```bash
 ai cache
@@ -557,7 +569,7 @@ ai upgrade
 ai doctor
 ```
 
-## GitHub
+### GitHub
 
 ```bash
 ai github setup
@@ -565,7 +577,7 @@ ai github status
 ai github test
 ```
 
-## State
+### State
 
 ```bash
 ai state export
@@ -574,7 +586,7 @@ ai state import <archive>
 
 ---
 
-# Project Lifecycle
+## Project Lifecycle
 
 ```text
 GitHub repository
@@ -614,7 +626,7 @@ Switching projects reuses the same workstation image.
 
 ---
 
-# Harness and DSH Lifecycle
+## Harness and DSH Lifecycle
 
 DSH installation, DSH state, and Harness runtime metadata are deliberately separate.
 
@@ -649,7 +661,7 @@ This lets the DSH service remain container-internal while still being reachable 
 
 ---
 
-# Preview and SSH Tunneling
+## Preview and SSH Tunneling
 
 Development ports are intentionally not public.
 
@@ -691,7 +703,7 @@ The container IP and app ports are runtime values and must not be hard-coded.
 
 ---
 
-# Git Workflow
+## Git Workflow
 
 GitHub is the source of truth for project source.
 
@@ -715,9 +727,9 @@ The workstation does not require a PAT or host SSH private key mounted into the 
 
 ---
 
-# Cache Management
+## Cache Management
 
-## Inspect
+### Inspect
 
 ```bash
 ai cache
@@ -725,7 +737,7 @@ ai cache
 
 This is read-only.
 
-## Safe cleanup
+### Safe cleanup
 
 ```bash
 ai cache clear
@@ -743,7 +755,7 @@ It does not intentionally remove:
 - Docker containers;
 - Docker volumes.
 
-## Dependency cleanup
+### Dependency cleanup
 
 ```bash
 ai cache clear --deps
@@ -769,11 +781,11 @@ Dependencies are reinstalled from the project's lockfile.
 
 ---
 
-# State Backup and Recovery
+## State Backup and Recovery
 
 Project source is protected by GitHub. DSH state is separate and should be backed up independently.
 
-## Export
+### Export
 
 ```bash
 ai state export
@@ -781,7 +793,7 @@ ai state export
 
 Store state archives somewhere protected and preferably off-host.
 
-## Import
+### Import
 
 ```bash
 ai state import <archive>
@@ -798,7 +810,7 @@ ai start
 ai dsh version
 ```
 
-## Backup recommendation
+### Backup recommendation
 
 For a production/operator environment, use regular encrypted and off-host copies of state exports.
 
@@ -806,11 +818,11 @@ The current system provides export/import functionality; automatic offsite backu
 
 ---
 
-# Updates and Upgrades
+## Updates and Upgrades
 
 There are three separate update layers.
 
-## CLI/repository
+### CLI/repository
 
 ```bash
 ai update
@@ -822,7 +834,7 @@ or:
 ./update.sh
 ```
 
-## Workstation image
+### Workstation image
 
 ```bash
 ai upgrade
@@ -830,7 +842,7 @@ ai upgrade
 
 The image is consumed from GHCR.
 
-## DSH only
+### DSH only
 
 ```bash
 ai dsh update
@@ -849,7 +861,7 @@ DSH updates do not require rebuilding the base image because the installation li
 
 ---
 
-# CI/CD
+## CI/CD
 
 The workstation image is built for Linux ARM64 in GitHub Actions.
 
@@ -877,7 +889,7 @@ ghcr.io/mosabbir-maruf/ai-workstation:latest
 ghcr.io/mosabbir-maruf/ai-workstation:<commit-sha>
 ```
 
-## Why SHA tags?
+### Why SHA tags?
 
 `latest` is convenient. A commit SHA tag provides a deterministic image reference for rollback and debugging.
 
@@ -891,9 +903,9 @@ is preferable to relying only on `latest`.
 
 ---
 
-# Operational Runbook
+## Operational Runbook
 
-## Start of day
+### Start of day
 
 ```bash
 ai doctor
@@ -903,7 +915,7 @@ ai run
 ai preview
 ```
 
-## During development
+### During development
 
 ```bash
 ai status
@@ -912,7 +924,7 @@ ai harness status
 ai shell
 ```
 
-## Switch project
+### Switch project
 
 ```bash
 ai use another-project
@@ -920,14 +932,14 @@ ai run
 ai preview
 ```
 
-## End of day
+### End of day
 
 ```bash
 ai app stop
 ai stop
 ```
 
-## Before DSH upgrade
+### Before DSH upgrade
 
 ```bash
 ai state export
@@ -936,7 +948,7 @@ ai harness restart
 ai dsh version
 ```
 
-## Before major workstation changes
+### Before major workstation changes
 
 ```bash
 ai state export
@@ -945,9 +957,9 @@ ai doctor
 
 ---
 
-# Troubleshooting
+## Troubleshooting
 
-## Workstation is stopped
+### Workstation is stopped
 
 ```bash
 ai start
@@ -959,7 +971,7 @@ Then:
 ai status
 ```
 
-## DSH/Harness is stopped
+### DSH/Harness is stopped
 
 ```bash
 ai harness status
@@ -972,7 +984,7 @@ If the workstation itself is stopped:
 ai start
 ```
 
-## App fails to start
+### App fails to start
 
 ```bash
 ai app status
@@ -987,7 +999,7 @@ ai cache clear --deps
 ai run
 ```
 
-## GitHub authentication fails
+### GitHub authentication fails
 
 ```bash
 ai github status
@@ -998,7 +1010,7 @@ Check the broker and GitHub App configuration.
 
 Do not copy a PAT or host SSH private key into the workstation as a workaround.
 
-## Preview fails
+### Preview fails
 
 ```bash
 ai status
@@ -1007,7 +1019,7 @@ ai preview
 
 Run the generated SSH command from the client machine and verify that the app is listening on the detected port.
 
-## Image problems
+### Image problems
 
 ```bash
 docker image ls ghcr.io/mosabbir-maruf/ai-workstation
@@ -1018,7 +1030,7 @@ For deterministic deployments, use a SHA-tagged image.
 
 ---
 
-# Security Checklist
+## Security Checklist
 
 ```text
 [ ] SSH key authentication enabled
@@ -1053,43 +1065,43 @@ regularly.
 
 ---
 
-# Design Decisions
+## Design Decisions
 
-## One workstation, many projects
+### One workstation, many projects
 
 Common tooling belongs in the image. Project source stays outside the image so a new project does not require a new image.
 
-## Active-project-only mount
+### Active-project-only mount
 
 Only the selected repository is exposed to the workstation. This reduces accidental access to unrelated projects.
 
-## Persistent DSH installation
+### Persistent DSH installation
 
 DSH can be updated independently from the base workstation image.
 
-## Persistent DSH state
+### Persistent DSH state
 
 DSH state is workflow data rather than disposable container state, so it lives outside the container.
 
-## No Docker socket
+### No Docker socket
 
 Mounting `/var/run/docker.sock` would provide the container with access to the host Docker daemon and greatly increase the blast radius. This architecture deliberately avoids it.
 
-## No host SSH keys
+### No host SSH keys
 
 GitHub access is brokered instead of mounting `~/.ssh` into the workstation.
 
-## Local-only development ports
+### Local-only development ports
 
 Development servers should not accidentally become public services. SSH tunneling provides private operator access.
 
-## Prebuilt ARM64 image
+### Prebuilt ARM64 image
 
 The production VPS consumes a prebuilt ARM64 image instead of compiling the image locally.
 
 ---
 
-# Quick Reference
+## Quick Reference
 
 ```text
 PROJECTS
@@ -1146,6 +1158,22 @@ STATE
   ai state export
   ai state import <archive>
 ```
+
+## Contributing
+
+Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on development workflow, branch naming, coding standards, shell scripting guidelines, and validation requirements before opening a pull request.
+
+---
+
+## Security
+
+Security is foundational to AI Workstation. To report a security vulnerability or learn more about our container isolation boundaries, credential helper architecture, and defense-in-depth model, please consult [SECURITY.md](SECURITY.md).
+
+---
+
+## License
+
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for the full license text.
 
 ---
 

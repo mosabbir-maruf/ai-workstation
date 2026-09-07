@@ -52,6 +52,7 @@ echo "Creating directories..."
 
 mkdir -p \
     "$ROOT/runtime/dsh" \
+    "$ROOT/runtime/app" \
     "$ROOT/runtime/npm-global" \
     "$ROOT/runtime/github-broker" \
     "$ROOT/secrets" \
@@ -60,6 +61,7 @@ mkdir -p \
 chmod 700 \
     "$ROOT/runtime" \
     "$ROOT/runtime/dsh" \
+    "$ROOT/runtime/app" \
     "$ROOT/runtime/npm-global" \
     "$ROOT/runtime/github-broker" \
     "$ROOT/secrets"

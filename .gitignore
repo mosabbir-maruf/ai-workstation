@@ -1,23 +1,33 @@
-# Local environment
+# Environment and Secrets
 .env
 .env.*
 !.env.example
-
-# Secrets
 secrets/
-*.secret
-*.key
 *.pem
+*.key
+*.p12
+*.pfx
 
-# Python
+# Host Runtime and State
+runtime/
+*.tar.gz
+
+# Python and Virtual Environments
 .venv/
 __pycache__/
 *.py[cod]
+*$py.class
 
-# Runtime / generated state
-state/
-runtime/
-workspace/
+# Node and npm
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# Local backups
-*.backup
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db

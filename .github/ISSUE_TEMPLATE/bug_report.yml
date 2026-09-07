@@ -1,0 +1,136 @@
+name: Bug Report
+description: Report an issue or unexpected behavior in AI Workstation
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Thank you for reporting an issue!
+
+        Please fill out this form as completely as possible.
+
+        > [!CAUTION]
+        > **SECURITY WARNING**:
+        > Never include sensitive information in this issue.
+        > **DO NOT paste**:
+        > - Private keys (`*.pem`, `*.key`)
+        > - GitHub App credentials or installation tokens
+        > - Passwords or API keys
+        > - Contents of `.env` files
+        > - Sensitive host network information or internal IPs
+        >
+        > For security vulnerabilities, please refer to our [Security Policy](https://github.com/mosabbir-maruf/ai-workstation/blob/main/SECURITY.md).
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: A clear and concise description of the bug.
+      placeholder: What happened? Describe the unexpected behavior.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which part of AI Workstation is affected?
+      options:
+        - CLI (`scripts/ai`)
+        - Workstation Container (`docker/*`)
+        - DeepSeek Harness / DSH
+        - GitHub Broker (`broker/*`)
+        - App Runner / Preview (`ai run`, `ai preview`)
+        - State Import / Export (`ai state`)
+        - Installer / Updater (`install.sh`, `update.sh`)
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Provide host and runtime environment details.
+      value: |
+        - Host OS: (e.g., Ubuntu 22.04 LTS, macOS 14)
+        - Architecture: (e.g., linux/arm64, x86_64)
+        - Docker Version: (e.g., 26.0.0)
+        - Docker Compose Version: (e.g., 2.26.1)
+        - DSH Version: (e.g., 0.1.2-rc.1)
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version or Commit SHA
+      description: Which commit SHA or version tag were you running?
+      placeholder: e.g., git rev-parse --short HEAD
+    validations:
+      required: true
+
+  - type: input
+    id: command
+    attributes:
+      label: Relevant Command
+      description: What was the exact `ai` command or script executed?
+      placeholder: e.g., ai start, ai run, ai preview, ai state import ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Describe step-by-step how to reproduce the problem.
+      placeholder: |
+        1. Run 'ai use my-project'
+        2. Run 'ai start'
+        3. Run 'ai run'
+        4. See error ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+      placeholder: Describe the expected behavior.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened?
+      placeholder: Include error messages or unexpected states.
+    validations:
+      required: true
+
+  - type: textarea
+    id: doctor
+    attributes:
+      label: "Diagnostic Output (`ai doctor`)"
+      description: Output of `ai doctor` (sanitized of sensitive info).
+      render: text
+      placeholder: Paste sanitized output of `ai doctor` here...
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant Logs
+      description: Relevant logs from `ai logs`, `ai app logs`, or systemd service (sanitized).
+      render: text
+      placeholder: Paste sanitized log output here...
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Any other context, related issues, or screenshots.
+

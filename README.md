@@ -5,6 +5,7 @@
 [![Platform](https://img.shields.io/badge/platform-linux%2Farm64-informational)](https://github.com/mosabbir-maruf/ai-workstation)
 [![Runtime](https://img.shields.io/badge/runtime-Docker-blue)](https://www.docker.com/)
 [![AI Runtime](https://img.shields.io/badge/AI%20runtime-DeepSeek%20Harness-black)](https://github.com/deepseek-ai/deepseek-harness)
+[![Maintainer](https://img.shields.io/badge/maintainer-Mosabbir%20Maruf-181717?logo=github)](https://github.com/mosabbir-maruf)
 
 ## Table of Contents
 
@@ -31,7 +32,8 @@
 - [Troubleshooting](#troubleshooting)
 - [Security Checklist](#security-checklist)
 - [Design Decisions](#design-decisions)
-- [Limitations and Future Hardening](#limitations-and-future-hardening)
+- [Quick Reference](#quick-reference)
+- [Maintainer](#maintainer)
 
 ---
 
@@ -68,39 +70,39 @@ The system has four major boundaries:
                 │ Mac / Admin│             │ Existing Reverse    │
                 │   Client   │             │ Proxy / Nginx       │
                 └─────┬──────┘             └──────────┬──────────┘
-                      │                                │
-                SSH tunnel                             ▼
+                      │                               │
+                SSH tunnel                            ▼
                       │                      Existing application stack
                       ▼
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                            Ubuntu VPS / Host                               │
 │                                                                            │
-│  ┌──────────────────────┐       ┌───────────────────────────────────────┐ │
-│  │ ~/projects/          │       │ ~/ai-workstation/                     │ │
-│  │                      │       │                                       │ │
-│  │ project-a/           │       │ scripts/ai                            │ │
-│  │ project-b/           │       │ docker/                               │ │
-│  │ active-project/ ─────┼──────►│ runtime/                              │ │
-│  │                      │       │ secrets/                              │ │
-│  └──────────┬───────────┘       │ .env                                  │ │
-│             │                   └────────────────┬──────────────────────┘ │
-│             │                                    │                        │
-│             │ /workspace mount                  │ Docker Compose         │
-│             ▼                                    ▼                        │
-│  ┌─────────────────────────────────────────────────────────────────────┐ │
-│  │                        ai-workstation                               │ │
-│  │                                                                     │ │
-│  │  User: sandbox (UID 1001)                                           │ │
-│  │  Node.js + Git + SSH client + ripgrep + fd + procps + tini         │ │
-│  │                                                                     │ │
-│  │  /workspace                  ← active project only                  │ │
-│  │  /home/sandbox/.dsh          ← persistent DSH state                 │ │
-│  │  /home/sandbox/.npm-global   ← persistent DSH installation          │ │
-│  │                                                                     │ │
-│  │  DSH:     127.0.0.1:4090                                          │ │
-│  │  Bridge:  0.0.0.0:4091                                            │ │
-│  │  App:     project-selected development port(s)                     │ │
-│  └─────────────────────────────────────────────────────────────────────┘ │
+│  ┌──────────────────────┐       ┌───────────────────────────────────────┐  │
+│  │ ~/projects/          │       │ ~/ai-workstation/                     │  │
+│  │                      │       │                                       │  │
+│  │ project-a/           │       │ scripts/ai                            │  │
+│  │ project-b/           │       │ docker/                               │  │
+│  │ active-project/ ─────┼──────►│ runtime/                              │  │
+│  │                      │       │ secrets/                              │  │
+│  └──────────┬───────────┘       │ .env                                  │  │
+│             │                   └────────────────┬──────────────────────┘  │
+│             │                                    │                         │
+│             │ /workspace mount                   │ Docker Compose          │
+│             ▼                                    ▼                         │
+│  ┌──────────────────────────────────────────────────────────────────────┐  │
+│  │                            ai-workstation                            │  │
+│  │                                                                      │  │
+│  │  User: sandbox (UID 1001)                                            │  │
+│  │  Node.js + Git + SSH client + ripgrep + fd + procps + tini           │  │
+│  │                                                                      │  │
+│  │  /workspace                  ← active project only                   │  │
+│  │  /home/sandbox/.dsh          ← persistent DSH state                  │  │
+│  │  /home/sandbox/.npm-global   ← persistent DSH installation           │  │
+│  │                                                                      │  │
+│  │  DSH:     127.0.0.1:4090                                             │  │
+│  │  Bridge:  0.0.0.0:4091                                               │  │
+│  │  App:     project-selected development port(s)                       │  │
+│  └──────────────────────────────────────────────────────────────────────┘  │
 │                              ▲                                             │
 │                              │ Unix socket                                 │
 │                   ┌──────────┴───────────┐                                 │
@@ -1087,26 +1089,6 @@ The production VPS consumes a prebuilt ARM64 image instead of compiling the imag
 
 ---
 
-# Limitations and Future Hardening
-
-The current design intentionally avoids unnecessary complexity.
-
-Possible future improvements:
-
-- automatic encrypted/off-host DSH backups;
-- stronger transactional rollback around state imports;
-- refusing dependency cleanup while an app process is running;
-- broader automated CLI integration tests;
-- image signature/provenance verification;
-- stricter deployment pinning and rollback policy;
-- optional resource profiles for larger projects;
-- application health checks;
-- structured audit output.
-
-These are hardening opportunities, not requirements for normal operation.
-
----
-
 # Quick Reference
 
 ```text
@@ -1164,6 +1146,14 @@ STATE
   ai state export
   ai state import <archive>
 ```
+
+---
+
+## Maintainer
+
+Developed and maintained by [**Mosabbir Maruf**](https://github.com/mosabbir-maruf).
+
+[![GitHub Profile](https://img.shields.io/badge/GitHub-mosabbir--maruf-181717?style=flat&logo=github)](https://github.com/mosabbir-maruf)
 
 ---
 

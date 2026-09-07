@@ -144,12 +144,32 @@ cmd_use() {
     [[ -d "$path/.git" ]] ||
         die "Git project not found: $name"
 
-    docker rm -f ai-workstation >/dev/null 2>&1 || true
+    load_env
+
+    if [[ "${ACTIVE_PROJECT:-}" == "$name" ]]; then
+        echo "Already active: $name"
+        return 0
+    fi
+
+    local workstation_running=0
+
+    if docker ps --format '{{.Names}}' |
+       grep -qx ai-workstation; then
+        workstation_running=1
+    fi
 
     ACTIVE_PROJECT="$name"
     ACTIVE_PROJECT_PATH="$path"
 
     save_env
+
+    if [[ "$workstation_running" -eq 1 ]]; then
+        echo "Switching workstation workspace..."
+
+        compose up -d --force-recreate
+
+        cmd_harness_start
+    fi
 
     echo "Active project: $name"
     echo "Path: $path"

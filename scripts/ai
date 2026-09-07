@@ -6,6 +6,7 @@ ENV_FILE="$ROOT/.env"
 COMPOSE_FILE="$ROOT/docker/compose.yml"
 PROJECTS_DIR="$HOME/projects"
 RUNTIME_DIR="$ROOT/runtime"
+GITHUB_LIB="$ROOT/scripts/lib/github.sh"
 
 mkdir -p "$PROJECTS_DIR" "$RUNTIME_DIR"
 
@@ -23,14 +24,34 @@ load_env() {
 }
 
 save_env() {
+    local image dsh_version workstation_root
+    local github_app_id github_installation_id github_broker_gid github_broker_socket
+
+    image="$(grep '^IMAGE=' "$ENV_FILE" 2>/dev/null | cut -d= -f2- || true)"
+    dsh_version="$(grep '^DSH_VERSION=' "$ENV_FILE" 2>/dev/null | cut -d= -f2- || true)"
+    workstation_root="$(grep '^AI_WORKSTATION_ROOT=' "$ENV_FILE" 2>/dev/null | cut -d= -f2- || true)"
+
+    github_app_id="$(grep '^GITHUB_APP_ID=' "$ENV_FILE" 2>/dev/null | cut -d= -f2- || true)"
+    github_installation_id="$(grep '^GITHUB_INSTALLATION_ID=' "$ENV_FILE" 2>/dev/null | cut -d= -f2- || true)"
+    github_broker_gid="$(grep '^GITHUB_BROKER_GID=' "$ENV_FILE" 2>/dev/null | cut -d= -f2- || true)"
+    github_broker_socket="$(grep '^GITHUB_BROKER_SOCKET=' "$ENV_FILE" 2>/dev/null | cut -d= -f2- || true)"
+
+    image="${image:-${IMAGE:-ghcr.io/mosabbir-maruf/ai-workstation:latest}}"
+    dsh_version="${dsh_version:-${DSH_VERSION:-0.1.2-rc.1}}"
+    workstation_root="${workstation_root:-${AI_WORKSTATION_ROOT:-$ROOT}}"
+
     cat > "$ENV_FILE" <<EOF2
-IMAGE=${IMAGE:-ghcr.io/mosabbir-maruf/ai-workstation:latest}
-DSH_VERSION=${DSH_VERSION:-0.1.2-rc.1}
+IMAGE=$image
+DSH_VERSION=$dsh_version
 ACTIVE_PROJECT=${ACTIVE_PROJECT:-}
 ACTIVE_PROJECT_PATH=${ACTIVE_PROJECT_PATH:-}
+AI_WORKSTATION_ROOT=$workstation_root
+GITHUB_APP_ID=$github_app_id
+GITHUB_INSTALLATION_ID=$github_installation_id
+GITHUB_BROKER_SOCKET=$github_broker_socket
+GITHUB_BROKER_GID=$github_broker_gid
 EOF2
 }
-
 compose() {
     load_env
     docker compose \
@@ -113,7 +134,7 @@ cmd_use() {
     [[ -d "$path/.git" ]] ||
         die "Git project not found: $name"
 
-    compose down >/dev/null 2>&1 || true
+    docker rm -f ai-workstation >/dev/null 2>&1 || true
 
     ACTIVE_PROJECT="$name"
     ACTIVE_PROJECT_PATH="$path"
@@ -160,7 +181,6 @@ cmd_start() {
         "$RUNTIME_DIR/dsh" \
         "$RUNTIME_DIR/npm-global"
 
-    compose pull
     compose up -d
 
     echo "Workstation started."
@@ -229,7 +249,7 @@ cmd_dsh_update() {
 }
 
 cmd_dsh_version() {
-    docker exec ai-workstation dsh --version
+    docker exec ai-workstation         node /home/sandbox/.npm-global/node_modules/@deepseek-ai/dsh/lib/bin.js         --version
 }
 
 cmd_cache() {
@@ -333,6 +353,22 @@ cmd_state_import() {
     echo "State imported."
 }
 
+cmd_github() {
+    local action="${1:-}"
+
+    [[ -f "$GITHUB_LIB" ]] ||
+        die "GitHub module not found: $GITHUB_LIB"
+
+    case "$action" in
+        setup|status|test)
+            bash "$GITHUB_LIB" "$action"
+            ;;
+        *)
+            die "Usage: ai github {setup|status|test}"
+            ;;
+    esac
+}
+
 usage() {
     cat <<EOF2
 AI Workstation
@@ -366,6 +402,11 @@ Maintenance:
   ai update
   ai upgrade
   ai doctor
+
+GitHub:
+  ai github setup
+  ai github status
+  ai github test
 
 State:
   ai state export
@@ -412,6 +453,10 @@ case "${1:-}" in
     update) cmd_update ;;
     upgrade) cmd_upgrade ;;
     doctor) cmd_doctor ;;
+    github)
+        shift
+        cmd_github "$@"
+        ;;
     state)
         shift
         case "${1:-}" in

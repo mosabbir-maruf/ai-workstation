@@ -1,9 +1,23 @@
+# Local environment
 .env
 .env.*
 !.env.example
+
+# Secrets
+secrets/
 *.secret
 *.key
 *.pem
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+
+# Runtime / generated state
 state/
 runtime/
 workspace/
+
+# Local backups
+*.backup

@@ -3,6 +3,8 @@ services:
     image: ${IMAGE:-ghcr.io/mosabbir-maruf/ai-workstation:latest}
     container_name: ai-workstation
     restart: unless-stopped
+    group_add:
+      - "${GITHUB_BROKER_GID:-987}"
 
     working_dir: /workspace
 
@@ -14,9 +16,9 @@ services:
 
     volumes:
       - ${ACTIVE_PROJECT_PATH:-/tmp}:/workspace
-      - ../runtime/npm-global:/home/sandbox/.npm-global
-      - ../runtime/dsh:/home/sandbox/.dsh
-
+      - ${AI_WORKSTATION_ROOT:-/home/mosabbir/ai-workstation}/runtime/npm-global:/home/sandbox/.npm-global
+      - ${AI_WORKSTATION_ROOT:-/home/mosabbir/ai-workstation}/runtime/dsh:/home/sandbox/.dsh
+      - ${AI_WORKSTATION_ROOT:-/home/mosabbir/ai-workstation}/runtime/github-broker:/run/ai-github-broker
     ports:
       - "127.0.0.1:3000:3000"
       - "127.0.0.1:3001:3001"
@@ -41,7 +43,7 @@ services:
     entrypoint:
       - /usr/bin/tini
       - --
-      - /workspace/.ai-entrypoint.sh
+      - /usr/local/bin/entrypoint.sh
 
     command:
       - bash
@@ -49,12 +51,14 @@ services:
       - |
         set -e
 
-        node \
+        node --expose-internals \
           /home/sandbox/.npm-global/node_modules/@deepseek-ai/dsh/lib/bin.js \
           web \
           --host 127.0.0.1 \
           --port 4090 \
           --no-open &
+
+        dsh_pid=$!
 
         node -e '
           const net = require("net");
@@ -72,4 +76,9 @@ services:
           server.listen(4091, "0.0.0.0");
         ' &
 
-        wait
+        bridge_pid=$!
+
+        trap 'kill "$$dsh_pid" "$$bridge_pid" 2>/dev/null || true' EXIT INT TERM
+
+        wait -n "$$dsh_pid" "$$bridge_pid"
+        exit $?

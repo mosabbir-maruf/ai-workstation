@@ -1,0 +1,75 @@
+services:
+  workstation:
+    image: ${IMAGE:-ghcr.io/mosabbir-maruf/ai-workstation:latest}
+    container_name: ai-workstation
+    restart: unless-stopped
+
+    working_dir: /workspace
+
+    environment:
+      HOME: /home/sandbox
+      NPM_CONFIG_PREFIX: /home/sandbox/.npm-global
+      PATH: /home/sandbox/.npm-global/bin:/usr/local/bin:/usr/bin:/bin
+      DSH_VERSION: ${DSH_VERSION:-0.1.2-rc.1}
+
+    volumes:
+      - ${ACTIVE_PROJECT_PATH:-/tmp}:/workspace
+      - ../runtime/npm-global:/home/sandbox/.npm-global
+      - ../runtime/dsh:/home/sandbox/.dsh
+
+    ports:
+      - "127.0.0.1:3000:3000"
+      - "127.0.0.1:3001:3001"
+      - "127.0.0.1:8000:8000"
+      - "127.0.0.1:4090:4091"
+
+    cap_drop:
+      - ALL
+
+    security_opt:
+      - no-new-privileges:true
+
+    privileged: false
+
+    mem_limit: 512m
+    cpus: "1.5"
+    pids_limit: 256
+
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=128m
+
+    entrypoint:
+      - /usr/bin/tini
+      - --
+      - /workspace/.ai-entrypoint.sh
+
+    command:
+      - bash
+      - -lc
+      - |
+        set -e
+
+        node \
+          /home/sandbox/.npm-global/node_modules/@deepseek-ai/dsh/lib/bin.js \
+          web \
+          --host 127.0.0.1 \
+          --port 4090 \
+          --no-open &
+
+        node -e '
+          const net = require("net");
+
+          const server = net.createServer((socket) => {
+            const target = net.connect(4090, "127.0.0.1", () => {
+              socket.pipe(target);
+              target.pipe(socket);
+            });
+
+            target.on("error", () => socket.destroy());
+            socket.on("error", () => target.destroy());
+          });
+
+          server.listen(4091, "0.0.0.0");
+        ' &
+
+        wait

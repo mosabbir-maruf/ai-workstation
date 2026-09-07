@@ -1,0 +1,430 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="${AI_WORKSTATION_ROOT:-$HOME/ai-workstation}"
+ENV_FILE="$ROOT/.env"
+COMPOSE_FILE="$ROOT/docker/compose.yml"
+PROJECTS_DIR="$HOME/projects"
+RUNTIME_DIR="$ROOT/runtime"
+
+mkdir -p "$PROJECTS_DIR" "$RUNTIME_DIR"
+
+die() {
+    echo "ERROR: $*" >&2
+    exit 1
+}
+
+load_env() {
+    [[ -f "$ENV_FILE" ]] || cp "$ROOT/.env.example" "$ENV_FILE"
+
+    set -a
+    source "$ENV_FILE"
+    set +a
+}
+
+save_env() {
+    cat > "$ENV_FILE" <<EOF2
+IMAGE=${IMAGE:-ghcr.io/mosabbir-maruf/ai-workstation:latest}
+DSH_VERSION=${DSH_VERSION:-0.1.2-rc.1}
+ACTIVE_PROJECT=${ACTIVE_PROJECT:-}
+ACTIVE_PROJECT_PATH=${ACTIVE_PROJECT_PATH:-}
+EOF2
+}
+
+compose() {
+    load_env
+    docker compose \
+        --project-directory "$ROOT" \
+        -f "$COMPOSE_FILE" \
+        "$@"
+}
+
+require_active() {
+    load_env
+    [[ -n "${ACTIVE_PROJECT:-}" ]] ||
+        die "No active project. Use: ai use <project>"
+
+    [[ -d "${ACTIVE_PROJECT_PATH:-}" ]] ||
+        die "Active project path does not exist."
+}
+
+cmd_add() {
+    local url="${1:-}"
+    [[ -n "$url" ]] || die "Usage: ai add <github-url>"
+
+    local name
+    name="$(basename "${url%.git}")"
+
+    [[ ! -e "$PROJECTS_DIR/$name" ]] ||
+        die "Project already exists: $name"
+
+    git clone "$url" "$PROJECTS_DIR/$name"
+
+    echo "Project added: $name"
+    echo "Run: ai use $name"
+}
+
+cmd_remove() {
+    local name="${1:-}"
+    [[ -n "$name" ]] || die "Usage: ai remove <project>"
+
+    load_env
+
+    if [[ "${ACTIVE_PROJECT:-}" == "$name" ]]; then
+        compose down >/dev/null 2>&1 || true
+        ACTIVE_PROJECT=""
+        ACTIVE_PROJECT_PATH=""
+        save_env
+    fi
+
+    rm -rf -- "$PROJECTS_DIR/$name"
+    echo "Removed: $name"
+}
+
+cmd_list() {
+    echo "Projects:"
+    shopt -s nullglob
+
+    local found=0
+
+    for dir in "$PROJECTS_DIR"/*; do
+        if [[ -d "$dir/.git" ]]; then
+            found=1
+
+            load_env
+
+            if [[ "${ACTIVE_PROJECT:-}" == "$(basename "$dir")" ]]; then
+                echo "  * $(basename "$dir")"
+            else
+                echo "    $(basename "$dir")"
+            fi
+        fi
+    done
+
+    [[ "$found" -eq 1 ]] || echo "  (none)"
+}
+
+cmd_use() {
+    local name="${1:-}"
+    [[ -n "$name" ]] || die "Usage: ai use <project>"
+
+    local path="$PROJECTS_DIR/$name"
+
+    [[ -d "$path/.git" ]] ||
+        die "Git project not found: $name"
+
+    compose down >/dev/null 2>&1 || true
+
+    ACTIVE_PROJECT="$name"
+    ACTIVE_PROJECT_PATH="$path"
+
+    save_env
+
+    echo "Active project: $name"
+    echo "Path: $path"
+}
+
+cmd_pull() {
+    require_active
+    cd "$ACTIVE_PROJECT_PATH"
+    git pull --ff-only
+}
+
+cmd_push() {
+    local message="${1:-}"
+    [[ -n "$message" ]] || die 'Usage: ai push "commit message"'
+
+    require_active
+
+    cd "$ACTIVE_PROJECT_PATH"
+
+    git add -A
+
+    if git diff --cached --quiet; then
+        echo "Nothing to commit."
+        return
+    fi
+
+    git commit -m "$message"
+    git push
+}
+
+cmd_start() {
+    require_active
+
+    mkdir -p \
+        "$RUNTIME_DIR/dsh" \
+        "$RUNTIME_DIR/npm-global"
+
+    chmod 700 \
+        "$RUNTIME_DIR/dsh" \
+        "$RUNTIME_DIR/npm-global"
+
+    compose pull
+    compose up -d
+
+    echo "Workstation started."
+}
+
+cmd_stop() {
+    compose down
+    echo "Workstation stopped."
+}
+
+cmd_restart() {
+    compose restart
+}
+
+cmd_status() {
+    load_env
+
+    echo "=== AI Workstation ==="
+    echo "Active project: ${ACTIVE_PROJECT:-none}"
+    echo "Project path: ${ACTIVE_PROJECT_PATH:-none}"
+    echo
+
+    compose ps
+}
+
+cmd_logs() {
+    compose logs -f --tail=100
+}
+
+cmd_shell() {
+    require_active
+    docker exec -it ai-workstation bash
+}
+
+cmd_preview() {
+    echo "Mac SSH tunnel:"
+    echo
+    echo "ssh -L 3000:127.0.0.1:3000 \\"
+    echo "    -L 3001:127.0.0.1:3001 \\"
+    echo "    -L 8000:127.0.0.1:8000 \\"
+    echo "    -L 4090:127.0.0.1:4090 \\"
+    echo "    mosabbir-cloud"
+    echo
+    echo "Client : http://127.0.0.1:3000"
+    echo "Admin  : http://127.0.0.1:3001"
+    echo "Backend: http://127.0.0.1:8000"
+    echo "DSH    : http://127.0.0.1:4090"
+}
+
+cmd_dsh_update() {
+    require_active
+
+    local version="${1:-latest}"
+
+    if [[ "$version" == "latest" ]]; then
+        docker exec ai-workstation \
+            npm install --prefix /home/sandbox/.npm-global \
+            @deepseek-ai/dsh@latest
+    else
+        docker exec ai-workstation \
+            npm install --prefix /home/sandbox/.npm-global \
+            "@deepseek-ai/dsh@$version"
+    fi
+
+    echo "DSH updated."
+}
+
+cmd_dsh_version() {
+    docker exec ai-workstation dsh --version
+}
+
+cmd_cache() {
+    echo "=== Docker ==="
+    docker system df
+
+    echo
+    echo "=== AI runtime ==="
+    du -sh "$RUNTIME_DIR" 2>/dev/null || true
+
+    echo
+    echo "=== Project node_modules ==="
+    find "$PROJECTS_DIR" \
+        -type d \
+        -name node_modules \
+        -prune \
+        -exec du -sh {} \; 2>/dev/null || true
+}
+
+cmd_cache_clear() {
+    docker builder prune -af
+
+    if docker ps --format '{{.Names}}' |
+        grep -qx ai-workstation; then
+        docker exec ai-workstation npm cache clean --force || true
+    fi
+}
+
+cmd_update() {
+    git -C "$ROOT" pull --ff-only
+    compose pull
+}
+
+cmd_upgrade() {
+    cmd_update
+    compose up -d
+}
+
+cmd_doctor() {
+    echo "=== AI Workstation Doctor ==="
+
+    command -v docker >/dev/null ||
+        die "Docker not installed."
+
+    docker info >/dev/null ||
+        die "Docker daemon unavailable."
+
+    [[ -f "$ENV_FILE" ]] ||
+        die ".env missing."
+
+    load_env
+
+    echo "Docker: OK"
+    echo "Config: OK"
+
+    if [[ -n "${ACTIVE_PROJECT_PATH:-}" ]] &&
+       [[ -d "${ACTIVE_PROJECT_PATH:-}" ]]; then
+        echo "Project: OK"
+        echo "Project: ${ACTIVE_PROJECT:-unknown}"
+    else
+        echo "Project: none selected"
+    fi
+
+    if docker ps --format '{{.Names}}' |
+       grep -qx ai-workstation; then
+        echo "Container: running"
+    else
+        echo "Container: stopped"
+    fi
+
+    echo
+    echo "Doctor complete."
+}
+
+cmd_state_export() {
+    mkdir -p "$HOME/ai-state-backups"
+
+    local output
+    output="$HOME/ai-state-backups/ai-state-$(date +%Y%m%d-%H%M%S).tar.gz"
+
+    tar -czf "$output" \
+        -C "$ROOT" \
+        runtime \
+        .env
+
+    chmod 600 "$output"
+
+    echo "State exported:"
+    echo "$output"
+}
+
+cmd_state_import() {
+    local archive="${1:-}"
+    [[ -f "$archive" ]] ||
+        die "Usage: ai state import <archive>"
+
+    compose down >/dev/null 2>&1 || true
+
+    tar -xzf "$archive" -C "$ROOT"
+
+    echo "State imported."
+}
+
+usage() {
+    cat <<EOF2
+AI Workstation
+
+Projects:
+  ai add <github-url>
+  ai remove <project>
+  ai list
+  ai use <project>
+
+Git:
+  ai pull
+  ai push "commit message"
+
+Runtime:
+  ai start
+  ai stop
+  ai restart
+  ai status
+  ai logs
+  ai shell
+  ai preview
+
+DSH:
+  ai dsh update [version]
+  ai dsh version
+
+Maintenance:
+  ai cache
+  ai cache clear
+  ai update
+  ai upgrade
+  ai doctor
+
+State:
+  ai state export
+  ai state import <archive>
+EOF2
+}
+
+case "${1:-}" in
+    add) shift; cmd_add "$@" ;;
+    remove) shift; cmd_remove "$@" ;;
+    list) cmd_list ;;
+    use) shift; cmd_use "$@" ;;
+    pull) cmd_pull ;;
+    push) shift; cmd_push "$@" ;;
+    start) cmd_start ;;
+    stop) cmd_stop ;;
+    restart) cmd_restart ;;
+    status) cmd_status ;;
+    logs) cmd_logs ;;
+    shell) cmd_shell ;;
+    preview) cmd_preview ;;
+    dsh)
+        shift
+        case "${1:-}" in
+            update)
+                shift
+                cmd_dsh_update "$@"
+                ;;
+            version)
+                cmd_dsh_version
+                ;;
+            *)
+                die "Usage: ai dsh {update|version}"
+                ;;
+        esac
+        ;;
+    cache)
+        if [[ "${2:-}" == "clear" ]]; then
+            cmd_cache_clear
+        else
+            cmd_cache
+        fi
+        ;;
+    update) cmd_update ;;
+    upgrade) cmd_upgrade ;;
+    doctor) cmd_doctor ;;
+    state)
+        shift
+        case "${1:-}" in
+            export) cmd_state_export ;;
+            import)
+                shift
+                cmd_state_import "$@"
+                ;;
+            *)
+                die "Usage: ai state {export|import}"
+                ;;
+        esac
+        ;;
+    help|--help|-h|"") usage ;;
+    *) die "Unknown command: $1" ;;
+esac

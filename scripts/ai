@@ -1066,15 +1066,11 @@ EOF
 
 cmd_state_import() {
     local archive="${1:-}"
-    local staging
-    local member
-    local safe=1
+    local staging member safe=1
+    local backup_env backup_dsh
 
-    [[ -f "$archive" ]] ||
-        die "Usage: ai state import <archive>"
-
-    command -v tar >/dev/null ||
-        die "tar is required."
+    [[ -f "$archive" ]] || die "Usage: ai state import <archive>"
+    command -v tar >/dev/null || die "tar is required."
 
     staging="$(mktemp -d)"
 
@@ -1082,6 +1078,8 @@ cmd_state_import() {
         rm -rf "$staging"
     }
     trap cleanup_state_import RETURN
+
+    echo "Validating state archive..."
 
     tar -tzf "$archive" >/dev/null 2>&1 ||
         die "Invalid or corrupted state archive."
@@ -1095,12 +1093,27 @@ cmd_state_import() {
                 echo "Unexpected archive entry: $member" >&2
                 ;;
         esac
+
+        case "$member" in
+            /*|../*|*/../*|*/..|..)
+                safe=0
+                echo "Unsafe archive path: $member" >&2
+                ;;
+        esac
     done < <(tar -tzf "$archive")
 
     [[ "$safe" -eq 1 ]] ||
-        die "State archive contains unexpected files."
+        die "State archive contains unsafe or unexpected files."
 
-    tar -xzf "$archive" -C "$staging"
+    echo "✓ Archive entries validated"
+
+    echo "Extracting to temporary staging area..."
+
+    tar \
+        --no-same-owner \
+        --no-same-permissions \
+        -xzf "$archive" \
+        -C "$staging"
 
     [[ -f "$staging/manifest" ]] ||
         die "Invalid state archive: manifest missing."
@@ -1111,10 +1124,60 @@ cmd_state_import() {
     [[ -d "$staging/dsh" ]] ||
         die "Invalid state archive: DSH state missing."
 
+
+    echo "✓ Archive structure validated"
+
+    echo
+    echo "Checking staged DSH state..."
+
+    while IFS= read -r link; do
+        target="$(readlink "$link")"
+
+        case "$target" in
+            /*)
+                case "$target" in
+                    /home/sandbox/.npm-global/*)
+                        ;;
+                    *)
+                        echo "Unsafe absolute symlink target: $link -> $target" >&2
+                        safe=0
+                        ;;
+                esac
+                ;;
+            ../*|*/../*|..)
+                echo "Unsafe relative symlink target: $link -> $target" >&2
+                safe=0
+                ;;
+        esac
+    done < <(find "$staging/dsh" -type l -print)
+
+    [[ "$safe" -eq 1 ]] ||
+        die "State archive contains unsafe symlinks."
+
+    if find "$staging/dsh" -type f -links +1 -print -quit 2>/dev/null | grep -q .; then
+        die "State archive contains hard-linked files."
+    fi
+
+    echo "✓ DSH symlinks validated"
+
+    echo
+    echo "Checking current workstation state..."
+
+    backup_env="$(mktemp)"
+    backup_dsh="$(mktemp -d)"
+
+    cp "$ENV_FILE" "$backup_env"
+    cp -a "$RUNTIME_DIR/dsh/." "$backup_dsh/"
+
+    echo "✓ Current state backed up"
+
+    echo
     echo "Stopping workstation..."
+
     compose down >/dev/null 2>&1 || true
 
     cp "$staging/.env" "$ENV_FILE"
+    chmod 600 "$ENV_FILE"
 
     rm -rf "$RUNTIME_DIR/dsh"
     mkdir -p "$RUNTIME_DIR/dsh"
@@ -1126,7 +1189,11 @@ cmd_state_import() {
     chmod 700 "$RUNTIME_DIR/dsh/storages" 2>/dev/null || true
     chmod 600 "$RUNTIME_DIR/dsh/storages/workspace.json" 2>/dev/null || true
 
-    echo "State imported."
+    rm -f "$backup_env"
+    rm -rf "$backup_dsh"
+
+    echo
+    echo "State imported successfully."
     echo "Run: ./scripts/ai start"
 }
 

@@ -180,24 +180,71 @@ cmd_push() {
     git push
 }
 
+HARNESS_RUNTIME_DIR="$RUNTIME_DIR/harness"
+
+harness_exec() {
+    docker exec ai-workstation \
+        /usr/local/bin/harness.sh "$@"
+}
+
+cmd_harness_start() {
+    docker ps --format '{{.Names}}' |
+        grep -qx ai-workstation ||
+        die "Workstation is not running."
+
+    harness_exec start
+}
+
+cmd_harness_stop() {
+    docker ps --format '{{.Names}}' |
+        grep -qx ai-workstation ||
+        return 0
+
+    harness_exec stop
+}
+
+cmd_harness_restart() {
+    docker ps --format '{{.Names}}' |
+        grep -qx ai-workstation ||
+        die "Workstation is not running."
+
+    harness_exec restart
+}
+
+cmd_harness_status() {
+    docker ps --format '{{.Names}}' |
+        grep -qx ai-workstation ||
+        {
+            echo "Harness: stopped (workstation is not running)"
+            return 0
+        }
+
+    harness_exec status || true
+}
+
 cmd_start() {
     require_active
 
     mkdir -p \
         "$RUNTIME_DIR/dsh" \
-        "$RUNTIME_DIR/npm-global"
+        "$RUNTIME_DIR/npm-global" \
+        "$HARNESS_RUNTIME_DIR"
 
     chmod 700 \
         "$RUNTIME_DIR/dsh" \
-        "$RUNTIME_DIR/npm-global"
+        "$RUNTIME_DIR/npm-global" \
+        "$HARNESS_RUNTIME_DIR"
 
     compose up -d
+
+    cmd_harness_start
 
     echo "Workstation started."
 }
 
 cmd_stop() {
     cmd_app_stop || true
+    cmd_harness_stop || true
     compose down
     rm -f "$APP_PID_FILE"
     echo "Workstation stopped."
@@ -205,6 +252,7 @@ cmd_stop() {
 
 cmd_restart() {
     compose restart
+    cmd_harness_start
 }
 
 APP_RUNTIME_DIR="$RUNTIME_DIR/app"
@@ -655,6 +703,26 @@ case "${1:-}" in
     start) cmd_start ;;
     stop) cmd_stop ;;
     restart) cmd_restart ;;
+    harness)
+        shift
+        case "${1:-}" in
+            start)
+                cmd_harness_start
+                ;;
+            stop)
+                cmd_harness_stop
+                ;;
+            restart)
+                cmd_harness_restart
+                ;;
+            status)
+                cmd_harness_status
+                ;;
+            *)
+                die "Usage: ai harness {start|stop|restart|status}"
+                ;;
+        esac
+        ;;
     status) cmd_status ;;
     logs) cmd_logs ;;
     shell) cmd_shell ;;

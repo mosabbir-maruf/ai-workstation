@@ -3,6 +3,7 @@ services:
     image: ${IMAGE:-ghcr.io/mosabbir-maruf/ai-workstation:latest}
     container_name: ai-workstation
     restart: unless-stopped
+
     group_add:
       - "${GITHUB_BROKER_GID:-987}"
 
@@ -20,6 +21,8 @@ services:
       - ${AI_WORKSTATION_ROOT:-/home/mosabbir/ai-workstation}/runtime/dsh:/home/sandbox/.dsh
       - ${AI_WORKSTATION_ROOT:-/home/mosabbir/ai-workstation}/runtime/app:/run/ai-workstation/app
       - ${AI_WORKSTATION_ROOT:-/home/mosabbir/ai-workstation}/runtime/github-broker:/run/ai-github-broker
+      - ${AI_WORKSTATION_ROOT:-/home/mosabbir/ai-workstation}/runtime/harness:/run/ai-workstation/harness
+
     ports:
       - "127.0.0.1:3000:3000"
       - "127.0.0.1:3001:3001"
@@ -47,39 +50,5 @@ services:
       - /usr/local/bin/entrypoint.sh
 
     command:
-      - bash
-      - -lc
-      - |
-        set -e
-
-        node --expose-internals \
-          /home/sandbox/.npm-global/node_modules/@deepseek-ai/dsh/lib/bin.js \
-          web \
-          --host 127.0.0.1 \
-          --port 4090 \
-          --no-open &
-
-        dsh_pid=$!
-
-        node -e '
-          const net = require("net");
-
-          const server = net.createServer((socket) => {
-            const target = net.connect(4090, "127.0.0.1", () => {
-              socket.pipe(target);
-              target.pipe(socket);
-            });
-
-            target.on("error", () => socket.destroy());
-            socket.on("error", () => target.destroy());
-          });
-
-          server.listen(4091, "0.0.0.0");
-        ' &
-
-        bridge_pid=$!
-
-        trap 'kill "$$dsh_pid" "$$bridge_pid" 2>/dev/null || true' EXIT INT TERM
-
-        wait -n "$$dsh_pid" "$$bridge_pid"
-        exit $?
+      - sleep
+      - infinity

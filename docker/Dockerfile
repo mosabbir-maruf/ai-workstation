@@ -1,9 +1,9 @@
 FROM node:22-bookworm-slim
 
-ENV DEBIAN_FRONTEND=noninteractive
-ENV HOME=/home/sandbox
-ENV NPM_CONFIG_PREFIX=/home/sandbox/.npm-global
-ENV PATH=/home/sandbox/.npm-global/bin:/usr/local/bin:/usr/local/sbin:/usr/sbin:/sbin:/usr/bin:/bin
+ENV DEBIAN_FRONTEND=noninteractive \
+    HOME=/home/sandbox \
+    NPM_CONFIG_PREFIX=/home/sandbox/.npm-global \
+    PATH=/home/sandbox/.npm-global/bin:/usr/local/bin:/usr/local/sbin:/usr/sbin:/sbin:/usr/bin:/bin
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -32,16 +32,25 @@ RUN mkdir -p \
         /home/sandbox \
         /workspace
 
+COPY --chown=sandbox:sandbox docker/entrypoint.sh \
+    /usr/local/bin/entrypoint.sh
+
+COPY --chown=sandbox:sandbox docker/app-runner.sh \
+    /usr/local/bin/app-runner.sh
+
+COPY --chown=sandbox:sandbox docker/harness.sh \
+    /usr/local/bin/harness.sh
+
+COPY --chown=sandbox:sandbox docker/github-app-credential-helper \
+    /usr/local/bin/github-app-credential-helper
+
+RUN chmod 0755 \
+    /usr/local/bin/entrypoint.sh \
+    /usr/local/bin/app-runner.sh \
+    /usr/local/bin/harness.sh \
+    /usr/local/bin/github-app-credential-helper
+
 WORKDIR /workspace
-
-USER sandbox
-
-
-COPY --chown=sandbox:sandbox docker/entrypoint.sh /usr/local/bin/entrypoint.sh
-COPY --chown=sandbox:sandbox docker/app-runner.sh /usr/local/bin/app-runner.sh
-COPY --chown=sandbox:sandbox docker/github-app-credential-helper /usr/local/bin/github-app-credential-helper
-
-RUN chmod +x /usr/local/bin/app-runner.sh /usr/local/bin/github-app-credential-helper
 
 USER sandbox
 

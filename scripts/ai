@@ -1060,11 +1060,15 @@ cmd_doctor() {
         check_warn "GitHub broker socket unavailable"
     fi
 
-    if [[ -n "$container_id" ]] &&
-       docker exec "$container_id" test -x /usr/local/bin/github-app-credential-helper; then
-        check_ok "GitHub credential helper installed"
+    if [[ -n "$container_id" ]]; then
+        if docker exec "$container_id" \
+            test -x /usr/local/bin/github-app-credential-helper; then
+            check_ok "GitHub credential helper installed"
+        else
+            check_fail "GitHub credential helper missing"
+        fi
     else
-        check_fail "GitHub credential helper missing"
+        check_warn "GitHub credential helper check skipped: workstation stopped"
     fi
 
     echo

@@ -235,6 +235,10 @@ cmd_start() {
         "$RUNTIME_DIR/npm-global" \
         "$HARNESS_RUNTIME_DIR"
 
+    if [[ "$(stat -c '%u:%g' "$HARNESS_RUNTIME_DIR" 2>/dev/null || true)" != "1001:1001" ]]; then
+        sudo chown -R 1001:1001 "$HARNESS_RUNTIME_DIR"
+    fi
+
     compose up -d
 
     cmd_harness_start
@@ -449,7 +453,9 @@ cmd_app_restart() {
 cmd_app_status() {
     load_env
 
-    echo "=== Project ==="
+    if [[ "${APP_STATUS_QUIET:-0}" != "1" ]]; then
+        echo "=== Project ==="
+    fi
     echo "Project: ${ACTIVE_PROJECT:-none}"
 
     if app_running; then
@@ -477,7 +483,23 @@ cmd_status() {
     echo "Project path: ${ACTIVE_PROJECT_PATH:-none}"
     echo
 
-    compose ps
+    if docker ps --format '{{.Names}}' | grep -qx ai-workstation; then
+        echo "Workstation: running"
+    else
+        echo "Workstation: stopped"
+    fi
+
+    echo
+    if docker ps --format '{{.Names}}' | grep -qx ai-workstation; then
+        harness_exec status || true
+    else
+        echo "DSH:    stopped"
+        echo "Bridge: stopped"
+    fi
+
+    echo
+    echo "=== App ==="
+    APP_STATUS_QUIET=1 cmd_app_status || true
 }
 
 cmd_logs() {

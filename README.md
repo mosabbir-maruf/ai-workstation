@@ -96,8 +96,8 @@ This frontend is designed to run as an independent web application that communic
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/mosabbir-maruf/ai-workstation-frontend.git
-   cd ai-workstation-frontend
+   git clone https://github.com/mosabbir-maruf/ai-workstation.git
+   cd ai-workstation
    ```
 
 2. **Install dependencies**:
@@ -165,24 +165,24 @@ When the frontend and backend are hosted on different origins:
 
 1. **Pull the official container image**:
    ```bash
-   docker pull ghcr.io/mosabbir-maruf/ai-workstation-frontend:latest
+   docker pull ghcr.io/mosabbir-maruf/ai-workstation:latest
    ```
 
 2. **Run the container**:
    ```bash
    docker run -d \
-     --name ai-workstation-frontend \
+     --name ai-workstation \
      --restart unless-stopped \
      -p 3000:3000 \
      -e NEXT_PUBLIC_API_URL=https://api.workstation.yourdomain.com \
      -e NEXT_PUBLIC_SITE_URL=https://workstation.yourdomain.com \
-     ghcr.io/mosabbir-maruf/ai-workstation-frontend:latest
+     ghcr.io/mosabbir-maruf/ai-workstation:latest
    ```
 
 3. **Or build locally**:
    ```bash
-   docker build -t ai-workstation-frontend .
-   docker run -p 3000:3000 ai-workstation-frontend
+   docker build -t ai-workstation .
+   docker run -p 3000:3000 ai-workstation
    ```
 
 ### Option B: Node.js Standalone Server
@@ -206,7 +206,7 @@ The GitHub Actions workflow (`.github/workflows/ci.yml`) automates verification 
    - Next.js production build (`pnpm build`)
 2. **Docker Build Validation**: Verifies the container build on every pull request.
 3. **Publish to GitHub Container Registry (GHCR)**:
-   - Publishes to `ghcr.io/<owner>/ai-workstation-frontend` on pushes to `main` and release tags (`v*.*.*`).
+   - Publishes to `ghcr.io/<owner>/ai-workstation` on pushes to `main` and release tags (`v*.*.*`).
    - Image tags: `latest`, `sha-<short_sha>`, and semver tags.
 4. **Safe Image Retention Policy**:
    - Retains strictly **`latest`** and the **previous release image** for safe rollbacks.

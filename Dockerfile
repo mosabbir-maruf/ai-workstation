@@ -15,6 +15,9 @@ FROM base AS deps
 WORKDIR /app
 
 COPY package.json pnpm-lock.yaml* ./
+COPY source.config.ts ./
+COPY content ./content
+COPY lib ./lib
 RUN pnpm install --frozen-lockfile
 
 # --- Stage 3: Build application ---

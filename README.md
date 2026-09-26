@@ -238,4 +238,12 @@ pnpm start
 
 ## License
 
-[MIT](LICENSE)
+This project is licensed under the MIT License. See [LICENSE](https://github.com/mosabbir-maruf/ai-workstation/blob/main/LICENSE) for the full license text.
+
+---
+
+## Maintainer
+
+Developed and maintained by [**Mosabbir Maruf**](https://github.com/mosabbir-maruf).
+
+[![GitHub Profile](https://img.shields.io/badge/GitHub-mosabbir--maruf-181717?style=flat&logo=github)](https://github.com/mosabbir-maruf)

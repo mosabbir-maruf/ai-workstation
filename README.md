@@ -14,6 +14,7 @@
   <a href="https://github.com/mosabbir-maruf/ai-workstation/actions/workflows/ci.yml"><img src="https://github.com/mosabbir-maruf/ai-workstation/actions/workflows/ci.yml/badge.svg" alt="CI/CD Pipeline" /></a>
   <a href="https://github.com/mosabbir-maruf/ai-workstation/pkgs/container/ai-workstation"><img src="https://img.shields.io/badge/GHCR-ai--workstation-blue?logo=docker" alt="Docker Image" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT" /></a>
+  <a href="https://github.com/mosabbir-maruf"><img src="https://img.shields.io/badge/maintainer-Mosabbir%20Maruf-181717?logo=github" alt="Maintainer" /></a>
 </p>
 
 <p align="center">

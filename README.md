@@ -42,7 +42,7 @@ This frontend is designed to run as an independent web application that communic
                  ▼
 ┌─────────────────────────────────┐
 │    AI Workstation Backend/API   │ ◀── Separate CLI/daemon repository
-│    (VPS / Local Machine)        │     (https://github.com/mosabbir-maruf/ai-workstation)
+│    (VPS / Local Machine)        │     (https://github.com/mosabbir-maruf/ai-workstation-cli)
 └────────────────┬────────────────┘
                  │
                  ├── Docker Engine & Isolation Containers
@@ -88,7 +88,7 @@ This frontend is designed to run as an independent web application that communic
 - **Node.js**: `>= 20.0.0`
 - **Package Manager**: `pnpm >= 9.0.0`
 - **Docker** (optional): For containerized deployments
-- **Backend Service**: Running instance of [ai-workstation](https://github.com/mosabbir-maruf/ai-workstation)
+- **Backend Service**: Running instance of [ai-workstation-cli](https://github.com/mosabbir-maruf/ai-workstation-cli)
 
 ---
 

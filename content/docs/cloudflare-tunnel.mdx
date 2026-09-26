@@ -1,0 +1,201 @@
+---
+title: Cloudflare Tunnel
+description: Local-only port bindings, SSH port-forwarding, Cloudflare Zero Trust Anywhere URLs, automatic 0.0.0.0 host binding, and DSH loopback settings rules.
+---
+
+Development ports in AI Workstation are never exposed directly to the public internet. Operators connect either via **SSH port-forwarding** (default, zero public attack surface) or an opt-in **Cloudflare Zero Trust Tunnel** for browser access from anywhere.
+
+---
+
+## SSH Port Forwarding
+
+Fixed host loopback bindings in `docker/compose.yml`:
+
+```text
+127.0.0.1:3000 -> container:3000
+127.0.0.1:3001 -> container:3001
+127.0.0.1:5173 -> container:5173
+127.0.0.1:8080 -> container:8080
+127.0.0.1:8000 -> container:8000
+127.0.0.1:4090 -> container:4091 (DSH TCP bridge)
+```
+
+Run `ai preview` on the VPS to inspect the active container IP, auto-detected application listening port(s), and generated SSH tunnel command:
+
+```bash
+ai preview
+```
+
+Example output:
+
+```text
+Detected app port(s): 5173
+
+SSH tunnel command:
+
+ssh -N \
+  -L 5173:172.20.0.2:5173 \
+  -L 4090:172.20.0.2:4091 \
+  mosabbir-cloud
+
+URLs:
+  App : http://127.0.0.1:5173
+  DSH : http://127.0.0.1:4090
+```
+
+The container IP and app ports are runtime values and must not be hard-coded.
+
+---
+
+## Auto Host Binding
+
+`ai run` binds the project development server to `0.0.0.0` inside the container automatically so both SSH preview and Cloudflare Tunnel can reach it — no `package.json` edits required:
+
+- **Vite / Astro / SvelteKit / Nuxt / Angular**: automatically appends `--host 0.0.0.0`.
+- **Next.js**: automatically appends `-H 0.0.0.0`.
+- **Custom flags respected**: your own `--host`, `-H`, or `0.0.0.0` in the `dev` script always wins and is never overridden.
+- **Backend apps (Express / Nest / Fastify / Hono)**: no flag is injected; these bind all interfaces by default or respect the `HOST=0.0.0.0` environment variable exported by `docker/compose.yml`.
+- **Non-JS backends (Python / Go)**: bind `0.0.0.0` manually (`Flask --host=0.0.0.0`, `uvicorn --host 0.0.0.0`, `Django runserver 0.0.0.0:8000` plus `ALLOWED_HOSTS`).
+
+`ai run` prints the active mode at startup: `Bind: auto (--host 0.0.0.0)` or `Bind: project config`.
+
+---
+
+## Cloudflare Tunnel
+
+Cloudflare Tunnel is the opt-in path for using the active app and DSH from any device without running SSH from your client machine. Everything is managed in the Cloudflare Zero Trust dashboard — no CLI login, no certificate files, and no JSON credentials to copy.
+
+### Security Model
+
+- `cloudflared` runs on the **VPS host**, not inside the 512 MB workstation container, so it adds zero container memory or CPU overhead.
+- The origin is always local (`http://127.0.0.1:<port>`), eliminating extra network hops and decoupling ingress from changing container IPs.
+- One persistent QUIC connector serves all hostnames.
+- Development ports stay bound to `127.0.0.1`; Cloudflare is the only ingress, gated behind a **Cloudflare Access** policy.
+
+### Create Tunnel
+
+1. Navigate to **Cloudflare Dashboard -> Zero Trust -> Networks -> Tunnels -> Create tunnel** -> select **Cloudflared** -> name it (e.g. `ai-workstation`).
+2. On the **Install and run a connector** screen, select the VPS platform:
+   - **OS**: **Debian** (for Ubuntu/Debian VPS).
+   - **Architecture**: **64-bit** on `amd64` (`uname -m` shows `x86_64`), or **arm64-bit** on an ARM VPS.
+3. Copy the **connector token** (the `eyJh...` string) from the install command.
+4. In **Cloudflare Zero Trust -> Access**, add an application policy (e.g. Email OTP or Google SSO) for both hostnames. Do not skip this step: the dev server and DSH have no login of their own.
+
+### Install Connector
+
+```bash
+ai tunnel setup
+ai tunnel status
+```
+
+`ai tunnel setup` prompts for the connector token (stored at `secrets/cloudflared-token` with mode `600`), the App hostname, the DSH hostname, and the App local port (defaults to the detected listening port). It auto-installs `cloudflared` if missing (`amd64`/`arm64`), registers the systemd service, and writes `CLOUDFLARED_APP_HOSTNAME`, `CLOUDFLARED_DSH_HOSTNAME`, `CLOUDFLARED_APP_PORT`, `DSH_TRUSTED_HOSTS`, and `ALLOWED_HOSTS` into `.env`.
+
+### Public Hostnames
+
+In the tunnel -> **Public hostnames** -> **Add** (origin = VPS itself):
+
+| Field | App | DSH |
+|---|---|---|
+| Hostname | `app` | `dsh` |
+| Domain | your domain | your domain |
+| Path | empty | empty |
+| Service Type | `HTTP` | `HTTP` |
+| URL | `127.0.0.1:<app-port>` (e.g. `127.0.0.1:5173`) | `127.0.0.1:4090` |
+
+Leave HTTP Host Header empty, Chunked Encoding Off, and Enforce Access JWT validation Off (the edge Access policy already gates traffic).
+
+Resulting URLs:
+
+```text
+App : https://app.example.com
+DSH : https://dsh.example.com
+```
+
+### Multi-App Routing
+
+The workstation runs one active project at a time. You can configure one public hostname per project pointing at that project's dev port (no dashboard edits when switching):
+
+```text
+portfolio.example.com -> http://127.0.0.1:5173
+paradinha.example.com -> http://127.0.0.1:3000
+dsh.example.com       -> http://127.0.0.1:4090
+```
+
+Inactive projects return `502` until you run `ai use <project>` and `ai run`.
+
+---
+
+## Loopback Gate
+
+DSH's Settings pages (**Models**, **Plugins**, **Agent presets**) load **only** on a loopback address (`127.x`, `localhost`, `[::1]`). On any non-loopback address — tunnel hostname, LAN IP, or reverse proxy — the browser client itself refuses (`Loading the provider directory failed: settings are unavailable in this browser`).
+
+This is an upstream client-side gate in DSH:
+- **What works from anywhere**: chat, sessions, workspaces, and using configured model providers.
+- **What requires loopback or direct file edit**: entering or rotating LLM provider API keys.
+
+### Key Entry Methods
+
+1. **Via SSH Tunnel (One Time)**:
+   Run `ssh -N -L 4090:<container-ip>:4091 <vps>` (using the container IP and token from `ai preview`), open `http://127.0.0.1:4090` -> **Settings -> Models -> Apply**. Keys persist server-side in `runtime/dsh/`.
+2. **Direct File / Console Edit (`runtime/dsh/settings.yaml`)**:
+   Keys live in `~/ai-workstation/runtime/dsh/settings.yaml` on the VPS (or via the **DSH Model Keys** tab in the Workstation Console) and are hot-reloaded without restarting the container.
+
+---
+
+## Port Sync & Tokens
+
+`ai preview` auto-detects the listening app port and prints the Anywhere URLs on every invocation, including a ready-to-open `DSH open:` URL containing DSH's startup login token:
+
+```text
+Anywhere URLs:
+  App : https://app.example.com
+  DSH : https://dsh.example.com
+  DSH open: https://dsh.example.com/?token=...
+```
+
+If the detected app port changes, `ai preview` automatically runs `ai tunnel sync <port>` and prints the exact Cloudflare dashboard hostname update needed.
+
+### Tunnel Commands
+
+```bash
+ai tunnel setup
+ai tunnel sync [port]
+ai tunnel status
+ai tunnel start
+ai tunnel stop
+ai tunnel logs
+```
+
+---
+
+## Allowed Hosts
+
+Tunnels change the HTTP `Host` header. `ai tunnel setup` stores the app hostname in `ALLOWED_HOSTS`, which `docker/compose.yml` passes into the container:
+
+- **Vite (`vite.config.js`)**:
+  ```js
+  allowedHosts: [
+    "localhost",
+    "127.0.0.1",
+    ...(process.env.ALLOWED_HOSTS ?? "")
+      .split(",")
+      .map((h) => h.trim())
+      .filter(Boolean),
+  ]
+  ```
+- **Next.js**: Configure `experimental.allowedDevOrigins` from `process.env.ALLOWED_HOSTS`.
+- **Multiple projects**: Use a comma-separated list in `.env`, e.g. `ALLOWED_HOSTS=app.example.com,paradinha.example.com`.
+
+---
+
+## Tunnel Troubleshooting
+
+```bash
+ai tunnel status
+sudo journalctl -u cloudflared -n 50
+ai preview
+```
+
+- **Cloudflare error 1033 / 502**: Connector stopped or wrong origin port (compare `ai preview` port with the Cloudflare dashboard route).
+- **DSH page loads but `/api/*` returns `forbidden`**: Ensure `DSH_TRUSTED_HOSTS=<dsh-host>` is set in `~/ai-workstation/.env` and recreate the container (`ai stop && ai start`).
+- **App 403 Invalid Host**: Add `$ALLOWED_HOSTS` to your framework dev server config.

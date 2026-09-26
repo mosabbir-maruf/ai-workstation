@@ -1,0 +1,90 @@
+---
+title: Harness & DSH
+description: DeepSeek Harness (DSH) architecture, persistent npm-global installation, internal 4090/4091 TCP bridge, and upgrade lifecycle.
+---
+
+AI Workstation decouples **DeepSeek Harness (DSH)** installation, DSH user state, and Harness process metadata across three dedicated host directories so container updates never wipe agent state.
+
+---
+
+## Storage Separation
+
+```text
+runtime/npm-global/
+    └── Persistent DSH installation (@deepseek-ai/dsh in /home/sandbox/.npm-global)
+
+runtime/dsh/
+    └── Persistent DSH state, settings.yaml, .credentials.yaml, and session history (/home/sandbox/.dsh)
+
+runtime/harness/
+    └── Ephemeral PID files (dsh.pid, bridge.pid) and harness.log (/run/ai-workstation/harness)
+```
+
+---
+
+## Bridge Topology
+
+Inside the `ai-workstation` container (`/usr/local/bin/harness.sh`):
+
+```text
+DSH Web Server
+ └── 127.0.0.1:4090 (--host 127.0.0.1 --port 4090 --no-open)
+        ▲
+        │
+        │ local Node TCP pipe
+        │
+Harness Bridge
+ └── 0.0.0.0:4091
+        │
+        ▼
+Host Binding: 127.0.0.1:4090 -> container:4091
+```
+
+1. **Workspace Directory Pinning**: `harness.sh` executes `cd /workspace` before launching DSH so the DSH workspace file picker opens directly on the active project repository rather than `/home/sandbox`.
+2. **Trusted Host Fence (`DSH_TRUSTED_HOSTS`)**: When Cloudflare Tunnel is configured, `ai tunnel setup` populates `DSH_TRUSTED_HOSTS` in `.env`, and `harness.sh` passes `--trusted-host <hostname>` to DSH automatically.
+3. **Loopback Protection**: Keeping DSH on `127.0.0.1:4090` inside the container while bridging `0.0.0.0:4091` to host `127.0.0.1:4090` allows both SSH port forwarding (`-L 4090:<container-ip>:4091`) and host-level `cloudflared` (`http://127.0.0.1:4090`) to reach DSH safely.
+
+---
+
+## Harness Lifecycle
+
+```bash
+ai harness start
+ai harness stop
+ai harness restart
+ai harness status
+```
+
+Expected healthy status output:
+
+```text
+=== Harness ===
+DSH:    running
+Bridge: running
+```
+
+---
+
+## Binary Upgrades
+
+Because `@deepseek-ai/dsh` is installed under `runtime/npm-global` (`/home/sandbox/.npm-global`), you can upgrade or pin DSH versions at any time without rebuilding the Docker image:
+
+```bash
+# Inspect current version
+ai dsh version
+
+# Upgrade to latest release
+ai dsh update
+
+# Or pin a specific release tag
+ai dsh update 0.1.2-rc.1
+```
+
+### Safe Upgrade Flow
+
+```bash
+ai state export
+ai dsh update
+ai harness restart
+ai dsh version
+```

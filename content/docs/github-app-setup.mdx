@@ -1,0 +1,202 @@
+---
+title: GitHub Setup
+description: How GitHub access is brokered through a GitHub App and host Unix domain socket without copying PATs or SSH keys into the container.
+---
+
+GitHub access in AI Workstation is brokered through a **GitHub App**. No Personal Access Token (PAT) or SSH private key is copied into the workstation container.
+
+```text
+Git inside container
+       │
+       ▼
+credential helper (/usr/local/bin/github-app-credential-helper)
+       │
+       ▼
+Unix socket (/run/ai-github-broker/github.sock)
+       │
+       ▼
+host GitHub broker (ai-github-broker.service)
+       │
+       ▼
+GitHub App RS256 JWT authentication (secrets/github-app.pem)
+       │
+       ▼
+GitHub
+```
+
+The container-side credential helper only handles `get` and deliberately ignores `store` and `erase` actions so short-lived installation tokens are never persisted to disk inside the container.
+
+You need three values:
+
+```text
+GitHub App ID
+GitHub Installation ID
+GitHub App private key (.pem)
+```
+
+---
+
+## Create GitHub App
+
+1. On GitHub.com, navigate to **Settings -> Developer settings -> GitHub Apps -> New GitHub App**.
+2. Fill in an App name and Homepage URL (for example, `https://example.com`).
+3. Disable **Webhook** if you do not need it.
+4. Set minimum repository permissions:
+   - **Contents**: Read and write
+   - **Metadata**: Read-only
+   - **Pull requests**: Read and write
+5. Create the App.
+6. Note the **App ID** shown on the App general page.
+
+---
+
+## Generate Private Key
+
+GitHub generates this key; do not create it locally with `openssl`.
+
+1. On the App general page, select **Generate a private key**.
+2. GitHub downloads a `.pem` file, for example:
+   ```text
+   ai-dev-workstation.2026-09-23.private-key.pem
+   ```
+3. The download happens only once. If you lose the file, return to the same page and generate a new private key. Generating a new key revokes the previous one.
+
+The key must contain either:
+
+```text
+-----BEGIN RSA PRIVATE KEY-----
+...
+-----END RSA PRIVATE KEY-----
+```
+
+or:
+
+```text
+-----BEGIN PRIVATE KEY-----
+...
+-----END PRIVATE KEY-----
+```
+
+---
+
+## Install the App
+
+1. On the App page, select **Install App**.
+2. Install it on your account or selected repositories.
+3. After installation, copy the **Installation ID** from the browser URL:
+   ```text
+   https://github.com/settings/installations/<INSTALLATION_ID>
+   ```
+
+---
+
+## Copy Key to VPS
+
+`ai github setup` runs on the VPS and expects a VPS-local `.pem` path. Copy the downloaded file from your local machine first.
+
+From your local machine:
+
+```bash
+ssh <user>@<vps-host> "mkdir -p ~/ai-workstation/secrets && chmod 700 ~/ai-workstation/secrets"
+
+scp /path/to/<app-name>.<date>.private-key.pem \
+  <user>@<vps-host>:~/ai-workstation/secrets/github-app.pem
+```
+
+Example:
+
+```bash
+scp "/Users/mosabbirmaruf/Downloads/ai-dev-workstation.2026-09-23.private-key.pem" \
+  mosabbir-cloud:~/ai-workstation/secrets/github-app.pem
+```
+
+Alternatively, copy to a temporary VPS path and let `ai github setup` install it:
+
+```bash
+scp "/Users/mosabbirmaruf/Downloads/ai-dev-workstation.2026-09-23.private-key.pem" \
+  mosabbir-cloud:/tmp/github-app.pem
+```
+
+### macOS Finder Fix
+
+On macOS, if `scp` fails with `Operation not permitted` for a file under `~/Downloads`, macOS privacy is blocking Terminal from reading `Downloads`. Fix (fastest, no system settings change required): move it with Finder:
+
+1. Open **Finder -> Downloads**.
+2. Copy `ai-dev-workstation.2026-09-23.private-key.pem`.
+3. Paste it into your Home folder (`~` or `~/.ssh/`).
+4. Then from Terminal:
+
+```bash
+chmod 600 ~/ai-dev-workstation.2026-09-23.private-key.pem
+
+scp ~/ai-dev-workstation.2026-09-23.private-key.pem \
+  mosabbir-cloud:~/ai-workstation/secrets/github-app.pem
+```
+
+Do not use `cp` in Terminal to move it from `~/Downloads` — the same macOS TCC block will hit. Use Finder drag/copy.
+
+Then, on the VPS, verify permissions (`600`):
+
+```bash
+chmod 600 ~/ai-workstation/secrets/github-app.pem
+ls -l ~/ai-workstation/secrets/github-app.pem
+head -1 ~/ai-workstation/secrets/github-app.pem
+```
+
+The final private key belongs at:
+
+```text
+~/ai-workstation/secrets/github-app.pem
+```
+
+---
+
+## Configure & Test
+
+On the VPS:
+
+```bash
+ai github setup
+ai github status
+ai github test
+```
+
+When `ai github setup` prompts for `Private key (.pem) path:`, enter either:
+
+```text
+~/ai-workstation/secrets/github-app.pem
+```
+
+or, if you used the temporary-path method:
+
+```text
+/tmp/github-app.pem
+```
+
+(`~/...` tilde expansion is handled automatically by `scripts/lib/github.sh`.)
+
+Setup copies the key to `~/ai-workstation/secrets/github-app.pem` (`0600`), saves `GITHUB_APP_ID`, `GITHUB_INSTALLATION_ID`, `GITHUB_BROKER_SOCKET`, and `GITHUB_BROKER_GID` to `.env`, configures the `ai-broker` group (`770` on `runtime/github-broker`), and starts the `ai-github-broker` systemd service.
+
+A successful authentication test reports:
+
+```text
+Testing GitHub App credentials...
+✓ GitHub Installation Token: OK
+
+GitHub authentication: READY ✓
+```
+
+---
+
+## Troubleshooting
+
+If `ai github test` fails with `Algorithm 'RS256' could not be found`, the Python `cryptography` backend is missing in `.venv`:
+
+```bash
+~/ai-workstation/.venv/bin/pip install "PyJWT[crypto]"
+~/ai-workstation/.venv/bin/python -c 'from jwt.api_jws import PyJWS; PyJWS().get_algorithm_by_name("RS256"); print("RS256 OK")'
+sudo systemctl restart ai-github-broker
+ai github test
+```
+
+New installations configure this automatically via `./install.sh`.

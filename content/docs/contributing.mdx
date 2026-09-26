@@ -1,0 +1,126 @@
+---
+title: Contributing
+description: Development workflow, branch naming, Conventional Commits, shell and Docker standards, static validation commands, and pull request checklist.
+---
+
+We welcome contributions to **AI Workstation** that improve stability, security, documentation, and operator ergonomics while preserving the four foundational isolation boundaries (Host Management Layer, Unprivileged `sandbox` Container, Unix Socket GitHub Broker, and Localhost/Zero-Trust Network Boundary).
+
+---
+
+## Workflow
+
+1. **Fork and Clone**:
+   ```bash
+   git clone https://github.com/<your-username>/ai-workstation.git
+   cd ai-workstation
+   ```
+2. **Create a Feature Branch**:
+   ```bash
+   git switch -c feat/my-improvement
+   ```
+3. **Make Focused Changes**: Keep changes minimal, modular, and directly related to a single logical task.
+4. **Validate Locally**: Run syntax checks, Docker Compose validation, and integration checks below.
+5. **Review Git Status and Whitespace**:
+   ```bash
+   git status --short
+   git diff --check
+   ```
+6. **Commit with Conventional Messages**:
+   ```bash
+   git commit -m "feat(cli): add diagnostic flag to ai doctor"
+   ```
+
+---
+
+## Branch & Commits
+
+### Branch Prefixes
+
+- `feat/<feature-name>` — New capabilities or enhancements
+- `fix/<issue-name>` — Bug fixes
+- `docs/<topic>` — Documentation updates
+- `refactor/<area>` — Code cleanup without behavior changes
+- `test/<area>` — Validation script improvements
+- `chore/<task>` — CI/CD or maintenance updates
+
+### Commit Format
+
+```text
+<type>(<optional scope>): <short description in imperative mood>
+```
+
+Allowed types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`.
+
+---
+
+## Coding Standards
+
+### Bash Guidelines
+
+1. **Strict Mode**: Begin every script with:
+   ```bash
+   #!/usr/bin/env bash
+   set -euo pipefail
+   ```
+2. **Defensive Quoting**: Quote all variable expansions (`"$var"`) to prevent word splitting and globbing.
+3. **Command Checks**: Use `command -v <tool> >/dev/null 2>&1` instead of `which`.
+4. **Fatal Errors**: Use `die "message"` to print to `stderr` and exit non-zero.
+
+### Docker Contracts
+
+- Container must run as `sandbox` (`UID 1001`, `GID 1001`) with `cap_drop: [ALL]`, `security_opt: [no-new-privileges:true]`, and `privileged: false`.
+- Long-running processes must run under `/usr/bin/tini`.
+- Volume mappings:
+  - `${ACTIVE_PROJECT_PATH}:/workspace`
+  - `runtime/dsh:/home/sandbox/.dsh`
+  - `runtime/npm-global:/home/sandbox/.npm-global`
+  - `runtime/app:/run/ai-workstation/app`
+  - `runtime/harness:/run/ai-workstation/harness`
+  - `runtime/github-broker:/run/ai-github-broker`
+
+---
+
+## Validation Suite
+
+Run these verification commands before opening any pull request:
+
+```bash
+# 1. Validate all bash scripts
+bash -n install.sh update.sh scripts/ai scripts/lib/*.sh docker/*.sh docker/github-app-credential-helper
+
+# 2. Validate Python scripts
+python3 -m py_compile broker/github_broker.py scripts/github-app-credential-helper
+
+# 3. Validate Docker Compose configuration
+docker compose -f docker/compose.yml config
+
+# 4. Check for trailing whitespace and formatting errors
+git diff --check
+```
+
+On a test Linux VPS environment, also verify:
+
+```bash
+ai doctor
+ai status
+ai harness status
+ai github status
+ai github test
+```
+
+---
+
+## PR Checklist
+
+Before submitting a pull request, verify every item:
+
+- [ ] My pull request is focused on a single logical change.
+- [ ] I have run `git diff --check` and verified no whitespace or formatting errors exist.
+- [ ] All modified bash scripts pass `bash -n <script>`.
+- [ ] All Python scripts pass `python3 -m py_compile`.
+- [ ] `docker compose -f docker/compose.yml config` validates cleanly.
+- [ ] `ai doctor` passes on a live test workstation host.
+- [ ] **No secrets, tokens, private keys (`*.pem`), credentials, or `.env` files are committed**.
+- [ ] **No host runtime state (`runtime/`, `secrets/`, `*.tar.gz`) is committed**.
+- [ ] The security model (`sandbox` UID `1001`, no Docker socket, no host `~/.ssh`) is preserved.
+- [ ] Relevant documentation (`README.md`, CLI `usage()`) has been updated.

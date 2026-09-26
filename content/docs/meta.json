@@ -1,0 +1,19 @@
+{
+  "title": "AI Workstation",
+  "pages": [
+    "---Getting Started---",
+    "index",
+    "installation",
+    "cli-reference",
+    "---Authentication & Access---",
+    "github-app-setup",
+    "cloudflare-tunnel",
+    "---Runtime & Operations---",
+    "harness-and-dsh",
+    "cache-and-state",
+    "operations",
+    "---Security & Governance---",
+    "security",
+    "contributing"
+  ]
+}

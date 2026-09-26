@@ -1,0 +1,348 @@
+---
+title: Installation
+description: Host requirements, installation walkthrough, environment variables, daily workflow, and complete CLI reference for AI Workstation.
+---
+
+Follow the steps below to provision AI Workstation on your remote Linux VPS (`linux/amd64` or `linux/arm64`) and operate projects with the `ai` CLI.
+
+## Requirements
+
+### Host System
+
+- Linux host with Docker (`24.0+` recommended).
+- Docker Compose v2 support (`docker compose`).
+- Git (`2.30+`).
+- Python 3 (`3.10+`) with `venv` support (`python3-venv`).
+- `sudo`.
+- GitHub access to the repositories you will manage.
+- Linux host (`amd64` or `arm64`) for the published multi-arch image (`ghcr.io/mosabbir-maruf/ai-workstation:latest`), or a local Docker build otherwise.
+
+The included installer validates Docker, Git, Python 3, Docker daemon access, and Python virtual-environment support automatically.
+
+### Server Posture
+
+- SSH key authentication enabled.
+- Password authentication disabled.
+- Root SSH login disabled.
+- Firewall default deny for incoming traffic.
+- Only required public ports open.
+- Development ports bound exclusively to `127.0.0.1`.
+
+---
+
+## Clone Repository
+
+```bash
+git clone https://github.com/mosabbir-maruf/ai-workstation.git ~/ai-workstation
+cd ~/ai-workstation
+```
+
+---
+
+## Installation
+
+Run the automated host installer:
+
+```bash
+./install.sh
+```
+
+The installer executes the following steps:
+
+1. Validates host prerequisites (`docker`, `git`, `python3`, `sudo`).
+2. Installs Python `venv` support if needed.
+3. Creates runtime (`runtime/`), project (`~/projects/`), and secret (`secrets/`) directories with strict permissions (`700`).
+4. Creates `.env` from `.env.example` (mode `600`).
+5. Creates the Python virtual environment (`.venv/`) and installs `PyJWT[crypto]`.
+6. Symlinks `ai` at `/usr/local/bin/ai`.
+7. Validates the resulting installation.
+
+After installation completes, verify and initialize GitHub App authentication:
+
+```bash
+ai doctor
+ai github setup
+ai github status
+ai github test
+```
+
+---
+
+## Environment Config
+
+`.env.example` contains the workstation runtime variables:
+
+```dotenv
+IMAGE=ghcr.io/mosabbir-maruf/ai-workstation:latest
+DSH_VERSION=0.1.2-rc.1
+ACTIVE_PROJECT=
+ACTIVE_PROJECT_PATH=
+AI_WORKSTATION_ROOT=
+DSH_TRUSTED_HOSTS=
+ALLOWED_HOSTS=
+GITHUB_APP_ID=
+GITHUB_INSTALLATION_ID=
+GITHUB_BROKER_SOCKET=
+GITHUB_BROKER_GID=
+CLOUDFLARED_TOKEN_SET=
+CLOUDFLARED_APP_HOSTNAME=
+CLOUDFLARED_DSH_HOSTNAME=
+CLOUDFLARED_APP_PORT=
+```
+
+The `ai` CLI automatically updates project, GitHub broker, and Cloudflare Tunnel keys in `.env` when configured.
+
+### Permission Rules
+
+- Keep `.env` private (mode `600`) and never commit it to Git.
+- Keep `secrets/github-app.pem` private (mode `600`).
+- Keep `secrets/cloudflared-token` private (mode `600`).
+- Keep `runtime/dsh/` at mode `700` and `runtime/dsh/.credentials.yaml` / `settings.yaml` at mode `600`.
+- Prefer SHA-pinned image references (`IMAGE=ghcr.io/mosabbir-maruf/ai-workstation:<commit-sha>`) for deterministic production deployments.
+- Pin `DSH_VERSION` when deterministic agent behavior is required.
+
+---
+
+## Daily Workflow
+
+### Operator Session
+
+```bash
+ai doctor
+ai start
+ai run
+ai preview
+
+# Work with DSH / editor / browser
+
+ai app logs
+ai status
+
+ai app stop
+ai stop
+```
+
+### Core Commands
+
+| Task | Command |
+|---|---|
+| Start workstation container & Harness | `ai start` |
+| Check container, DSH, Bridge & App status | `ai status` |
+| Start active project dev server (`0.0.0.0` auto-bind) | `ai run` |
+| Print SSH port-forwarding & Cloudflare Anywhere URLs | `ai preview` |
+| Stop active project dev server | `ai app stop` |
+| Stop workstation container, App & Harness | `ai stop` |
+
+---
+
+## Project Lifecycle
+
+```text
+GitHub repository
+       │
+       ▼
+ai add <github-url>
+       │
+       ▼
+~/projects/project-name
+       │
+       ▼
+ai use project-name
+       │
+       ▼
+ACTIVE_PROJECT / ACTIVE_PROJECT_PATH
+       │
+       ▼
+ai start
+       │
+       ▼
+Docker workstation
+       │
+       ▼
+ai run
+       │
+       ▼
+Development server
+       │
+       ▼
+ai preview
+       │
+       ▼
+Mac browser through SSH tunnel (or Cloudflare Anywhere URL)
+```
+
+Switching projects with `ai use <project>` reuses the same workstation image and recreates the `/workspace` volume binding cleanly.
+
+---
+
+## Command Groups
+
+Run `ai` or `ai help` for the built-in command summary.
+
+### Projects
+
+```bash
+ai add <github-url>
+ai remove <project>
+ai list
+ai use <project>
+```
+
+- `ai add` clones a valid GitHub HTTPS repository (`https://github.com/<owner>/<repo>`) into `~/projects/<name>`.
+- `ai use` selects which project is mounted into `/workspace` and recreates the container mount if `ai-workstation` is already running.
+- `ai remove` stops the workstation if removing the active project and deletes `~/projects/<name>`.
+
+### Git
+
+```bash
+ai pull
+ai push "commit message"
+```
+
+- `ai pull` runs `git pull --ff-only` inside the active project directory.
+- `ai push` stages changes (`git add -A`), scans staged filenames for sensitive patterns (`.env`, `.env.*`, `*.pem`, `*.key`, `*.p12`, `*.pfx`, `credentials.json`, `service-account*.json`), aborts and resets staging if any secret file is detected, and otherwise commits and pushes.
+
+### Workstation
+
+```bash
+ai start
+ai stop
+ai restart
+ai status
+ai logs
+ai shell
+ai run
+ai preview
+```
+
+### App
+
+```bash
+ai app stop
+ai app restart
+ai app status
+ai app logs
+```
+
+### Harness
+
+```bash
+ai harness start
+ai harness stop
+ai harness restart
+ai harness status
+```
+
+### DSH
+
+```bash
+ai dsh version
+ai dsh update
+ai dsh update <version>
+```
+
+### Maintenance
+
+```bash
+ai cache
+ai cache clear
+ai cache clear --deps
+ai cache clear --deps --yes
+ai update
+ai upgrade
+ai doctor
+```
+
+### GitHub
+
+```bash
+ai github setup
+ai github status
+ai github test
+```
+
+### Tunnel
+
+```bash
+ai tunnel setup
+ai tunnel sync [port]
+ai tunnel status
+ai tunnel start
+ai tunnel stop
+ai tunnel logs
+```
+
+### State
+
+```bash
+ai state export
+ai state import <archive>
+```
+
+---
+
+## Quick Reference
+
+```text
+PROJECTS
+  ai add <github-url>
+  ai remove <project>
+  ai list
+  ai use <project>
+
+GIT
+  ai pull
+  ai push "commit message"
+
+WORKSTATION
+  ai start
+  ai stop
+  ai restart
+  ai status
+  ai logs
+  ai shell
+  ai run
+  ai preview
+
+APP
+  ai app stop
+  ai app restart
+  ai app status
+  ai app logs
+
+HARNESS
+  ai harness start
+  ai harness stop
+  ai harness restart
+  ai harness status
+
+DSH
+  ai dsh update [version]
+  ai dsh version
+
+MAINTENANCE
+  ai cache
+  ai cache clear
+  ai cache clear --deps
+  ai cache clear --deps --yes
+  ai update
+  ai upgrade
+  ai doctor
+
+GITHUB
+  ai github setup
+  ai github status
+  ai github test
+
+TUNNEL
+  ai tunnel setup
+  ai tunnel sync [port]
+  ai tunnel status
+  ai tunnel start
+  ai tunnel stop
+  ai tunnel logs
+
+STATE
+  ai state export
+  ai state import <archive>
+```

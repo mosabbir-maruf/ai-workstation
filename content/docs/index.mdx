@@ -1,0 +1,244 @@
+---
+title: Overview
+description: A reusable, isolated AI coding workstation for running DeepSeek Harness (DSH) and project development workloads on a remote Linux VPS.
+---
+
+AI Workstation provides one reusable, defense-in-depth development environment on a remote Linux VPS (`linux/amd64` and `linux/arm64`) powered by Docker and **DeepSeek Harness (DSH)**.
+
+Projects remain ordinary Git repositories on the host under `~/projects/`. Only the currently selected project is mounted into the workstation container at `/workspace`.
+
+The workstation contains the common developer runtime and DeepSeek Harness. DSH installation and DSH state are persisted outside the disposable container filesystem, allowing the container or base image to be replaced without losing Harness state.
+
+## Operational Boundaries
+
+The system enforces four distinct boundaries:
+
+1. **Host management layer** — Docker, projects (`~/projects/`), runtime state (`runtime/`), secrets (`secrets/`, `.env`), and the `ai` CLI (`scripts/ai`).
+2. **Workstation container** — Isolated developer runtime (`sandbox` UID `1001`) plus only the selected project mounted at `/workspace`.
+3. **GitHub broker** — GitHub App credential flow through a host Unix domain socket (`github.sock`) instead of a Personal Access Token (PAT) or host SSH private key inside the container.
+4. **Existing infrastructure & network boundary** — The existing gateway/reverse-proxy stack remains separate, and all development ports bind exclusively to `127.0.0.1` on the host.
+
+---
+
+## System Architecture
+
+<div className="not-prose my-6 flex w-full justify-center overflow-hidden rounded-xl border border-border bg-card px-4 py-6 sm:px-6">
+  <pre className="m-0 overflow-hidden bg-transparent p-0 font-mono text-[12px] text-foreground leading-[1.55] sm:text-[13px]">
+    {`                             INTERNET
+                                │
+                  ┌─────────────┴─────────────┐
+                  │                           │
+             SSH :1182                   HTTPS :443
+                  │                           │
+                  ▼                           ▼
+          ┌───────────────┐           ┌───────────────┐
+          │  Mac / Admin  │           │ Reverse Proxy │
+          │    Client     │           │    / Nginx    │
+          └───────┬───────┘           └───────┬───────┘
+                  │                           │
+             SSH tunnel                       ▼
+                  │                  Existing app stack
+                  ▼
+┌──────────────────────────────────────────────────────────────────┐
+│                         Ubuntu VPS / Host                        │
+│                                                                  │
+│  ┌──────────────────────┐       ┌─────────────────────────────┐  │
+│  │ ~/projects/          │       │ ~/ai-workstation/           │  │
+│  │  project-a/          │       │  scripts/ai     docker/     │  │
+│  │  project-b/          │       │  runtime/       secrets/    │  │
+│  │  active-project/ ────┼──────►│  .env           config/     │  │
+│  └──────────┬───────────┘       └──────────────┬──────────────┘  │
+│             │                                  │                 │
+│             │ /workspace mount                 │ Docker Compose  │
+│             ▼                                  ▼                 │
+│  ┌────────────────────────────────────────────────────────────┐  │
+│  │                       ai-workstation                       │  │
+│  │                                                            │  │
+│  │  User: sandbox (UID 1001)                                  │  │
+│  │  Node.js + Git + SSH client + ripgrep + fd + procps + tini │  │
+│  │                                                            │  │
+│  │  /workspace                  ← active project only         │  │
+│  │  /home/sandbox/.dsh          ← persistent DSH state        │  │
+│  │  /home/sandbox/.npm-global   ← persistent DSH installation │  │
+│  │                                                            │  │
+│  │  DSH: 127.0.0.1:4090         │  Bridge: 0.0.0.0:4091       │  │
+│  │  App: project-selected development port(s)                 │  │
+│  └─────────────────────────────▲──────────────────────────────┘  │
+│                                │ Unix socket (github.sock)       │
+│                    ┌───────────┴────────────┐                    │
+│                    │ GitHub broker runtime  │                    │
+│                    │ secrets/github-app.pem │                    │
+│                    └────────────────────────┘                    │
+└──────────────────────────────────────────────────────────────────┘`}
+  </pre>
+</div>
+
+### Data Flow
+
+```text
+Mac / operator
+     │
+     │ SSH
+     ▼
+Host CLI: ai
+     │
+     ├── project selection
+     ├── Git operations
+     ├── workstation lifecycle
+     ├── Harness lifecycle
+     ├── app lifecycle
+     ├── cache maintenance
+     └── preview/tunnel generation
+     │
+     ▼
+Docker workstation
+     │
+     ├── selected project at /workspace
+     ├── persistent DSH state
+     ├── persistent DSH installation
+     ├── app runtime state
+     ├── Harness runtime state
+     └── GitHub broker socket
+```
+
+---
+
+## Core Components
+
+| Component | Responsibility | Persistence |
+|---|---|---|
+| `scripts/ai` | Main operator CLI | Git |
+| `docker/Dockerfile` | Base workstation image | Git / GHCR |
+| `docker/compose.yml` | Runtime, mounts, limits, ports | Git |
+| `docker/entrypoint.sh` | Container bootstrap and DSH installation | Git |
+| `docker/app-runner.sh` | Project process runner | Git |
+| `docker/harness.sh` | DSH + bridge lifecycle | Git |
+| `docker/github-app-credential-helper` | Container-side Git credential helper | Git |
+| `scripts/lib/github.sh` | GitHub App/broker management | Git |
+| `scripts/lib/tunnel.sh` | Cloudflare Tunnel connector & hostname helpers | Git |
+| `scripts/lib/ports.sh` | Shared container listening port detector | Git |
+| `broker/github_broker.py` | Host-side GitHub App credential broker | Git |
+| `runtime/dsh/` | DSH state/config/history | Host persistent |
+| `runtime/npm-global/` | DSH installation | Host persistent |
+| `runtime/app/` | App PID/log state | Disposable |
+| `runtime/harness/` | Harness PID/log state | Disposable |
+| `runtime/github-broker/` | Broker socket/runtime | Runtime |
+| `~/projects/` | Git working copies | Host persistent |
+| GitHub Actions | Multi-arch (`amd64`/`arm64`) image build/publish | CI |
+| GHCR | Container image registry (`ghcr.io/mosabbir-maruf/ai-workstation`) | External |
+
+---
+
+## Repository Structure
+
+```text
+ai-workstation/
+├── .env.example                     # Environment template
+├── .gitignore                       # Ignored secrets, runtime, and OS files
+├── CONTRIBUTING.md                  # Contributor guidelines
+├── LICENSE                          # MIT License
+├── README.md                        # Primary architecture & user documentation
+├── SECURITY.md                      # Security policy and disclosure process
+├── install.sh                       # Host installation and validation script
+├── update.sh                        # Fast-forward update and upgrade script
+│
+├── .github/
+│   ├── ISSUE_TEMPLATE/
+│   │   ├── bug_report.yml           # Structured bug report form
+│   │   ├── feature_request.yml      # Structured feature request form
+│   │   └── config.yml               # Issue template configuration
+│   ├── workflows/
+│   │   └── image.yml                # Multi-arch GHCR build & publish workflow
+│   └── pull_request_template.md     # PR submission template
+│
+├── broker/
+│   └── github_broker.py             # Host-side GitHub App credential broker
+│
+├── config/
+│   └── projects.yml                 # Project configuration registry
+│
+├── docs/
+│   ├── github-app-setup.md          # GitHub App key walkthrough
+│   └── cloudflare-tunnel.md         # Anywhere-access guide
+│
+├── docker/
+│   ├── Dockerfile                   # Base multi-arch workstation image
+│   ├── compose.yml                  # Runtime/security configuration
+│   ├── entrypoint.sh                # Container bootstrap & DSH setup
+│   ├── app-runner.sh                # App process runner
+│   ├── harness.sh                   # DSH + bridge lifecycle
+│   └── github-app-credential-helper # Container-side credential helper
+│
+└── scripts/
+    ├── ai                           # Main CLI
+    ├── github-app-credential-helper # Host-side credential helper
+    └── lib/
+        ├── github.sh                # GitHub App/broker helpers
+        ├── tunnel.sh                # Cloudflare Tunnel helpers
+        └── ports.sh                 # Shared container port detector
+```
+
+Note: `runtime/`, `.env`, `.venv/`, `secrets/`, and project checkouts under `~/projects/` are local host runtime paths and are intentionally excluded from version control.
+
+---
+
+## Runtime Structure
+
+```text
+~/
+├── ai-workstation/
+│   ├── .env
+│   ├── .venv/
+│   ├── runtime/
+│   │   ├── dsh/
+│   │   ├── npm-global/
+│   │   ├── app/
+│   │   ├── harness/
+│   │   └── github-broker/
+│   └── secrets/
+│       ├── github-app.pem
+│       └── cloudflared-token  # Tunnel connector token (optional)
+│
+└── projects/
+    ├── project-a/.git
+    ├── project-b/.git
+    └── active-project/.git
+```
+
+Only the selected project is mounted into `/workspace`.
+
+---
+
+## Design Decisions
+
+### Reusable Container
+Common developer tooling belongs inside the base container image (`Dockerfile`). Project source code stays outside on the host under `~/projects/` so adding a new repository does not require rebuilding or tagging a new image.
+
+### Isolated Mount
+Only the active repository is exposed to the workstation container at `/workspace`. Inactive repositories under `~/projects/` remain unmounted and unreachable from inside the container.
+
+### Persistent Binary
+DeepSeek Harness is installed into `runtime/npm-global` (`~/.npm-global` in container) so DSH can be updated independently via `ai dsh update` without rebuilding container layers.
+
+### Persistent State
+DSH configuration and session history (`settings.yaml`, `.credentials.yaml`, `storages/workspace.json`) live in host-persistent `runtime/dsh/` (`~/.dsh` in container), surviving image teardowns and rebuilds.
+
+### No Host Docker Socket
+Mounting `/var/run/docker.sock` would give the container root-equivalent control over the host Docker daemon. AI Workstation strictly prohibits mounting the host Docker socket.
+
+### No Host SSH Keys
+GitHub access is brokered through short-lived GitHub App installation tokens over a Unix domain socket (`github.sock`) instead of mounting `~/.ssh` or copying long-lived PATs into the workstation.
+
+### Localhost Port Binding
+Development servers (`127.0.0.1:3000`, `3001`, `5173`, `8080`, `8000`, `4090:4091`) never bind directly to public interfaces (`0.0.0.0`) on the VPS. Operator access is granted exclusively through SSH port-forwarding or Cloudflare Access tunnels.
+
+---
+
+## Next Steps
+
+- [Installation & CLI Reference](/docs/installation) — Host prerequisites, `./install.sh`, `.env` configuration, and all `ai` CLI subcommands.
+- [GitHub App & Broker Setup](/docs/github-app-setup) — Creating the GitHub App, generating `.pem` keys, `scp` transfer, and Unix socket credential brokering.
+- [Cloudflare Tunnel & Preview](/docs/cloudflare-tunnel) — SSH port-forwarding, Cloudflare Zero Trust Anywhere URLs, and DSH loopback settings behavior.
+- [Operations, Cache & State Runbook](/docs/operations) — Harness/DSH lifecycle, safe cache pruning, state archive export/import, CI/CD, and troubleshooting.
+- [Security Policy & Isolation Model](/docs/security) — Threat model, container capabilities, cgroup limits, state validation, and security checklist.
+- [Contributing & Validation Guide](/docs/contributing) — Branch conventions, shell/Docker standards, static verification, and PR checklist.

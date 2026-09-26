@@ -1,0 +1,343 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "fumadocs-ui/css/shadcn.css";
+@import "fumadocs-ui/css/preset.css";
+@import "shadcn/tailwind.css";
+@import "./styles/aiws-tokens.css";
+
+/* Note: Run `npx shadcn@latest init` to generate shadcn/tailwind.css if needed */
+
+/* Include UI package in Tailwind's content scanning */
+@source "../../../packages/ui/src/**/*.tsx";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-serif: var(--font-serif);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-label: var(--chart-label);
+  --color-chart-tooltip-background: var(--chart-tooltip-background);
+  --color-chart-tooltip-foreground: var(--chart-tooltip-foreground);
+  --color-chart-tooltip-muted: var(--chart-tooltip-muted);
+  --color-chart-indicator: var(--chart-indicator-color);
+  --color-chart-indicator-secondary: var(--chart-indicator-secondary-color);
+  --color-legend: var(--legend);
+  --color-legend-foreground: var(--legend-foreground);
+  --color-legend-muted: var(--legend-muted);
+  --color-legend-muted-foreground: var(--legend-muted-foreground);
+  --color-legend-track: var(--legend-track);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  --font-heading: var(--font-geist-sans);
+  --color-fd-input: var(--input);
+
+  --shadow-color: var(--shadow);
+
+  --shadow-2xs: 0 1px var(--shadow);
+  --shadow-xs: 0 1px 2px 0 var(--shadow);
+  --shadow-sm: 0 1px 3px 0 var(--shadow), 0 1px 2px -1px var(--shadow);
+  --shadow-md: 0 4px 6px -1px var(--shadow), 0 2px 4px -2px var(--shadow);
+  --shadow-lg: 0 10px 15px -3px var(--shadow), 0 4px 6px -4px var(--shadow);
+  --shadow-xl: 0 20px 25px -5px var(--shadow), 0 8px 10px -6px var(--shadow);
+  --shadow-2xl: 0 25px 50px -12px var(--shadow);
+
+  --animate-caret-blink: caret-blink 1.06s step-end infinite;
+  --animate-studio-pill-border-spin: studio-pill-border-spin 3.75s linear
+    infinite;
+
+  @keyframes caret-blink {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes studio-pill-border-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  --animate-marquee: marquee var(--duration) infinite linear;
+  --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
+
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(calc(-100% - var(--gap)));
+    }
+  }
+
+  @keyframes marquee-vertical {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(calc(-100% - var(--gap)));
+    }
+  }
+}
+
+:root {
+  /* Site-only tokens (shared palette is in aiws-tokens.css) */
+  --site-header-height: 3.5rem;
+
+  /* Text selection */
+  --text-highlight-background: var(--color-indigo-500);
+  --text-highlight-foreground: var(--color-indigo-800);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  /* Legend hover effect using :has() */
+  .legend-container:has([data-hovered]) > *:not([data-hovered]) {
+    opacity: 0.5;
+  }
+
+  .legend-container > * {
+    transition: opacity 150ms ease-out;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  html {
+    @apply font-sans;
+  }
+
+  ::selection {
+    background-color: var(--text-highlight-background);
+    color: var(--text-highlight-foreground);
+  }
+
+  ::-moz-selection {
+    background-color: var(--text-highlight-background);
+    color: var(--text-highlight-foreground);
+  }
+}
+
+:root {
+  --vt-fade-exit: 150ms;
+  --vt-fade-enter: 200ms;
+}
+
+::view-transition-group(site-header),
+::view-transition-group(page-canvas-rulers) {
+  animation: none;
+  z-index: 100;
+}
+
+::view-transition-old(site-header),
+::view-transition-old(page-canvas-rulers) {
+  display: none;
+}
+
+::view-transition-new(site-header),
+::view-transition-new(page-canvas-rulers) {
+  animation: none;
+}
+
+::view-transition-old(.page-fade) {
+  animation: var(--vt-fade-exit) ease-out both page-fade-out;
+}
+
+::view-transition-new(.page-fade) {
+  animation: var(--vt-fade-enter) ease-in var(--vt-fade-exit) both page-fade-in;
+}
+
+@keyframes page-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes page-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Global thin scrollbars across the website */
+html,
+body,
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklch, var(--foreground) 24%, transparent)
+    transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: color-mix(in oklch, var(--foreground) 24%, transparent);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in oklch, var(--foreground) 38%, transparent);
+}
+
+@layer components {
+  .studio-pill-border-gradient {
+    background: conic-gradient(
+      from 0deg,
+      transparent 0deg 228deg,
+      color-mix(in oklch, var(--chart-1) 55%, transparent) 248deg,
+      var(--chart-2) 278deg,
+      color-mix(in oklch, var(--chart-2) 55%, transparent) 308deg,
+      transparent 328deg 360deg
+    );
+  }
+
+  .docs-scroll-area {
+    --studio-scrollbar-width: 3px;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklch, var(--foreground) 24%, transparent)
+      transparent;
+  }
+
+  .docs-scroll-area::-webkit-scrollbar {
+    width: var(--studio-scrollbar-width);
+  }
+
+  .docs-scroll-area::-webkit-scrollbar-track {
+    margin-block: 6px;
+    background: transparent;
+  }
+
+  .docs-scroll-area::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: color-mix(in oklch, var(--foreground) 24%, transparent);
+  }
+
+  .docs-scroll-area::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in oklch, var(--foreground) 38%, transparent);
+  }
+}
+
+/* Align Fumadocs UI tokens with shadcn card surfaces */
+:root {
+  --color-fd-background: var(--background);
+  --color-fd-foreground: var(--foreground);
+  --color-fd-muted: var(--muted);
+  --color-fd-muted-foreground: var(--muted-foreground);
+  --color-fd-border: var(--border);
+  --color-fd-input: var(--input);
+  --color-fd-secondary: var(--card);
+  --color-fd-accent: var(--accent);
+  --color-fd-primary: var(--primary);
+  --color-fd-primary-foreground: var(--primary-foreground);
+}
+
+/* Legacy MDX hook — previews use Card + previewCardClassName in component-preview.tsx */
+.component-preview {
+  @apply rounded-xl border border-border bg-card shadow-sm ring-0;
+}
+
+.component-preview-dark {
+  @apply bg-background;
+}
+
+/* Docs ComponentShowcase code panels */
+.showcase-code-block {
+  --showcase-code-line-height: 1.625;
+
+  & .fd-scroll-container {
+    @apply text-sm;
+    line-height: var(--showcase-code-line-height);
+  }
+
+  & pre {
+    tab-size: 2;
+  }
+
+  & .line {
+    min-height: calc(1em * var(--showcase-code-line-height));
+    line-height: var(--showcase-code-line-height);
+    white-space: pre;
+  }
+}
+
+/* Ensure docs code blocks and architecture diagrams display in full without internal vertical scrollbars */
+.prose .fd-scroll-container {
+  max-height: none !important;
+  overflow-y: visible !important;
+}

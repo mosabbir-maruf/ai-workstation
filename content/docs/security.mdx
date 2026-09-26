@@ -1,0 +1,147 @@
+---
+title: Security Policy
+description: Defense-in-depth container isolation, cgroup limits, GitHub App Unix socket credential brokering, state archive validation, and security checklist.
+---
+
+The **AI Workstation** project prioritizes defense-in-depth isolation of developer environments running on remote Linux servers. Because the workstation executes AI-assisted development tools, arbitrary project builds, and third-party dependencies, security boundaries are engineered to constrain the blast radius of untrusted code while preventing credential leakage into the container runtime.
+
+---
+
+## Supported Versions
+
+| Version / Branch | Supported | Notes |
+|---|---|---|
+| `main` branch | Yes | Active development branch |
+| Latest release / tag | Yes | Current production deployment targets |
+| Historical commits | No | Upgrade to latest `main` or SHA release |
+
+---
+
+## Threat Model
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 1. Host Management Layer                                                    │
+│    - Host OS (Ubuntu), Docker daemon, sudoers, scripts/ai, host user        │
+│    - Host-only secrets: .env, secrets/github-app.pem, cloudflared-token     │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ 2. Workstation Container                                                    │
+│    - Non-root user 'sandbox' (UID 1001, GID 1001)                           │
+│    - No Docker socket, no host ~/.ssh, cap_drop: ALL, no-new-privileges     │
+│    - Mounts ONLY active project at /workspace                               │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ 3. GitHub Credential Broker                                                 │
+│    - Host-side systemd service (ai-github-broker) with strict sandboxing    │
+│    - Communicates strictly via Unix domain socket (github.sock)             │
+│    - Issues short-lived installation access tokens in memory                │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ 4. Network and External Boundary                                            │
+│    - Development ports bound to 127.0.0.1 on host (never 0.0.0.0)          │
+│    - Private operator access via SSH port-forwarding or Cloudflare Access   │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Container Isolation
+
+The workstation container runs untrusted dependencies (`npm install`, dev servers, AI agents) under the following hard constraints:
+
+- **Non-Root Execution**: Runs strictly as user `sandbox` (`UID 1001`, `GID 1001`).
+- **Dropped Capabilities**: `cap_drop: [ALL]` — zero Linux kernel capabilities are retained.
+- **No Privilege Escalation**: `security_opt: [no-new-privileges:true]` prevents `setuid` binaries from gaining elevated privileges.
+- **Unprivileged Runtime**: `privileged: false`.
+- **Resource Constraints**:
+  - **Memory**: `512m` hard limit (`mem_limit: 512m`).
+  - **CPU**: `1.5` CPUs (`cpus: "1.5"`).
+  - **PIDs**: `256` maximum processes (`pids_limit: 256`) to mitigate fork bombs.
+- **Secure `/tmp`**: Mounted as `tmpfs` with `rw,noexec,nosuid,size=128m` to block execution of binaries dropped in `/tmp`.
+- **No Host Docker Socket**: `/var/run/docker.sock` is **never** mounted into the container, preventing container escape to the host daemon.
+- **No Host SSH Keys**: `~/.ssh` is **never** mounted into the container.
+- **Isolated Workspace**: Only `${ACTIVE_PROJECT_PATH}:/workspace` is mounted. Unselected projects under `~/projects/` are unreachable from inside the container.
+
+---
+
+## Credential Broker
+
+### Socket Token Flow
+
+1. When Git inside the container initiates an HTTPS operation with `github.com`, `/usr/local/bin/github-app-credential-helper` is invoked with `get`.
+2. The helper connects to `/run/ai-github-broker/github.sock`.
+3. The host-side systemd service (`broker/github_broker.py`) validates the request, signs an RS256 JWT using `secrets/github-app.pem`, and requests a short-lived installation token from GitHub.
+4. The token is returned over the socket and passed via `stdout` to Git in memory.
+5. `store` and `erase` actions are ignored so tokens are **never written to disk** inside the container.
+
+### Systemd Hardening
+
+- `NoNewPrivileges=true`
+- `PrivateTmp=true`
+- `ProtectSystem=strict`
+- `ProtectHome=read-only`
+- `ReadWritePaths=$RUNTIME_DIR`
+- Socket directory `runtime/github-broker` is owned by `<user>:ai-broker` with mode `0770`, and `github.sock` is created with mode `0660`.
+
+### Secret Scanner
+
+`ai push` scans all staged files before creating a commit and aborts (`git reset`) if any filename matches:
+- `.env` or `.env.*` (excluding `.env.example`)
+- `*.pem`, `*.key`, `*.p12`, `*.pfx`
+- `credentials.json`, `service-account*.json`
+
+---
+
+## Secret Permissions
+
+| Path | Purpose | Recommended Mode | Storage Location |
+|---|---|---|---|
+| `.env` | Environment configuration | `0600` | Host repository root |
+| `secrets/` | Secret storage directory | `0700` | Host repository root |
+| `secrets/github-app.pem` | GitHub App private key | `0600` | Host `secrets/` directory |
+| `secrets/cloudflared-token` | Cloudflare Tunnel connector token | `0600` | Host `secrets/` directory |
+| `runtime/dsh/` | Persistent DSH runtime directory | `0700` | Host persistent runtime |
+| `runtime/dsh/.credentials.yaml` | DSH API credentials | `0600` | Host persistent runtime |
+| `runtime/dsh/settings.yaml` | DSH provider settings | `0600` | Host persistent runtime |
+
+---
+
+## Archive Validation
+
+Because extracting `.tar.gz` archives carries path traversal and symlink risks, `ai state import` enforces six verification gates before touching runtime files:
+
+1. **Archive Member Allowlist**: Rejects archives containing any entry outside `manifest`, `.env`, and `dsh/*`.
+2. **Path Traversal Rejection**: Rejects absolute paths (`/*`) and relative traversal segments (`../`, `*/../*`).
+3. **Symlink Target Sanitization**: Inspects all staged symlinks and rejects any target outside `/home/sandbox/.npm-global/*` or containing `..`.
+4. **Hardlink Prohibition**: Rejects archives containing hard-linked files (`find -type f -links +1`).
+5. **Staging Isolation**: Extracts into `mktemp -d` with `--no-same-owner` and `--no-same-permissions`.
+6. **Automatic Rollback Backup**: Backs up existing `.env` and `runtime/dsh` before swapping and enforces `0600`/`0700` permissions after restore.
+
+---
+
+## Security Checklist
+
+```text
+[ ] SSH key authentication enabled
+[ ] SSH password authentication disabled
+[ ] Root SSH login disabled
+[ ] Firewall defaults to deny incoming
+[ ] Only required public ports are open
+[ ] Workstation runs as non-root (sandbox UID 1001)
+[ ] Workstation is not privileged
+[ ] ALL Linux capabilities are dropped
+[ ] no-new-privileges is enabled
+[ ] Host Docker socket is not mounted
+[ ] Host ~/.ssh is not mounted
+[ ] Host networking is not used
+[ ] Only active project is mounted at /workspace
+[ ] .env is not tracked
+[ ] GitHub private key is not tracked
+[ ] Cloudflare Tunnel token is not tracked
+[ ] Cloudflare Access policy protects tunnel hostnames
+[ ] DSH credentials are protected (0600)
+[ ] GitHub authentication uses broker/App flow
+[ ] Development ports are localhost-only (127.0.0.1)
+[ ] DSH state has an off-host recovery backup
+[ ] Image source is trusted / SHA-pinned
+```
+
+Run `ai doctor` regularly to audit these invariants automatically.

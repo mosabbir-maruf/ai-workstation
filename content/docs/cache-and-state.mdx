@@ -1,0 +1,96 @@
+---
+title: Cache & State Backup
+description: Read-only cache inspection, safe Docker builder and npm cache cleanup, dependency pruning, and portable state archive export/import.
+---
+
+AI Workstation provides built-in commands to reclaim disk space safely (`ai cache`) and back up or restore DSH state (`ai state`).
+
+---
+
+## Cache Management
+
+### Storage Inspection
+
+```bash
+ai cache
+```
+
+Outputs three storage reports:
+- **`=== Docker ===`** — `docker system df` (images, containers, local volumes, and build cache).
+- **`=== AI runtime ===`** — `du -sh ~/ai-workstation/runtime`.
+- **`=== Project node_modules ===`** — Disk usage of every `node_modules` directory under `~/projects/*`.
+
+### Safe Cleanup
+
+```bash
+ai cache clear
+```
+
+Cleans reclaimable **Docker builder cache** (`docker builder prune -af`) and **in-container npm cache** (`npm cache clean --force`).
+
+### Protected Paths
+
+`ai cache clear` is designed so it **never removes**:
+- DSH state (`runtime/dsh`)
+- DSH installation (`runtime/npm-global`)
+- `.env` configuration
+- Git repositories (`~/projects/*`)
+- Docker images (`ghcr.io/mosabbir-maruf/ai-workstation`)
+- Docker containers (`ai-workstation`)
+- Docker volumes
+
+### Dependency Purge
+
+To remove `node_modules` directories across all repositories in `~/projects/*`:
+
+```bash
+# Interactive confirmation
+ai cache clear --deps
+
+# Non-interactive
+ai cache clear --deps --yes
+```
+
+Recommended dependency reset sequence:
+
+```bash
+ai app stop
+ai cache clear --deps
+ai run
+```
+
+When `ai run` executes next, dependencies are cleanly reinstalled from the project lockfile (`npm ci`, `pnpm install --frozen-lockfile`, `yarn install --immutable`, or `bun install --frozen-lockfile`).
+
+---
+
+## State Backup
+
+Project source code lives in GitHub, while DSH workflow state (`runtime/dsh`) and `.env` are backed up via encrypted off-host `.tar.gz` archives.
+
+### Export Snapshot
+
+```bash
+ai state export
+```
+
+Creates `~/ai-state-backups/ai-state-<timestamp>.tar.gz` (permissions `0600`).
+
+### Archive Manifest
+
+| Included in Snapshot | Excluded from Snapshot |
+|---|---|
+| `manifest` (version, timestamp, `DSH_VERSION`) | `runtime/npm-global` |
+| `.env` | `runtime/app` & `runtime/harness` |
+| `runtime/dsh/` (`settings.yaml`, `.credentials.yaml`, `storages/`) | `runtime/github-broker` & `github.sock` |
+| — | `secrets/github-app.pem` & `~/projects/*` |
+
+### Import Snapshot
+
+```bash
+ai stop
+ai state import ~/ai-state-backups/ai-state-20260925-020000.tar.gz
+ai start
+ai dsh version
+```
+
+During import, `ai state import` validates archive member names (`manifest`, `.env`, `dsh/*`), blocks relative/absolute path traversal (`..`), rejects hardlinks, verifies symlinks point strictly within `/home/sandbox/.npm-global/*`, backs up the existing state before replacement, and restores `0600`/`0700` file permissions.

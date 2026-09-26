@@ -1,0 +1,136 @@
+---
+title: CLI Reference
+description: Complete command reference for the ai CLI across projects, Git, workstation runtime, app, Harness, DSH, cache, GitHub, tunnel, and state.
+---
+
+Run `ai` or `ai help` on the VPS host to display the built-in command list.
+
+---
+
+## Projects
+
+```bash
+ai add <github-url>
+ai remove <project>
+ai list
+ai use <project>
+```
+
+- **`ai add <github-url>`** — Validates and clones a GitHub HTTPS repository (`https://github.com/<owner>/<repo>`) into `~/projects/<name>`.
+- **`ai remove <project>`** — Stops the workstation if removing the active project and deletes `~/projects/<name>`.
+- **`ai list`** — Lists all Git repositories in `~/projects/` and marks the active project with `*`.
+- **`ai use <project>`** — Updates `ACTIVE_PROJECT` and `ACTIVE_PROJECT_PATH` in `.env`, recreates the `/workspace` container mount if `ai-workstation` is running, and restarts the Harness.
+
+---
+
+## Git
+
+```bash
+ai pull
+ai push "commit message"
+```
+
+- **`ai pull`** — Executes `git pull --ff-only` inside the active project directory (`ACTIVE_PROJECT_PATH`).
+- **`ai push "commit message"`** — Stages all modified files (`git add -A`), scans staged filenames for sensitive file patterns (`.env`, `.env.*` except `.env.example`, `*.pem`, `*.key`, `*.p12`, `*.pfx`, `credentials.json`, `service-account*.json`), aborts and resets staging if any match is found, and otherwise commits and pushes via the GitHub App credential broker.
+
+---
+
+## Runtime Commands
+
+```bash
+ai start
+ai stop
+ai restart
+ai status
+ai logs
+ai shell
+ai run
+ai preview
+```
+
+- **`ai start`** — Initializes `runtime/dsh`, `runtime/npm-global`, and `runtime/harness` (`0700`, `1001:1001`), starts `ai-workstation` via Docker Compose, and launches DSH + Bridge (`ai harness start`).
+- **`ai stop`** — Stops the active project app, stops the Harness, tears down the `ai-workstation` container, and cleans up `runtime/app/pid`.
+- **`ai restart`** — Restarts the `ai-workstation` container and starts the Harness.
+- **`ai status`** — Displays the active project, container status (`running`/`stopped`), Harness (`DSH` + `Bridge`) status, and App status/PID.
+- **`ai logs`** — Streams `docker compose logs -f --tail=100`.
+- **`ai shell`** — Opens an interactive `bash` session inside `ai-workstation` as user `sandbox` (`UID 1001`) at `/workspace`.
+- **`ai run`** — Detects the project package manager (`npm`, `pnpm`, `yarn`, `bun`), installs missing dependencies from lockfiles, auto-injects `0.0.0.0` host flags (`--host 0.0.0.0` or `-H 0.0.0.0`), and runs the dev server in the background via `/usr/local/bin/app-runner.sh`.
+- **`ai preview`** — Inspects the container IP, detects listening app ports via `scripts/lib/ports.sh`, prints the ready-to-run `ssh -N -L ...` command, and prints Cloudflare Tunnel Anywhere URLs (`App`, `DSH`, and `DSH open:` with token).
+
+---
+
+## App Supervisor
+
+```bash
+ai app stop
+ai app restart
+ai app status
+ai app logs
+```
+
+- **`ai app stop`** — Terminates the active project process group (`PGID`) and PID inside the container (`SIGTERM` followed by `SIGKILL` cleanup).
+- **`ai app restart`** — Runs `ai app stop` followed by `ai run`.
+- **`ai app status`** — Prints the active project name, running state, and container PID.
+- **`ai app logs`** — Streams `/run/ai-workstation/app/app.log` (`tail -n 100 -f`).
+
+---
+
+## Harness & DSH
+
+```bash
+ai harness start
+ai harness stop
+ai harness restart
+ai harness status
+
+ai dsh version
+ai dsh update
+ai dsh update <version>
+```
+
+- **`ai harness {start|stop|restart|status}`** — Controls the container-internal DSH web process (`127.0.0.1:4090`) and TCP bridge (`0.0.0.0:4091`) via `/usr/local/bin/harness.sh`.
+- **`ai dsh version`** — Outputs the installed `@deepseek-ai/dsh` version in `/home/sandbox/.npm-global`.
+- **`ai dsh update [version]`** — Installs `@deepseek-ai/dsh@latest` (or a pinned release tag) into persistent `/home/sandbox/.npm-global` without rebuilding the Docker image.
+
+---
+
+## Maintenance
+
+```bash
+ai cache
+ai cache clear
+ai cache clear --deps
+ai cache clear --deps --yes
+ai update
+ai upgrade
+ai doctor
+```
+
+- **`ai cache`** — Read-only disk report (`docker system df`, `du -sh runtime`, and `~/projects/*/node_modules`).
+- **`ai cache clear [--deps] [--yes]`** — Prunes Docker builder cache (`docker builder prune -af`) and npm cache (`npm cache clean --force`), plus removes `~/projects/*/node_modules` when `--deps` is passed.
+- **`ai update`** — Fast-forward updates `~/ai-workstation` (`git pull --ff-only`) and pulls latest compose images.
+- **`ai upgrade`** — Runs `ai update`, recreates the container (`compose up -d`), and restarts the Harness.
+- **`ai doctor`** — Runs the full 20-point verification suite across Docker, `.env`, active project mount, container user/cgroups/capabilities (`sandbox`, `512 MB`, `1.5 CPU`, `256 PIDs`, `cap_drop: ALL`, `no-new-privileges`), DSH/Harness, and `github.sock`.
+
+---
+
+## Broker, Tunnel & State
+
+```bash
+# GitHub App Broker
+ai github setup
+ai github status
+ai github test
+
+# Cloudflare Tunnel (Anywhere Access)
+ai tunnel setup
+ai tunnel sync [port]
+ai tunnel status
+ai tunnel start
+ai tunnel stop
+ai tunnel logs
+
+# State Backup & Restore
+ai state export
+ai state import <archive>
+```

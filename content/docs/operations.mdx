@@ -1,0 +1,295 @@
+---
+title: Operations & Runbook
+description: DeepSeek Harness lifecycle, safe cache pruning, state archive export/import, updates, CI/CD pipeline, and daily operational runbook.
+---
+
+This guide covers the runtime lifecycle of **DeepSeek Harness (DSH)**, cache inspection and safe cleanup, state backup and recovery, image/CLI upgrades, CI/CD publishing, and the operator runbook.
+
+---
+
+## Harness Architecture
+
+DSH installation, DSH state, and Harness runtime metadata are deliberately separated across three host directories:
+
+```text
+runtime/npm-global/
+    └── DSH installation (@deepseek-ai/dsh)
+
+runtime/dsh/
+    └── DSH state/config/history (settings.yaml, .credentials.yaml, storages/)
+
+runtime/harness/
+    └── Ephemeral PID/log/runtime metadata (dsh.pid, bridge.pid, harness.log)
+```
+
+Inside the `ai-workstation` container (`docker/harness.sh`):
+
+```text
+DSH
+ └── 127.0.0.1:4090
+        ▲
+        │
+        │ local TCP bridge
+        │
+Bridge
+ └── 0.0.0.0:4091
+        │
+        ▼
+Host: 127.0.0.1:4090
+```
+
+This architecture keeps the DSH service bound strictly to container-internal loopback (`127.0.0.1:4090`) while exposing it safely to the host loopback (`127.0.0.1:4090`) via the internal Node TCP bridge on port `4091`.
+
+### Harness Commands
+
+```bash
+ai harness start
+ai harness stop
+ai harness restart
+ai harness status
+
+ai dsh version
+ai dsh update
+ai dsh update <version>
+```
+
+---
+
+## Cache Management
+
+### Storage Audit
+
+```bash
+ai cache
+```
+
+`ai cache` is strictly read-only and reports three footprints:
+1. `=== Docker ===` — `docker system df`
+2. `=== AI runtime ===` — `du -sh ~/ai-workstation/runtime`
+3. `=== Project node_modules ===` — `find ~/projects -type d -name node_modules -prune -exec du -sh {} \;`
+
+### Safe Cache Purge
+
+```bash
+ai cache clear
+```
+
+Cleans reclaimable **Docker builder cache** (`docker builder prune -af`) and **in-container npm cache** (`npm cache clean --force`) when the workstation is running.
+
+`ai cache clear` intentionally **never removes**:
+- DSH state (`runtime/dsh`)
+- DSH installation (`runtime/npm-global`)
+- `.env`
+- Git repositories (`~/projects/*`)
+- Docker images (`ghcr.io/mosabbir-maruf/ai-workstation`)
+- Docker containers (`ai-workstation`)
+- Docker volumes
+
+### Dependency Reset
+
+```bash
+ai cache clear --deps
+```
+
+Removes `node_modules` directories across `~/projects/*` after confirmation (or non-interactively with `--yes`):
+
+```bash
+ai cache clear --deps --yes
+```
+
+Recommended dependency reset flow:
+
+```bash
+ai app stop
+ai cache clear --deps
+ai run
+```
+
+When `ai run` starts next, dependencies are reinstalled automatically from the project's lockfile (`npm ci`, `pnpm install --frozen-lockfile`, `yarn install --immutable`, or `bun install --frozen-lockfile`).
+
+---
+
+## State Recovery
+
+Project source code is protected by GitHub. DSH workflow state (`runtime/dsh`) and `.env` are separate and should be backed up independently.
+
+### Export State
+
+```bash
+ai state export
+```
+
+Creates a `0600` permissioned archive at `~/ai-state-backups/ai-state-<timestamp>.tar.gz` containing:
+- `manifest` (format version, ISO timestamp, and `DSH_VERSION`)
+- `.env`
+- `dsh/` (`runtime/dsh`)
+
+Store exported state archives off-host in encrypted storage.
+
+### Import State
+
+```bash
+ai state import <archive>
+```
+
+Recommended recovery workflow:
+
+```bash
+ai stop
+ai state import /path/to/backup.tar.gz
+ai start
+ai dsh version
+```
+
+---
+
+## Update Layers
+
+AI Workstation separates updates into three independent layers:
+
+### CLI Update
+
+```bash
+ai update
+```
+
+or `./update.sh` — runs `git pull --ff-only` on `~/ai-workstation` and `docker compose pull`.
+
+### Image Upgrade
+
+```bash
+ai upgrade
+```
+
+Pulls the latest multi-arch image from GHCR, recreates the `ai-workstation` container, and starts the Harness.
+
+### DSH Update
+
+```bash
+ai state export
+ai dsh update
+ai harness restart
+ai dsh version
+```
+
+DSH updates do not require rebuilding the base Docker image because the installation lives in persistent `runtime/npm-global`.
+
+---
+
+## CI/CD Pipeline
+
+The workstation image is built for `linux/amd64` and `linux/arm64` in GitHub Actions on every push to `main`:
+
+```text
+Push to main
+     │
+     ▼
+.github/workflows/image.yml
+     │
+     ├── checkout
+     ├── QEMU (multi-arch)
+     ├── Docker Buildx
+     ├── GHCR login
+     ├── build linux/amd64,linux/arm64
+     ├── push :latest
+     ├── push :<commit-sha>
+     ├── inspect published images
+     └── clean old tagged versions
+```
+
+Published image references:
+
+```text
+ghcr.io/mosabbir-maruf/ai-workstation:latest
+ghcr.io/mosabbir-maruf/ai-workstation:<commit-sha>
+```
+
+For deterministic production deployments, pin the SHA tag in `.env`:
+
+```dotenv
+IMAGE=ghcr.io/mosabbir-maruf/ai-workstation:<commit-sha>
+```
+
+---
+
+## Operational Runbook
+
+### Start of Day
+
+```bash
+ai doctor
+ai start
+ai status
+ai run
+ai preview
+```
+
+### During Development
+
+```bash
+ai status
+ai app logs
+ai harness status
+ai shell
+```
+
+### Switch Project
+
+```bash
+ai use another-project
+ai run
+ai preview
+```
+
+### End of Day
+
+```bash
+ai app stop
+ai stop
+```
+
+---
+
+## Troubleshooting
+
+### Container Stopped
+
+```bash
+ai start
+ai status
+```
+
+### Harness Stopped
+
+```bash
+ai harness status
+ai harness restart
+```
+
+### App Startup Error
+
+```bash
+ai app status
+ai app logs
+
+# Clean dependency reinstall if needed:
+ai app stop
+ai cache clear --deps
+ai run
+```
+
+### GitHub Auth Error
+
+```bash
+ai github status
+ai github test
+```
+
+Never copy a PAT or host SSH private key into the container as a workaround. Verify `ai-github-broker` and `secrets/github-app.pem`.
+
+### Image Inspection
+
+```bash
+docker image ls ghcr.io/mosabbir-maruf/ai-workstation
+ai doctor
+```

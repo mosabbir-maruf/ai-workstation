@@ -99,7 +99,7 @@ jobs:
         run: |
           # Lowercase owner/repository resolution for GHCR compliance
           OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-          IMAGE="ghcr.io/${OWNER_LOWER}/ai-workstation-frontend"
+          IMAGE="ghcr.io/${OWNER_LOWER}/ai-workstation"
           SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
 
           echo "image=${IMAGE}" >> "$GITHUB_OUTPUT"
@@ -148,7 +148,7 @@ jobs:
       - name: Prune Stale Image Versions (Keep Latest + Previous Release)
         uses: actions/delete-package-versions@v5
         with:
-          package-name: 'ai-workstation-frontend'
+          package-name: 'ai-workstation'
           package-type: 'container'
           min-versions-to-keep: 2
           ignore-versions: '^(latest)$'

@@ -11,8 +11,8 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/mosabbir-maruf/ai-workstation-frontend/actions/workflows/ci.yml"><img src="https://github.com/mosabbir-maruf/ai-workstation-frontend/actions/workflows/ci.yml/badge.svg" alt="CI/CD Pipeline" /></a>
-  <a href="https://github.com/mosabbir-maruf/ai-workstation-frontend/pkgs/container/ai-workstation-frontend"><img src="https://img.shields.io/badge/GHCR-ai--workstation--frontend-blue?logo=docker" alt="Docker Image" /></a>
+  <a href="https://github.com/mosabbir-maruf/ai-workstation/actions/workflows/ci.yml"><img src="https://github.com/mosabbir-maruf/ai-workstation/actions/workflows/ci.yml/badge.svg" alt="CI/CD Pipeline" /></a>
+  <a href="https://github.com/mosabbir-maruf/ai-workstation/pkgs/container/ai-workstation"><img src="https://img.shields.io/badge/GHCR-ai--workstation-blue?logo=docker" alt="Docker Image" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT" /></a>
 </p>
 
@@ -56,7 +56,7 @@ This frontend is designed to run as an independent web application that communic
 | Repository | Purpose | Primary Interface |
 | :--- | :--- | :--- |
 | **[ai-workstation-cli](https://github.com/mosabbir-maruf/ai-workstation-cli)** | Backend daemon, container harness, and CLI engine | Terminal CLI (`ai`) |
-| **[ai-workstation-frontend](https://github.com/mosabbir-maruf/ai-workstation-frontend)** | Graphical web console, live telemetry, and documentation | Web Browser (`/workstation`, `/docs`) |
+| **[ai-workstation](https://github.com/mosabbir-maruf/ai-workstation)** | Graphical web console, live telemetry, and documentation | Web Browser (`/workstation`, `/docs`) |
 
 - **CLI-only users**: Can use the backend `ai-workstation-cli` repository directly without the web frontend.
 - **Web Console users**: Can run or deploy this frontend to manage their workstation graphically against their remote VPS or local backend.

@@ -77,10 +77,10 @@ function StatusDot({ state }: { state: ServiceStatusState }) {
 function parseAppStatus(
   res: PromiseSettledResult<{ ok: boolean; output: string }>
 ): { isRun: boolean; pid: string } {
-  if (res.status !== "fulfilled") {
+  if (res.status !== "fulfilled" || !res.value.ok) {
     return { isRun: false, pid: "—" };
   }
-  const out = res.value.output;
+  const out = res.value.output || "";
   const isRun =
     out.toLowerCase().includes("running") ||
     out.toLowerCase().includes("active") ||
@@ -95,10 +95,10 @@ function parseAppStatus(
 function parseHarnessActive(
   res: PromiseSettledResult<{ ok: boolean; output: string }>
 ): boolean {
-  if (res.status !== "fulfilled") {
+  if (res.status !== "fulfilled" || !res.value.ok) {
     return false;
   }
-  const out = res.value.output.toLowerCase();
+  const out = (res.value.output || "").toLowerCase();
   return (
     out.includes("running") || out.includes("active") || out.includes("ok")
   );
@@ -107,10 +107,10 @@ function parseHarnessActive(
 function parseTunnelOnline(
   res: PromiseSettledResult<{ ok: boolean; output: string }>
 ): boolean {
-  if (res.status !== "fulfilled") {
+  if (res.status !== "fulfilled" || !res.value.ok) {
     return false;
   }
-  const out = res.value.output.toLowerCase();
+  const out = (res.value.output || "").toLowerCase();
   return (
     out.includes("active") ||
     out.includes("connected") ||

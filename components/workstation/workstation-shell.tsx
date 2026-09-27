@@ -18,6 +18,7 @@ import { ProjectsSection } from "./sections/projects-section";
 import { StateSection } from "./sections/state-section";
 import { TerminalSection } from "./sections/terminal-section";
 import { TunnelSection } from "./sections/tunnel-section";
+import { WorkstationSetupFlow } from "./workstation-setup-flow";
 
 export const WORKSTATION_SECTIONS = [
   { id: "overview", label: "Overview", index: "01", tag: "System" },
@@ -83,9 +84,56 @@ export function WorkstationShell() {
       ? initialSection
       : "overview"
   );
+  const [showWizard, setShowWizard] = useState<boolean>(false);
+  const [wizardDismissed, setWizardDismissed] = useState<boolean>(false);
+
+  // Check on mount if setup is needed
+  useEffect(() => {
+    try {
+      const dismissed = localStorage.getItem("aiws.wizard.dismissed");
+      if (dismissed === "true") {
+        setWizardDismissed(true);
+        return;
+      }
+    } catch {
+      // ignore
+    }
+
+    // Auto-detect if essentials are unconfigured
+    const checkNeedsSetup = async () => {
+      try {
+        const [gRes, tRes, pRes] = await Promise.allSettled([
+          workstationApi.getGithubStatus(),
+          workstationApi.getTunnelStatus(),
+          workstationApi.getProjects(),
+        ]);
+        const ghUnconfigured =
+          gRes.status === "fulfilled" &&
+          (gRes.value.output || "").includes("not configured");
+        const tunnelUnconfigured =
+          tRes.status === "fulfilled" &&
+          !(tRes.value.output || "").toLowerCase().includes("active");
+        const noProject =
+          pRes.status === "fulfilled" &&
+          !pRes.value.projects?.some((p) => p.active);
+
+        if (ghUnconfigured || tunnelUnconfigured || noProject) {
+          setShowWizard(true);
+        }
+      } catch {
+        // ignore
+      }
+    };
+
+    checkNeedsSetup();
+  }, []);
 
   const tabFromQuery = searchParams.get("tab") as WorkstationSectionId | null;
   useEffect(() => {
+    if (tabFromQuery === "setup") {
+      setShowWizard(true);
+      return;
+    }
     if (
       tabFromQuery &&
       WORKSTATION_SECTIONS.some((s) => s.id === tabFromQuery)
@@ -95,11 +143,22 @@ export function WorkstationShell() {
   }, [tabFromQuery]);
 
   const handleSelectSection = useCallback((id: WorkstationSectionId) => {
+    setShowWizard(false);
     setActiveSection(id);
     const url = new URL(window.location.href);
     url.searchParams.set("tab", id);
     window.history.replaceState({}, "", url.toString());
   }, []);
+
+  const handleDismissWizard = () => {
+    setShowWizard(false);
+    setWizardDismissed(true);
+    try {
+      localStorage.setItem("aiws.wizard.dismissed", "true");
+    } catch {
+      // ignore
+    }
+  };
 
   const currentSectionMeta = WORKSTATION_SECTIONS.find(
     (s) => s.id === activeSection
@@ -113,6 +172,18 @@ export function WorkstationShell() {
         <aside className="sticky top-20 z-30 self-start">
           {/* Mobile horizontal bar (<md) */}
           <div className="flex gap-1.5 overflow-x-auto border border-border bg-background/95 p-2 shadow-xs backdrop-blur-sm md:hidden">
+            <button
+              className={cn(
+                "shrink-0 px-3.5 py-2 font-medium text-sm tracking-tight transition-colors",
+                showWizard
+                  ? "bg-foreground font-semibold text-background"
+                  : "text-amber-600 dark:text-amber-400 hover:bg-muted/50"
+              )}
+              onClick={() => setShowWizard(true)}
+              type="button"
+            >
+              ⚡ Setup Guide
+            </button>
             {WORKSTATION_SECTIONS.map((section) => {
               const isActive = activeSection === section.id;
               return (
@@ -155,16 +226,20 @@ export function WorkstationShell() {
 
             <div className="border-border border-r border-b">
               {/* Panel Header */}
-              <div className="flex items-center justify-between border-border border-b bg-muted/30 px-4 py-3.5">
-                <div className="flex items-center gap-2.5">
+              <div className="flex items-center justify-between border-border border-b bg-muted/30 px-4 py-3">
+                <div className="flex items-center gap-2">
                   <span className="size-2 bg-foreground" />
                   <span className="font-bold text-foreground text-sm tracking-tight">
-                    Workstation Modules
+                    Workstation
                   </span>
                 </div>
-                <span className="font-mono text-muted-foreground text-xs tabular-nums">
-                  [{currentSectionMeta?.index}/12]
-                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowWizard(true)}
+                  className="font-mono text-[10px] text-amber-600 dark:text-amber-400 hover:underline uppercase tracking-wider"
+                >
+                  ⚡ Setup Guide
+                </button>
               </div>
 
               {/* Grouped Navigation Tree */}
@@ -257,28 +332,37 @@ export function WorkstationShell() {
             </div>
           </div>
 
-          {/* Section content switcher */}
-          <div className="space-y-6">
-            {activeSection === "overview" && (
-              <OverviewSection
-                onSelectTab={(tab) =>
-                  handleSelectSection(tab as WorkstationSectionId)
-                }
-              />
-            )}
-            {activeSection === "terminal" && <TerminalSection />}
-            {activeSection === "app" && <AppSection />}
-            {activeSection === "preview" && <PreviewSection />}
-            {activeSection === "projects" && <ProjectsSection />}
-            {activeSection === "git" && <GitSection />}
-            {activeSection === "github" && <GitHubSection />}
-            {activeSection === "tunnel" && <TunnelSection />}
-            {activeSection === "harness" && <HarnessSection />}
-            {activeSection === "dsh-keys" && <DshKeysSection />}
-            {activeSection === "maintenance" && <MaintenanceSection />}
-            {activeSection === "state" && <StateSection />}
-            {activeSection === "logs" && <LogsSection />}
-          </div>
+          {/* Conditional: Setup Wizard Full View vs Regular Module View */}
+          {showWizard ? (
+            <WorkstationSetupFlow
+              onComplete={() => {
+                setShowWizard(false);
+                handleDismissWizard();
+              }}
+            />
+          ) : (
+            <div className="space-y-6">
+              {activeSection === "overview" && (
+                <OverviewSection
+                  onSelectTab={(tab) =>
+                    handleSelectSection(tab as WorkstationSectionId)
+                  }
+                />
+              )}
+              {activeSection === "terminal" && <TerminalSection />}
+              {activeSection === "app" && <AppSection />}
+              {activeSection === "preview" && <PreviewSection />}
+              {activeSection === "projects" && <ProjectsSection />}
+              {activeSection === "git" && <GitSection />}
+              {activeSection === "github" && <GitHubSection />}
+              {activeSection === "tunnel" && <TunnelSection />}
+              {activeSection === "harness" && <HarnessSection />}
+              {activeSection === "dsh-keys" && <DshKeysSection />}
+              {activeSection === "maintenance" && <MaintenanceSection />}
+              {activeSection === "state" && <StateSection />}
+              {activeSection === "logs" && <LogsSection />}
+            </div>
+          )}
         </main>
       </div>
     </div>

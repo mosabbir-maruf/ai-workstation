@@ -888,6 +888,14 @@ function WorkspaceAndIngressGrid({
   onOpenGitSync?: () => void;
   onOpenTunnel?: () => void;
 }) {
+  const [currentOrigin, setCurrentOrigin] = useState<string>("Same-origin endpoint");
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.location.origin) {
+      setCurrentOrigin(window.location.origin);
+    }
+  }, []);
+
   const anywhereAppUrl =
     previewData?.anywhereApp || "Not configured (run 'ai tunnel setup')";
   const anywhereDshUrl =
@@ -1121,10 +1129,7 @@ function WorkspaceAndIngressGrid({
                   {[
                     {
                       label: "Current Origin",
-                      url:
-                        typeof window !== "undefined"
-                          ? window.location.origin
-                          : "Same-origin endpoint",
+                      url: currentOrigin,
                     },
                     { label: "Anywhere App Edge", url: anywhereAppUrl },
                     { label: "Anywhere DSH Harness", url: anywhereDshUrl },

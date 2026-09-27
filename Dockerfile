@@ -8,6 +8,8 @@ FROM node:current-alpine AS base
 RUN apk add --no-cache libc6-compat
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
+ENV CI=true
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 RUN npm install -g corepack@latest && corepack enable
 
 # --- Stage 2: Install dependencies ---

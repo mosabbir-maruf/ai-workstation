@@ -431,7 +431,15 @@ function LiveWaveAreaChart({
     );
   }
 
-  const data = metrics.timeline.map((pt, idx) => ({
+  let rawTimeline = metrics.timeline;
+  if (rawTimeline.length === 1) {
+    // Generate a preceding anchor so the SVG path has width to draw the area wave
+    const single = rawTimeline[0];
+    const prevDate = new Date(Date.now() - 5000).toISOString();
+    rawTimeline = [{ date: prevDate, cpu: single.cpu, memory: single.memory }, single];
+  }
+
+  const data = rawTimeline.map((pt, idx) => ({
     date: new Date(2026, 2, idx + 1),
     cpu: pt.cpu,
     memory: pt.memory,
@@ -546,7 +554,14 @@ function LiveMemoryPieChart({
               />
             );
           })}
-          <PieCenter defaultLabel="Total RAM" suffix=" GB" />
+          <PieCenter
+            defaultLabel="Total RAM"
+            formatOptions={{
+              minimumFractionDigits: 1,
+              maximumFractionDigits: 2,
+            }}
+            suffix=" GB"
+          />
         </PieChart>
       </div>
 
@@ -569,7 +584,11 @@ function LiveMemoryPieChart({
               </span>
             </div>
             <span className="shrink-0 font-bold text-foreground tabular-nums">
-              {item.value} GB
+              {typeof item.value === "number"
+                ? item.value < 1 && item.value > 0
+                  ? `${Math.round(item.value * 1024)} MB`
+                  : `${item.value.toFixed(2)} GB`
+                : `${item.value} GB`}
             </span>
           </div>
         ))}

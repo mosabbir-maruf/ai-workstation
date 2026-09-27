@@ -117,6 +117,22 @@ Because extracting `.tar.gz` archives carries path traversal and symlink risks, 
 
 ---
 
+---
+
+## Host Control Daemon Security
+
+When connecting the Web Dashboard (`bklit-ui`) to the remote host via Cloudflare Tunnel or reverse proxy, the HTTP daemon enforces constant-time Bearer token verification:
+
+- **Token Requirement**: Set `WORKSTATION_API_KEY` in `~/ai-workstation-cli/.env`.
+- **Accepted Authentication Vectors**:
+  - `Authorization: Bearer <key>` header
+  - `X-API-Key: <key>` header
+  - `?token=<key>` query parameter (strictly for SSE logs and browser downloads)
+- **Timing Attack Mitigation**: Uses `secrets.compare_digest` for constant-time cryptographic verification.
+- **Fail-Closed Behavior**: When `WORKSTATION_API_KEY` is configured, any unauthenticated or malformed request is rejected immediately with `401 Unauthorized` before executing any system command.
+
+---
+
 ## Security Checklist
 
 ```text
@@ -137,6 +153,7 @@ Because extracting `.tar.gz` archives carries path traversal and symlink risks, 
 [ ] GitHub private key is not tracked
 [ ] Cloudflare Tunnel token is not tracked
 [ ] Cloudflare Access policy protects tunnel hostnames
+[ ] WORKSTATION_API_KEY is configured for Web Console daemon
 [ ] DSH credentials are protected (0600)
 [ ] GitHub authentication uses broker/App flow
 [ ] Development ports are localhost-only (127.0.0.1)
@@ -145,3 +162,4 @@ Because extracting `.tar.gz` archives carries path traversal and symlink risks, 
 ```
 
 Run `ai doctor` regularly to audit these invariants automatically.
+

@@ -134,7 +134,7 @@ export function TerminalSection() {
         <div className="relative w-full overflow-visible">
           <div className="grid w-full grid-cols-1">
             <CadCell
-              index="13"
+              index="02"
               title="Remote Workstation Console & CLI"
               subtitle="Direct interactive CLI shell targeting host VPS or container sandbox"
               headerAction={

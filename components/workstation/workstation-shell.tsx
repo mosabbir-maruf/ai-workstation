@@ -50,25 +50,25 @@ export const WORKSTATION_GROUPS = [
   {
     category: "Workspace & VCS",
     items: [
-      { id: "projects", label: "Projects", index: "04", tag: "Workspace" },
-      { id: "git", label: "Git Sync", index: "05", tag: "VCS" },
-      { id: "github", label: "GitHub App", index: "06", tag: "Integration" },
+      { id: "projects", label: "Projects", index: "05", tag: "Workspace" },
+      { id: "git", label: "Git Sync", index: "06", tag: "VCS" },
+      { id: "github", label: "GitHub App", index: "07", tag: "Integration" },
     ],
   },
   {
     category: "Edge & AI Agent",
     items: [
-      { id: "tunnel", label: "Edge Tunnel", index: "07", tag: "Edge" },
-      { id: "harness", label: "Harness + DSH", index: "08", tag: "Agent" },
-      { id: "dsh-keys", label: "DSH Model Keys", index: "09", tag: "Secrets" },
+      { id: "tunnel", label: "Edge Tunnel", index: "08", tag: "Edge" },
+      { id: "harness", label: "Harness + DSH", index: "09", tag: "Agent" },
+      { id: "dsh-keys", label: "DSH Model Keys", index: "10", tag: "Secrets" },
     ],
   },
   {
     category: "Operations",
     items: [
-      { id: "maintenance", label: "Maintenance", index: "10", tag: "Ops" },
-      { id: "state", label: "State Backup", index: "11", tag: "Backup" },
-      { id: "logs", label: "Workstation Logs", index: "12", tag: "Telemetry" },
+      { id: "maintenance", label: "Maintenance", index: "11", tag: "Ops" },
+      { id: "state", label: "State Backup", index: "12", tag: "Backup" },
+      { id: "logs", label: "Workstation Logs", index: "13", tag: "Telemetry" },
     ],
   },
 ] as const;

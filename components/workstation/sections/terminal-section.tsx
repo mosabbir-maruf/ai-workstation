@@ -42,7 +42,7 @@ export function TerminalSection() {
     },
   ]);
 
-  const outputEndRef = useRef<HTMLDivElement>(null);
+  const logContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Command history navigation
@@ -50,7 +50,10 @@ export function TerminalSection() {
   const pastCommands = useRef<string[]>([]);
 
   useEffect(() => {
-    outputEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    // Only scroll the terminal inner container, NOT the outer window/page
+    if (logContainerRef.current) {
+      logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
+    }
   }, [history]);
 
   const handleRunCommand = async (cmdToRun?: string, explicitTarget?: "host" | "workstation") => {
@@ -96,7 +99,7 @@ export function TerminalSection() {
       ]);
     } finally {
       setExecuting(false);
-      setTimeout(() => inputRef.current?.focus(), 50);
+      setTimeout(() => inputRef.current?.focus({ preventScroll: true }), 50);
     }
   };
 
@@ -203,7 +206,10 @@ export function TerminalSection() {
                 </div>
 
                 {/* Terminal logs / history scroll area */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4 select-text">
+                <div
+                  ref={logContainerRef}
+                  className="flex-1 overflow-y-auto p-4 space-y-4 select-text"
+                >
                   {history.length === 0 ? (
                     <div className="text-zinc-600 text-center py-12">
                       Terminal buffer cleared. Enter a command below.
@@ -232,7 +238,6 @@ export function TerminalSection() {
                       </div>
                     ))
                   )}
-                  <div ref={outputEndRef} />
                 </div>
 
                 {/* Input prompt line */}

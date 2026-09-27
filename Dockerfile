@@ -23,7 +23,7 @@ COPY content ./content
 COPY lib ./lib
 RUN pnpm install --frozen-lockfile
 
-# --- Stage 3: Build application ---
+# --- Stage 3: Build application from source (used when building locally without pre-built artifacts) ---
 FROM base AS builder
 WORKDIR /app
 
@@ -50,12 +50,13 @@ RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
 # Static public assets
-COPY --from=builder /app/public ./public
+COPY public ./public
 
 # Setup .next directory ownership for cache writing
 RUN mkdir .next && chown nextjs:nodejs .next
 
-# Copy minimal standalone build output and static chunks
+# Copy standalone build output and static chunks
+# When built via builder stage, defaults to builder artifacts; when pre-built, uses context
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 

@@ -7,7 +7,6 @@ const nextConfig = {
   output: "standalone",
   reactStrictMode: true,
   transpilePackages: ["@aiws/ui", "geist"],
-  viewTransition: true,
   experimental: {
     // Keeps dev/prod from pulling the entire charts package per page.
     optimizePackageImports: ["@aiws/ui", "@aiws/ui/charts"],

@@ -19,6 +19,7 @@ import { StateSection } from "./sections/state-section";
 import { TerminalSection } from "./sections/terminal-section";
 import { TunnelSection } from "./sections/tunnel-section";
 import { WorkstationSetupFlow } from "./workstation-setup-flow";
+import { workstationApi } from "@/lib/workstation/api";
 
 export const WORKSTATION_SECTIONS = [
   { id: "overview", label: "Overview", index: "01", tag: "System" },
@@ -115,7 +116,7 @@ export function WorkstationShell() {
           !(tRes.value.output || "").toLowerCase().includes("active");
         const noProject =
           pRes.status === "fulfilled" &&
-          !pRes.value.projects?.some((p) => p.active);
+          !pRes.value.projects?.some((p: { active: boolean }) => p.active);
 
         if (ghUnconfigured || tunnelUnconfigured || noProject) {
           setShowWizard(true);
@@ -128,19 +129,19 @@ export function WorkstationShell() {
     checkNeedsSetup();
   }, []);
 
-  const tabFromQuery = searchParams.get("tab") as WorkstationSectionId | null;
+  const tabQueryParam = searchParams.get("tab");
   useEffect(() => {
-    if (tabFromQuery === "setup") {
+    if (tabQueryParam === "setup") {
       setShowWizard(true);
       return;
     }
     if (
-      tabFromQuery &&
-      WORKSTATION_SECTIONS.some((s) => s.id === tabFromQuery)
+      tabQueryParam &&
+      WORKSTATION_SECTIONS.some((s) => s.id === tabQueryParam)
     ) {
-      setActiveSection(tabFromQuery);
+      setActiveSection(tabQueryParam as WorkstationSectionId);
     }
-  }, [tabFromQuery]);
+  }, [tabQueryParam]);
 
   const handleSelectSection = useCallback((id: WorkstationSectionId) => {
     setShowWizard(false);

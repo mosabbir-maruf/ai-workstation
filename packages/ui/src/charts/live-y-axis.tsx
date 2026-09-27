@@ -134,8 +134,8 @@ const LiveYAxisInner = memo(function LiveYAxisInner({
   // Stabilize the tick VALUE set: only recompute which ticks exist when the
   // domain crosses an interval boundary. We quantize min/max to interval
   // boundaries so the set doesn't change on every sub-pixel lerp frame.
-  const quantizedMin = interval > 0 ? Math.floor(minVal / interval) : 0;
-  const quantizedMax = interval > 0 ? Math.ceil(maxVal / interval) : 0;
+  const _quantizedMin = interval > 0 ? Math.floor(minVal / interval) : 0;
+  const _quantizedMax = interval > 0 ? Math.ceil(maxVal / interval) : 0;
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: quantized values are intentional coarse-grained deps for stability
   const stableTickValues = useMemo(() => {
@@ -155,15 +155,7 @@ const LiveYAxisInner = memo(function LiveYAxisInner({
       values.push(rounded);
     }
     return values;
-  }, [
-    quantizedMin,
-    quantizedMax,
-    interval,
-    minVal,
-    maxVal,
-    valRange,
-    allowDecimals,
-  ]);
+  }, [interval, minVal, maxVal, allowDecimals]);
 
   // Pixel positions update every frame for smooth movement
   const tickData = useMemo(

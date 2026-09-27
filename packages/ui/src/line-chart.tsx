@@ -422,7 +422,7 @@ function Chart({
         yPageviews: yScalePageviews(d.pageviews) ?? 0,
       });
     },
-    [xScale, yScaleUsers, yScalePageviews, data]
+    [xScale, yScaleUsers, yScalePageviews, data, margin.left]
   );
 
   const handleMouseLeave = useCallback(() => {

@@ -133,4 +133,14 @@ ai tunnel logs
 # State Backup & Restore
 ai state export
 ai state import <archive>
+
+# Host Control Daemon (Web Dashboard API)
+ai daemon start
+ai daemon stop
+ai daemon restart
+ai daemon status
+ai daemon logs
 ```
+
+- **`ai daemon {start|stop|restart|status|logs}`** — Manages the native async Python host bridge service on `127.0.0.1:8000`, providing the HTTP endpoints and real-time SSE streams consumed by the AI Workstation Web Dashboard.
+

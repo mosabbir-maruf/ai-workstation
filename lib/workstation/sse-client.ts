@@ -34,15 +34,24 @@ function notifyListeners(stream: ActiveStream) {
 }
 
 function resolveSseUrl(endpoint: string): string {
-  if (endpoint.startsWith("http://") || endpoint.startsWith("https://")) {
-    return endpoint;
-  }
+  let url = endpoint;
   const envUrl = process.env.NEXT_PUBLIC_API_URL;
-  if (envUrl && typeof envUrl === "string") {
-    const base = envUrl.trim().replace(/\/+$/, "");
-    return `${base}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
+  if (!endpoint.startsWith("http://") && !endpoint.startsWith("https://")) {
+    if (envUrl && typeof envUrl === "string") {
+      const base = envUrl.trim().replace(/\/+$/, "");
+      url = `${base}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
+    }
   }
-  return endpoint;
+
+  const apiKey =
+    process.env.NEXT_PUBLIC_WORKSTATION_API_KEY ||
+    process.env.WORKSTATION_API_KEY;
+  if (apiKey && typeof apiKey === "string" && apiKey.trim().length > 0) {
+    const separator = url.includes("?") ? "&" : "?";
+    url = `${url}${separator}token=${encodeURIComponent(apiKey.trim())}`;
+  }
+
+  return url;
 }
 
 function openStream(endpoint: string, stream: ActiveStream) {

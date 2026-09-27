@@ -79,6 +79,12 @@ export async function proxyOrRespond(
         headers.set("origin", origin);
       }
 
+      // Inject server-side secret API Key / Bearer token if configured
+      const apiKey = process.env.WORKSTATION_API_KEY || process.env.NEXT_PUBLIC_WORKSTATION_API_KEY;
+      if (apiKey && !headers.has("authorization")) {
+        headers.set("Authorization", `Bearer ${apiKey.trim()}`);
+      }
+
       const fetchOptions: RequestInit = {
         method: request.method,
         headers,

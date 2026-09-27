@@ -100,12 +100,25 @@ export function getApiBaseUrl(): string {
   return "";
 }
 
+export function getWorkstationApiKey(): string {
+  if (typeof process !== "undefined") {
+    const key =
+      process.env.NEXT_PUBLIC_WORKSTATION_API_KEY ||
+      process.env.WORKSTATION_API_KEY;
+    if (typeof key === "string" && key.trim().length > 0) {
+      return key.trim();
+    }
+  }
+  return "";
+}
+
 /** Robust, typed request executor that handles HTTP errors, network timeouts, and structured errors */
 async function requestJson<T extends { ok?: boolean; output?: string }>(
   endpointPath: string,
   options?: RequestOptions
 ): Promise<T> {
   const baseUrl = getApiBaseUrl();
+  const apiKey = getWorkstationApiKey();
   const normalizedPath = endpointPath.startsWith("/")
     ? endpointPath
     : `/${endpointPath}`;
@@ -115,6 +128,11 @@ async function requestJson<T extends { ok?: boolean; output?: string }>(
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
+  const authHeaders: Record<string, string> = {};
+  if (apiKey) {
+    authHeaders["Authorization"] = `Bearer ${apiKey}`;
+  }
+
   try {
     const res = await fetch(targetUrl, {
       ...options,
@@ -122,6 +140,7 @@ async function requestJson<T extends { ok?: boolean; output?: string }>(
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
+        ...authHeaders,
         ...(options?.headers || {}),
       },
     });
@@ -347,13 +366,20 @@ export const workstationApi = {
     }),
   importState: async (file: File): Promise<StandardOutputResponse> => {
     const baseUrl = getApiBaseUrl();
+    const apiKey = getWorkstationApiKey();
     const targetUrl = `${baseUrl}/api/state/import`;
     const formData = new FormData();
     formData.append("file", file);
 
+    const headers: Record<string, string> = {};
+    if (apiKey) {
+      headers["Authorization"] = `Bearer ${apiKey}`;
+    }
+
     try {
       const res = await fetch(targetUrl, {
         method: "POST",
+        headers,
         body: formData,
       });
       const text = await res.text();

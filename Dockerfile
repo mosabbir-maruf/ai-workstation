@@ -49,6 +49,12 @@ ENV HOSTNAME="0.0.0.0"
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
+# OpenContainers metadata labels for automatic GHCR repository linking
+LABEL org.opencontainers.image.title="AI Workstation" \
+      org.opencontainers.image.description="Standalone Next.js web application for AI Workstation" \
+      org.opencontainers.image.source="https://github.com/mosabbir-maruf/ai-workstation" \
+      org.opencontainers.image.licenses="MIT"
+
 # Static public assets
 COPY public ./public
 

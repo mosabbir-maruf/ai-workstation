@@ -98,6 +98,11 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
+          labels: |
+            org.opencontainers.image.title=AI Workstation
+            org.opencontainers.image.description=Standalone Next.js web application for AI Workstation
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.licenses=MIT
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

@@ -8,7 +8,7 @@ FROM node:current-alpine AS base
 RUN apk add --no-cache libc6-compat
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable
+RUN npm install -g corepack@latest && corepack enable
 
 # --- Stage 2: Install dependencies ---
 FROM base AS deps

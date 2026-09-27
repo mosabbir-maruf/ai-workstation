@@ -409,6 +409,13 @@ export const workstationApi = {
     }
   },
 
+  // Terminal Execution
+  executeTerminalCommand: (params: { command: string; target?: "host" | "workstation" }) =>
+    requestJson<StandardOutputResponse>("/api/terminal/exec", {
+      method: "POST",
+      body: JSON.stringify(params),
+    }),
+
   // DSH Settings / Model Keys
   getDshSettings: () => requestJson<DshSettingsResponse>("/api/dsh-settings"),
   saveDshSettings: (content: string) =>

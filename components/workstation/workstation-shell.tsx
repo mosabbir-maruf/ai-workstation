@@ -16,21 +16,23 @@ import { OverviewSection } from "./sections/overview-section";
 import { PreviewSection } from "./sections/preview-section";
 import { ProjectsSection } from "./sections/projects-section";
 import { StateSection } from "./sections/state-section";
+import { TerminalSection } from "./sections/terminal-section";
 import { TunnelSection } from "./sections/tunnel-section";
 
 export const WORKSTATION_SECTIONS = [
   { id: "overview", label: "Overview", index: "01", tag: "System" },
-  { id: "app", label: "App Runtime", index: "02", tag: "Runtime" },
-  { id: "preview", label: "Live Preview", index: "03", tag: "Ingress" },
-  { id: "projects", label: "Projects", index: "04", tag: "Workspace" },
-  { id: "git", label: "Git Sync", index: "05", tag: "VCS" },
-  { id: "github", label: "GitHub App", index: "06", tag: "Integration" },
-  { id: "tunnel", label: "Edge Tunnel", index: "07", tag: "Edge" },
-  { id: "harness", label: "Harness + DSH", index: "08", tag: "Agent" },
-  { id: "dsh-keys", label: "DSH Model Keys", index: "09", tag: "Secrets" },
-  { id: "maintenance", label: "Maintenance", index: "10", tag: "Ops" },
-  { id: "state", label: "State Backup", index: "11", tag: "Backup" },
-  { id: "logs", label: "Workstation Logs", index: "12", tag: "Telemetry" },
+  { id: "terminal", label: "Remote Terminal", index: "02", tag: "CLI" },
+  { id: "app", label: "App Runtime", index: "03", tag: "Runtime" },
+  { id: "preview", label: "Live Preview", index: "04", tag: "Ingress" },
+  { id: "projects", label: "Projects", index: "05", tag: "Workspace" },
+  { id: "git", label: "Git Sync", index: "06", tag: "VCS" },
+  { id: "github", label: "GitHub App", index: "07", tag: "Integration" },
+  { id: "tunnel", label: "Edge Tunnel", index: "08", tag: "Edge" },
+  { id: "harness", label: "Harness + DSH", index: "09", tag: "Agent" },
+  { id: "dsh-keys", label: "DSH Model Keys", index: "10", tag: "Secrets" },
+  { id: "maintenance", label: "Maintenance", index: "11", tag: "Ops" },
+  { id: "state", label: "State Backup", index: "12", tag: "Backup" },
+  { id: "logs", label: "Workstation Logs", index: "13", tag: "Telemetry" },
 ] as const;
 
 export type WorkstationSectionId = (typeof WORKSTATION_SECTIONS)[number]["id"];
@@ -40,8 +42,9 @@ export const WORKSTATION_GROUPS = [
     category: "Control Plane",
     items: [
       { id: "overview", label: "Overview", index: "01", tag: "System" },
-      { id: "app", label: "App Runtime", index: "02", tag: "Runtime" },
-      { id: "preview", label: "Live Preview", index: "03", tag: "Ingress" },
+      { id: "terminal", label: "Remote Terminal", index: "02", tag: "CLI" },
+      { id: "app", label: "App Runtime", index: "03", tag: "Runtime" },
+      { id: "preview", label: "Live Preview", index: "04", tag: "Ingress" },
     ],
   },
   {
@@ -263,6 +266,7 @@ export function WorkstationShell() {
                 }
               />
             )}
+            {activeSection === "terminal" && <TerminalSection />}
             {activeSection === "app" && <AppSection />}
             {activeSection === "preview" && <PreviewSection />}
             {activeSection === "projects" && <ProjectsSection />}

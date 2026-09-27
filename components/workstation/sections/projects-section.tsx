@@ -97,7 +97,7 @@ export function ProjectsSection() {
   };
 
   const activeProject =
-    projects.find((p) => p.active)?.name || "ai-workstation-core";
+    projects.find((p) => p.active)?.name || "None";
 
   return (
     <div className="space-y-10 md:space-y-11">

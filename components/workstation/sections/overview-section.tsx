@@ -387,44 +387,32 @@ function CommandAndServicesMatrix({
 
 // ---------------------------------------------------------------------------
 // 2. Live CAD Telemetry Charts
-// ---------------------------------------------------------------------------
-
-const defaultWaveData = [
-  { date: new Date(2026, 2, 1), cpu: 28, memory: 62 },
-  { date: new Date(2026, 2, 3), cpu: 35, memory: 64 },
-  { date: new Date(2026, 2, 5), cpu: 44, memory: 67 },
-  { date: new Date(2026, 2, 7), cpu: 39, memory: 65 },
-  { date: new Date(2026, 2, 9), cpu: 52, memory: 71 },
-  { date: new Date(2026, 2, 11), cpu: 47, memory: 69 },
-  { date: new Date(2026, 2, 13), cpu: 61, memory: 74 },
-  { date: new Date(2026, 2, 15), cpu: 54, memory: 72 },
-  { date: new Date(2026, 2, 17), cpu: 42, memory: 68 },
-  { date: new Date(2026, 2, 19), cpu: 49, memory: 70 },
-];
-
-const defaultPieData = [
-  { label: "App Heap", value: 4.2 },
-  { label: "DSH Sandbox", value: 3.1 },
-  { label: "OS Kernel", value: 2.4 },
-  { label: "Page Cache", value: 1.8 },
-  { label: "Free RAM", value: 4.5 },
-];
-
-const defaultRingData = [
-  { label: "Workstation", value: 98, maxValue: 100 },
-  { label: "App Runtime", value: 92, maxValue: 100 },
-  { label: "DSH Bridge", value: 86, maxValue: 100 },
-  { label: "Edge Tunnel", value: 94, maxValue: 100 },
-];
-
-const defaultBarData = [
-  { month: "T-5m", ingress: 48, egress: 32, buffered: 14 },
-  { month: "T-4m", ingress: 62, egress: 44, buffered: 18 },
-  { month: "T-3m", ingress: 55, egress: 39, buffered: 15 },
-  { month: "T-2m", ingress: 78, egress: 52, buffered: 22 },
-  { month: "T-1m", ingress: 69, egress: 47, buffered: 19 },
-  { month: "Now", ingress: 74, egress: 56, buffered: 21 },
-];
+function ChartEmptyState({
+  title = "Telemetry Offline",
+  description = "Awaiting connection to workstation daemon...",
+  height = "min-h-[140px]",
+}: {
+  title?: string;
+  description?: string;
+  height?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        "flex w-full flex-col items-center justify-center border border-dashed border-border/70 bg-muted/5 p-4 text-center",
+        height
+      )}
+    >
+      <div className="flex items-center gap-1.5 font-mono text-[11px] text-muted-foreground uppercase tracking-wider">
+        <span className="size-1.5 rounded-full bg-muted-foreground/40" />
+        {title}
+      </div>
+      <p className="mt-1 max-w-[280px] font-mono text-[10px] text-muted-foreground/70">
+        {description}
+      </p>
+    </div>
+  );
+}
 
 function LiveWaveAreaChart({
   compact,
@@ -433,14 +421,21 @@ function LiveWaveAreaChart({
   compact: boolean;
   metrics: WorkstationTelemetryMetrics | null;
 }) {
-  const data =
-    metrics?.timeline && metrics.timeline.length > 0
-      ? metrics.timeline.map((pt, idx) => ({
-          date: new Date(2026, 2, idx + 1),
-          cpu: pt.cpu,
-          memory: pt.memory,
-        }))
-      : defaultWaveData;
+  if (!metrics?.timeline || metrics.timeline.length === 0) {
+    return (
+      <ChartEmptyState
+        description="Connect backend to stream compute & memory timeseries."
+        height={compact ? "min-h-[110px]" : "min-h-[150px]"}
+        title="Compute Stream Inactive"
+      />
+    );
+  }
+
+  const data = metrics.timeline.map((pt, idx) => ({
+    date: new Date(2026, 2, idx + 1),
+    cpu: pt.cpu,
+    memory: pt.memory,
+  }));
 
   return (
     <AreaChart
@@ -499,10 +494,17 @@ function LiveMemoryPieChart({
   compact: boolean;
   metrics: WorkstationTelemetryMetrics | null;
 }) {
-  const data =
-    metrics?.memory.pie && metrics.memory.pie.length > 0
-      ? metrics.memory.pie
-      : defaultPieData;
+  if (!metrics?.memory?.pie || metrics.memory.pie.length === 0) {
+    return (
+      <ChartEmptyState
+        description="Physical RAM segmentation available once host connects."
+        height={compact ? "min-h-[140px]" : "min-h-[160px]"}
+        title="Memory Metrics Inactive"
+      />
+    );
+  }
+
+  const data = metrics.memory.pie;
 
   return (
     <div className="flex w-full flex-col items-center justify-between gap-4 sm:flex-row">
@@ -583,12 +585,19 @@ function LiveDaemonsRingChart({
   compact: boolean;
   metrics: WorkstationTelemetryMetrics | null;
 }) {
-  const rawRings =
-    metrics?.daemons.rings && metrics.daemons.rings.length > 0
-      ? metrics.daemons.rings
-      : defaultRingData;
+  if (!metrics?.daemons?.rings || metrics.daemons.rings.length === 0) {
+    return (
+      <ChartEmptyState
+        description="Subsystem health quotas stream when daemon is active."
+        height={compact ? "min-h-[140px]" : "min-h-[165px]"}
+        title="Daemon Telemetry Offline"
+      />
+    );
+  }
 
-  // Normalize each of the 4 rings to a 25-point weight so RingCenter totalValue = composite % out of 100
+  const rawRings = metrics.daemons.rings;
+
+  // Normalize each of the rings to a composite weight so RingCenter totalValue = % out of 100
   const weightPerRing = Math.round(100 / Math.max(1, rawRings.length));
   const normalizedData = rawRings.map((ring) => ({
     label: ring.label,
@@ -642,10 +651,17 @@ function LiveThroughputBarChart({
   compact: boolean;
   metrics: WorkstationTelemetryMetrics | null;
 }) {
-  const data =
-    metrics?.throughput && metrics.throughput.length > 0
-      ? metrics.throughput
-      : defaultBarData;
+  if (!metrics?.throughput || metrics.throughput.length === 0) {
+    return (
+      <ChartEmptyState
+        description="Ingress and egress throughput record upon container activity."
+        height={compact ? "min-h-[110px]" : "min-h-[150px]"}
+        title="Throughput Monitor Idle"
+      />
+    );
+  }
+
+  const data = metrics.throughput;
 
   return (
     <BarChart
@@ -861,7 +877,7 @@ function WorkspaceAndIngressGrid({
     ? `/workspace/projects/${activeProject.name}`
     : "No workspace mounted";
   const remoteOriginUrl = activeProject
-    ? `https://github.com/mosabbir-maruf/${activeProject.name}.git`
+    ? `origin/${activeProject.name}`
     : "—";
 
   return (

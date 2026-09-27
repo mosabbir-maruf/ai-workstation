@@ -36,6 +36,7 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: latest
+          package-manager-cache: false
 
       - name: Enable Corepack & Setup pnpm
         run: |

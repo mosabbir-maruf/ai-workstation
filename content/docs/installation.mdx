@@ -57,12 +57,12 @@ The installer executes the following steps:
 6. Symlinks `ai` at `/usr/local/bin/ai`.
 7. Validates the resulting installation.
 
-After installation completes, verify and initialize GitHub App authentication:
+After installation completes, verify the environment, start the dashboard daemon, and initialize GitHub App authentication:
 
 ```bash
 ai doctor
-ai github setup
-ai github status
+ai daemon status    # Confirms the HTTP bridge for the Web Console is active
+ai github setup     # Optional: configure GitHub App credentials
 ai github test
 ```
 

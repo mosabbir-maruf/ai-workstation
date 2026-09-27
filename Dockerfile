@@ -4,7 +4,7 @@
 # ==============================================================================
 
 # --- Stage 1: Base runtime environment ---
-FROM node:22-alpine AS base
+FROM node:current-alpine AS base
 RUN apk add --no-cache libc6-compat
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
@@ -34,7 +34,7 @@ ENV NODE_ENV=production
 RUN pnpm build
 
 # --- Stage 4: Production Runner ---
-FROM node:22-alpine AS runner
+FROM node:current-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production

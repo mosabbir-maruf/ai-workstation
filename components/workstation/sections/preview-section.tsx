@@ -15,7 +15,7 @@ export function PreviewSection() {
     anywhereDsh?: string;
   } | null>(null);
   const [loading, setLoading] = useState(false);
-  const [viewportRoute, setViewportRoute] = useState<string>("/");
+  const [viewportMode, setViewportMode] = useState<"app" | "dsh">("app");
   const [iframeKey, setIframeKey] = useState<number>(0);
   const [currentOrigin, setCurrentOrigin] = useState<string>("Same-origin endpoint");
 
@@ -47,6 +47,7 @@ export function PreviewSection() {
 
   const appUrl = previewData?.anywhereApp || "";
   const dshUrl = previewData?.anywhereDsh || "";
+  const activeViewportUrl = viewportMode === "app" ? appUrl : dshUrl;
 
   return (
     <div className="space-y-10 md:space-y-11">
@@ -287,22 +288,46 @@ export function PreviewSection() {
         <div className="relative w-full overflow-visible">
           <CadCell
             bodyClassName="p-0 overflow-hidden"
-            footerLeft={`Viewport · Interactive 16:9 Sandbox (${viewportRoute})`}
-            footerRight="GET /api/preview"
+            footerLeft={
+              activeViewportUrl
+                ? `Viewport · ${viewportMode === "app" ? "Application" : "DSH Harness"} (${activeViewportUrl})`
+                : "Viewport · Ingress Endpoint Offline"
+            }
+            footerRight="If target blocks iframe embedding, click Open ↗"
             headerAction={
               <>
-                {(["/", "/docs", "/faq", "/workstation"] as const).map(
-                  (route) => (
-                    <Button
-                      className="h-6 rounded-none px-2 font-mono text-[10px] uppercase tracking-wider"
-                      key={route}
-                      onClick={() => setViewportRoute(route)}
-                      size="xs"
-                      variant={viewportRoute === route ? "default" : "ghost"}
-                    >
-                      {route}
-                    </Button>
-                  )
+                <Button
+                  className="h-6 rounded-none px-2.5 font-mono text-[10px] uppercase tracking-wider"
+                  onClick={() => setViewportMode("app")}
+                  size="xs"
+                  variant={viewportMode === "app" ? "default" : "ghost"}
+                >
+                  App Preview
+                </Button>
+                <Button
+                  className="h-6 rounded-none px-2.5 font-mono text-[10px] uppercase tracking-wider"
+                  onClick={() => setViewportMode("dsh")}
+                  size="xs"
+                  variant={viewportMode === "dsh" ? "default" : "ghost"}
+                >
+                  DSH Harness
+                </Button>
+                {activeViewportUrl && (
+                  <Button
+                    className="h-6 rounded-none px-2 font-mono text-[10px] uppercase tracking-wider"
+                    nativeButton={false}
+                    render={
+                      <a
+                        href={activeViewportUrl}
+                        rel="noopener noreferrer"
+                        target="_blank"
+                      >
+                        Open ↗
+                      </a>
+                    }
+                    size="xs"
+                    variant="ghost"
+                  />
                 )}
                 <Button
                   className="h-6 rounded-none px-2 font-mono text-[10px] uppercase tracking-wider"
@@ -321,13 +346,69 @@ export function PreviewSection() {
             index="V-03"
             title="Local Runtime Web Viewport"
           >
+            {/* Mini CAD URL & Ingress Bar */}
+            <div className="flex items-center justify-between gap-3 border-b border-border/70 bg-muted/20 px-3.5 py-1.5 font-mono text-[11px]">
+              <div className="flex min-w-0 items-center gap-2">
+                <span
+                  className={`size-1.5 shrink-0 rounded-full ${activeViewportUrl ? "bg-emerald-500" : "bg-amber-500"}`}
+                />
+                <span className="shrink-0 text-muted-foreground/60 uppercase text-[9px] tracking-widest">
+                  {viewportMode === "app" ? "Target: App" : "Target: DSH"}
+                </span>
+                <span
+                  className="truncate font-mono text-foreground text-xs"
+                  suppressHydrationWarning
+                >
+                  {activeViewportUrl || "Endpoint not configured / offline"}
+                </span>
+              </div>
+              {activeViewportUrl && (
+                <div className="flex shrink-0 items-center gap-1.5">
+                  <CopyButton
+                    aria-label="Copy Active Target URL"
+                    className="h-6 w-6 rounded-none border border-border/60"
+                    text={activeViewportUrl}
+                  />
+                </div>
+              )}
+            </div>
+
             <div className="relative aspect-16/9 min-h-[420px] w-full bg-background">
-              <iframe
-                className="size-full border-0"
-                key={`${viewportRoute}-${iframeKey}`}
-                src={viewportRoute}
-                title="Workstation Local App Preview"
-              />
+              {activeViewportUrl ? (
+                <iframe
+                  className="size-full border-0 bg-background"
+                  key={`${activeViewportUrl}-${iframeKey}`}
+                  sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals"
+                  src={activeViewportUrl}
+                  title={
+                    viewportMode === "app"
+                      ? "Workstation Application Preview"
+                      : "DeepSeek Harness Preview"
+                  }
+                />
+              ) : (
+                <div className="flex size-full min-h-[420px] flex-col items-center justify-center space-y-3 bg-muted/10 p-8 text-center font-mono">
+                  <span className="size-2 rounded-full bg-amber-500/60" />
+                  <div className="text-foreground text-xs font-semibold uppercase tracking-widest">
+                    {viewportMode === "app"
+                      ? "No Application Endpoint Configured"
+                      : "No DSH Harness Endpoint Configured"}
+                  </div>
+                  <p className="max-w-md text-xs text-muted-foreground">
+                    {viewportMode === "app"
+                      ? "Ensure your application is running (ai run) and Cloudflare Tunnel is configured with CLOUDFLARED_APP_HOSTNAME."
+                      : "Ensure DeepSeek Harness is running (ai harness start) and Cloudflare Tunnel is configured with CLOUDFLARED_DSH_HOSTNAME."}
+                  </p>
+                  <Button
+                    className="h-6 rounded-none px-3 font-mono text-[10px] uppercase tracking-wider"
+                    onClick={fetchPreview}
+                    size="xs"
+                    variant="outline"
+                  >
+                    Check Status ↻
+                  </Button>
+                </div>
+              )}
             </div>
           </CadCell>
 

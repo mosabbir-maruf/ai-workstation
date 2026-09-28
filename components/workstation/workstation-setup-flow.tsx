@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { CopyButton } from "@/components/copy-button";
+import { ModelDropdownSelector } from "./model-dropdown-selector";
 
 interface WorkstationSetupFlowProps {
   onComplete: () => void;
@@ -1156,34 +1157,25 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
                   />
 
                   {availableModels[selectedProvider] && availableModels[selectedProvider].length > 0 && (
-                    <div className="flex items-center gap-2 pt-1">
-                      <span className="text-[11px] font-mono text-muted-foreground shrink-0">
-                        Available:
-                      </span>
-                      <select
-                        value={
+                    <div className="space-y-1.5 pt-1">
+                      <div className="flex items-center justify-between text-[11px] font-mono text-muted-foreground">
+                        <span>Available Models ({availableModels[selectedProvider].length})</span>
+                      </div>
+                      <ModelDropdownSelector
+                        models={availableModels[selectedProvider]}
+                        selectedModel={
                           selectedProvider === "custom"
                             ? (customModel || providerModels.custom || "")
                             : (providerModels[selectedProvider] || "")
                         }
-                        onChange={(e) => {
-                          const val = e.target.value;
+                        onSelect={(chosenModel) => {
                           if (selectedProvider === "custom") {
-                            setCustomModel(val);
+                            setCustomModel(chosenModel);
                           }
-                          setProviderModels((prev) => ({ ...prev, [selectedProvider]: val }));
+                          setProviderModels((prev) => ({ ...prev, [selectedProvider]: chosenModel }));
                         }}
-                        className="h-7 w-full text-xs font-mono bg-background border border-border/80 rounded px-2 text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                      >
-                        <option value="" disabled>
-                          Select from {availableModels[selectedProvider].length} available models...
-                        </option>
-                        {availableModels[selectedProvider].map((m) => (
-                          <option key={m} value={m}>
-                            {m}
-                          </option>
-                        ))}
-                      </select>
+                        placeholder={`Choose from ${availableModels[selectedProvider].length} available models...`}
+                      />
                     </div>
                   )}
 

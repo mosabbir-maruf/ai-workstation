@@ -271,16 +271,19 @@ export const workstationApi = {
     requestJson<StandardOutputResponse>("/api/harness/start", {
       method: "POST",
       body: JSON.stringify({}),
+      timeoutMs: 60000,
     }),
   harnessStop: () =>
     requestJson<StandardOutputResponse>("/api/harness/stop", {
       method: "POST",
       body: JSON.stringify({}),
+      timeoutMs: 30000,
     }),
   harnessRestart: () =>
     requestJson<StandardOutputResponse>("/api/harness/restart", {
       method: "POST",
       body: JSON.stringify({}),
+      timeoutMs: 60000,
     }),
   getHarnessStatus: () =>
     requestJson<StandardOutputResponse>("/api/harness/status"),
@@ -289,6 +292,7 @@ export const workstationApi = {
     requestJson<StandardOutputResponse>("/api/dsh/update", {
       method: "POST",
       body: JSON.stringify(version ? { version } : {}),
+      timeoutMs: 180000,
     }),
 
   // Preview

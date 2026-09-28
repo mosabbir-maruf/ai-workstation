@@ -15,12 +15,15 @@ node_modules
 
 # Build and Cache Outputs
 .next/
+.netlify/
 out/
 build/
 dist/
 .source/
 .turbo/
 .vercel/
+*.tsbuildinfo
+next-env.d.ts
 
 # Testing and coverage
 coverage/

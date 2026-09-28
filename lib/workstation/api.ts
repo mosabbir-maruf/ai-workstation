@@ -124,25 +124,31 @@ export interface RequestOptions extends RequestInit {
   timeoutMs?: number;
 }
 
-/** Resolves configured API base URL (NEXT_PUBLIC_API_URL), normalized without trailing slash */
+function getServerEnv(key: string): string | undefined {
+  if (typeof window !== "undefined" || typeof process === "undefined") {
+    return undefined;
+  }
+  const env = process.env as Record<string, string | undefined>;
+  return env[key];
+}
+
+/** Resolves API base URL: same-origin ("") in the browser so Next.js /api proxy routes handle authentication server-side without exposing secrets in client bundles */
 export function getApiBaseUrl(): string {
-  if (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_API_URL) {
-    const raw = process.env.NEXT_PUBLIC_API_URL;
-    if (typeof raw === "string" && raw.trim().length > 0) {
-      return raw.trim().replace(/\/+$/, "");
-    }
+  const raw =
+    getServerEnv("WORKSTATION_BACKEND_URL") ||
+    getServerEnv("NEXT_PUBLIC_API_URL");
+  if (typeof raw === "string" && raw.trim().length > 0) {
+    return raw.trim().replace(/\/+$/, "");
   }
   return "";
 }
 
 export function getWorkstationApiKey(): string {
-  if (typeof process !== "undefined") {
-    const key =
-      process.env.NEXT_PUBLIC_WORKSTATION_API_KEY ||
-      process.env.WORKSTATION_API_KEY;
-    if (typeof key === "string" && key.trim().length > 0) {
-      return key.trim();
-    }
+  const key =
+    getServerEnv("WORKSTATION_API_KEY") ||
+    getServerEnv("NEXT_PUBLIC_WORKSTATION_API_KEY");
+  if (typeof key === "string" && key.trim().length > 0) {
+    return key.trim();
   }
   return "";
 }

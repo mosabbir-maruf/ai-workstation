@@ -653,7 +653,7 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
                   <span>
                     Status: {daemonActive ? '200 OK — {"ok": true, "output": "Host workstation daemon active."}' : '401 Unauthorized / Daemon Unreachable'}
                   </span>
-                  <CopyButton text="curl -i -H 'Authorization: Bearer <token>' https://api.hypersync.dev.cv/api/health" className="h-6 w-6 text-zinc-400" />
+                  <CopyButton text="curl -i -H 'Authorization: Bearer <token>' http://localhost:8000/api/health" className="h-6 w-6 text-zinc-400" />
                 </div>
               </div>
 
@@ -904,7 +904,7 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
                       type="text"
                       value={tunnelAppHost}
                       onChange={(e) => setTunnelAppHost(e.target.value)}
-                      placeholder="app.hypersync.dev.cv"
+                      placeholder="app.yourdomain.com"
                       className="text-xs font-mono"
                     />
                   </div>
@@ -916,7 +916,7 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
                       type="text"
                       value={tunnelDshHost}
                       onChange={(e) => setTunnelDshHost(e.target.value)}
-                      placeholder="dsh.hypersync.dev.cv"
+                      placeholder="dsh.yourdomain.com"
                       className="text-xs font-mono"
                     />
                   </div>

@@ -29,11 +29,16 @@ export interface WorkstationState {
   };
 }
 
+function getRuntimeEnv(key: string): string | undefined {
+  const env = process.env as Record<string, string | undefined>;
+  return env[key];
+}
+
 export function getBackendBaseUrl(): string {
   const url =
-    process.env.WORKSTATION_BACKEND_URL ||
-    process.env.NEXT_PUBLIC_API_URL ||
-    process.env.API_URL;
+    getRuntimeEnv("WORKSTATION_BACKEND_URL") ||
+    getRuntimeEnv("NEXT_PUBLIC_API_URL") ||
+    getRuntimeEnv("API_URL");
   return url ? url.trim().replace(/\/+$/, "") : "";
 }
 
@@ -80,7 +85,9 @@ export async function proxyOrRespond(
       }
 
       // Inject server-side secret API Key / Bearer token if configured
-      const apiKey = process.env.WORKSTATION_API_KEY || process.env.NEXT_PUBLIC_WORKSTATION_API_KEY;
+      const apiKey =
+        getRuntimeEnv("WORKSTATION_API_KEY") ||
+        getRuntimeEnv("NEXT_PUBLIC_WORKSTATION_API_KEY");
       if (apiKey && !headers.has("authorization")) {
         headers.set("Authorization", `Bearer ${apiKey.trim()}`);
       }

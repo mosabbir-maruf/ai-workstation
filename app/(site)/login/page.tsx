@@ -3,27 +3,9 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type FormEvent, Suspense, useState } from "react";
-import { HomeFooter } from "@/components/design/home-footer";
+import { AiwsLogo } from "@/components/icons/aiws-logo";
 import { Button } from "@/components/ui/button";
 import { CadCell, CadGridFrame } from "@/components/workstation/cad-primitives";
-
-function LockIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      aria-hidden="true"
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={1.75}
-      viewBox="0 0 24 24"
-      {...props}
-    >
-      <rect height="11" rx="2" ry="2" width="18" x="3" y="11" />
-      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-    </svg>
-  );
-}
 
 function EyeIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -67,7 +49,8 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const fromParam = searchParams.get("from");
-  const destination = fromParam && fromParam.startsWith("/") ? fromParam : "/workstation";
+  const destination =
+    fromParam && fromParam.startsWith("/") ? fromParam : "/workstation";
 
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -77,7 +60,7 @@ function LoginForm() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!password.trim()) {
-      setError("Please enter the workstation master secret.");
+      setError("Please enter your passphrase.");
       return;
     }
 
@@ -94,16 +77,15 @@ function LoginForm() {
       const data = await res.json();
 
       if (!res.ok || !data.ok) {
-        setError(data.error || "Authentication failed. Access denied.");
+        setError(data.error || "Access denied. Invalid passphrase.");
         setLoading(false);
         return;
       }
 
-      // Success: redirect to target destination
       router.push(destination);
       router.refresh();
     } catch {
-      setError("Network or connection error. Please try again.");
+      setError("Unable to reach server. Please try again.");
       setLoading(false);
     }
   };
@@ -111,33 +93,24 @@ function LoginForm() {
   return (
     <CadGridFrame showRulers>
       <CadCell
-        footerLeft="SECURE OPERATOR ACCESS // 30-DAY ENCRYPTED SESSION"
+        footerLeft="AUTHENTICATED SESSION // 30 DAYS"
         footerRight="STATUS: LOCKED"
-        index="AUTH-01"
-        title="Workstation Security Gateway"
+        index="AUTH"
+        title="Security Gateway"
       >
-        <form className="flex flex-col gap-5 p-1 sm:p-2" onSubmit={handleSubmit}>
-          <div className="flex items-start gap-3 border border-border/80 bg-muted/20 p-3.5 text-xs">
-            <LockIcon className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-            <p className="font-mono text-muted-foreground leading-relaxed">
-              This console provides remote control access to active container
-              workspaces, daemon processes, and terminal execution. Enter the
-              workstation master password to authenticate.
-            </p>
-          </div>
-
-          <div className="flex flex-col gap-2">
+        <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+          <div className="flex flex-col gap-1.5">
             <label
-              className="font-mono text-[11px] text-muted-foreground uppercase tracking-wider"
+              className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest"
               htmlFor="auth-password"
             >
-              Operator Passphrase / Key
+              Passphrase
             </label>
             <div className="relative flex items-center">
               <input
                 autoComplete="current-password"
                 autoFocus
-                className="h-10 w-full border border-border bg-muted/20 pr-10 pl-3 font-mono text-foreground text-xs placeholder:text-muted-foreground focus:border-foreground/40 focus:bg-background focus:outline-none"
+                className="h-10 w-full border border-border bg-muted/20 pr-10 pl-3 font-mono text-foreground text-xs placeholder:text-muted-foreground focus:border-foreground/50 focus:bg-background focus:outline-none"
                 disabled={loading}
                 id="auth-password"
                 onChange={(e) => {
@@ -149,7 +122,8 @@ function LoginForm() {
                 value={password}
               />
               <button
-                className="absolute right-2.5 text-muted-foreground hover:text-foreground"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                className="absolute right-2.5 text-muted-foreground transition-colors hover:text-foreground"
                 onClick={() => setShowPassword((prev) => !prev)}
                 tabIndex={-1}
                 type="button"
@@ -164,28 +138,19 @@ function LoginForm() {
           </div>
 
           {error && (
-            <div className="border border-destructive/40 bg-destructive/10 p-3 font-mono text-destructive text-xs">
-              [ACCESS_DENIED]: {error}
+            <div className="border border-destructive/40 bg-destructive/10 px-3 py-2 font-mono text-[11px] text-destructive">
+              {error}
             </div>
           )}
 
-          <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
-            <Button
-              className="h-10 rounded-none px-6 font-mono text-xs uppercase tracking-wider"
-              disabled={loading}
-              type="submit"
-              variant="white"
-            >
-              {loading ? "Authenticating..." : "Authorize & Unlock"}
-            </Button>
-
-            <Link
-              className="font-mono text-[11px] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-              href="/docs/security"
-            >
-              Security Policy & Token Details →
-            </Link>
-          </div>
+          <Button
+            className="h-10 w-full rounded-none font-mono text-xs uppercase tracking-wider"
+            disabled={loading}
+            type="submit"
+            variant="white"
+          >
+            {loading ? "Unlocking..." : "Unlock Console"}
+          </Button>
         </form>
       </CadCell>
     </CadGridFrame>
@@ -194,25 +159,44 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <main className="flex flex-1 flex-col space-y-10 overflow-x-clip pb-16 md:space-y-12 md:pb-24">
-      <section className="relative w-full pt-8 sm:pt-16">
-        <div className="container mx-auto max-w-xl overflow-visible px-[17px] sm:px-10">
-          <div className="mb-6 flex flex-col items-center text-center">
-            <div className="mb-2 font-mono text-[11px] text-muted-foreground uppercase tracking-widest">
-              AI Workstation Control Plane
-            </div>
-            <h1 className="font-bold text-2xl tracking-tight sm:text-3xl">
-              Operator Authorization
-            </h1>
-          </div>
+    <main className="flex min-h-[calc(100vh-140px)] flex-col items-center justify-center px-[17px] py-12 sm:px-6">
+      <div className="flex w-full max-w-sm flex-col items-center">
+        {/* Minimalist Logo & Brand Identity */}
+        <div className="mb-6 flex flex-col items-center text-center">
+          <Link
+            aria-label="AI Workstation Home"
+            className="mb-3 transition-opacity hover:opacity-80"
+            href="/"
+          >
+            <AiwsLogo size={32} />
+          </Link>
+          <h1 className="font-bold text-foreground text-lg tracking-tight">
+            AI Workstation
+          </h1>
+          <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+            Enter operator passphrase to unlock console
+          </p>
+        </div>
 
-          <Suspense fallback={<div className="h-64 animate-pulse bg-muted/20" />}>
+        {/* Clean Centered CAD Login Card */}
+        <div className="w-full">
+          <Suspense
+            fallback={
+              <div className="h-44 w-full animate-pulse border border-border bg-muted/10" />
+            }
+          >
             <LoginForm />
           </Suspense>
         </div>
-      </section>
 
-      <HomeFooter />
+        {/* Back Link */}
+        <Link
+          className="mt-6 font-mono text-[11px] text-muted-foreground transition-colors hover:text-foreground"
+          href="/"
+        >
+          ← Return to public site
+        </Link>
+      </div>
     </main>
   );
 }

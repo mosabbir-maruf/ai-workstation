@@ -159,6 +159,16 @@ function CadGridFrame({
   );
 }
 
+export interface ActionFeedbackInfo {
+  ok: boolean;
+  command: string;
+  actionName: string;
+  title: string;
+  headline?: string;
+  fullOutput: string;
+  timestamp: string;
+}
+
 // ---------------------------------------------------------------------------
 // 1. Command Strip + 5-Service CAD Matrix
 // ---------------------------------------------------------------------------
@@ -178,6 +188,7 @@ function CommandAndServicesMatrix({
   loading,
   actionInProgress,
   actionFeedback,
+  onDismissFeedback,
   onStart,
   onRun,
   onPreview,
@@ -197,13 +208,15 @@ function CommandAndServicesMatrix({
   metrics: WorkstationTelemetryMetrics | null;
   loading: boolean;
   actionInProgress: string | null;
-  actionFeedback: string | null;
+  actionFeedback: ActionFeedbackInfo | null;
+  onDismissFeedback?: () => void;
   onStart: () => void;
   onRun: () => void;
   onPreview: () => void;
   onRestart: () => void;
   onRefresh: () => void;
 }) {
+
   const hostLabel = metrics?.hostname
     ? `${metrics.hostname} (${metrics.cpu.cores}c)`
     : "Unconnected Host";
@@ -329,11 +342,63 @@ function CommandAndServicesMatrix({
         </div>
 
         {actionFeedback && (
-          <div className="flex items-center justify-between border-border/60 border-t bg-muted/15 px-4 py-1.5 font-mono text-foreground text-xs">
-            <span className="truncate">{actionFeedback}</span>
-            <span className="ml-2 shrink-0 text-[10px] text-emerald-500 uppercase">
-              [ACK]
-            </span>
+          <div className="border-border/60 border-t bg-black p-3.5 font-mono text-xs">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-[11px] text-zinc-500">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span
+                    className={cn(
+                      "font-bold",
+                      actionFeedback.ok ? "text-emerald-500" : "text-rose-500"
+                    )}
+                  >
+                    mosabbir@cloud:~$
+                  </span>
+                  <span className="font-semibold text-zinc-100">
+                    {actionFeedback.command}
+                  </span>
+                  <span
+                    className={cn(
+                      "border px-1.5 py-0.2 font-mono text-[9px] font-bold uppercase tracking-wider",
+                      actionFeedback.ok
+                        ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
+                        : "border-rose-500/30 bg-rose-500/10 text-rose-400"
+                    )}
+                  >
+                    {actionFeedback.ok ? "0 (SUCCESS)" : "1 (FAILED)"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-[10px] text-zinc-500">
+                    {actionFeedback.timestamp}
+                  </span>
+                  <CopyButton
+                    className="h-5 w-5 p-0.5 text-zinc-400 hover:text-zinc-100"
+                    text={actionFeedback.fullOutput}
+                  />
+                  {onDismissFeedback && (
+                    <button
+                      className="cursor-pointer px-1 font-mono text-xs text-zinc-500 hover:text-zinc-200"
+                      onClick={onDismissFeedback}
+                      title="Dismiss"
+                      type="button"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              </div>
+              <pre
+                className={cn(
+                  "max-h-56 select-text overflow-y-auto whitespace-pre-wrap break-all rounded border p-2.5 font-mono text-xs leading-relaxed",
+                  actionFeedback.ok
+                    ? "border-zinc-800/60 bg-zinc-950/70 text-zinc-300"
+                    : "border-rose-950/80 bg-zinc-950/70 text-rose-300"
+                )}
+              >
+                {actionFeedback.fullOutput}
+              </pre>
+            </div>
           </div>
         )}
       </div>
@@ -1378,7 +1443,8 @@ function LogsAndNotesGrid({ onOpenFullLogs }: { onOpenFullLogs?: () => void }) {
 export function OverviewSection({ onSelectTab }: OverviewSectionProps) {
   const [loading, setLoading] = useState(false);
   const [actionInProgress, setActionInProgress] = useState<string | null>(null);
-  const [actionFeedback, setActionFeedback] = useState<string | null>(null);
+  const [actionFeedback, setActionFeedback] =
+    useState<ActionFeedbackInfo | null>(null);
 
   const [telemetryMetrics, setTelemetryMetrics] =
     useState<WorkstationTelemetryMetrics | null>(null);
@@ -1443,18 +1509,65 @@ export function OverviewSection({ onSelectTab }: OverviewSectionProps) {
 
   const executeQuickAction = async (
     name: string,
+    command: string,
     actionFn: () => Promise<{ ok: boolean; output: string }>
   ) => {
     try {
       setActionInProgress(name);
       setActionFeedback(null);
       const res = await actionFn();
-      setActionFeedback(
-        `[${name.toUpperCase()} SUCCESS]: ${res.output.split("\n")[0]}`
-      );
+      const trimmedOutput = (res.output || "").trim();
+      const lines = trimmedOutput
+        .split("\n")
+        .map((l) => l.trim())
+        .filter(Boolean);
+
+      let headline = "";
+      if (lines.length > 0) {
+        const errorLine = lines.find((l) =>
+          l.toLowerCase().includes("error:")
+        );
+        headline = errorLine
+          ? errorLine.replace(/^ERROR:\s*/i, "")
+          : lines[lines.length - 1];
+      } else {
+        headline = res.ok
+          ? "Operation completed successfully."
+          : "Action failed.";
+      }
+
+      const timestamp = new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+
+      setActionFeedback({
+        ok: Boolean(res.ok),
+        command,
+        actionName: name,
+        title: res.ok ? "SUCCESS" : "ERROR",
+        headline,
+        fullOutput: trimmedOutput,
+        timestamp,
+      });
       await refreshAllTelemetry();
     } catch (err) {
-      setActionFeedback(`[${name.toUpperCase()} FAILED]: ${String(err)}`);
+      const errMsg = err instanceof Error ? err.message : String(err);
+      const timestamp = new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+      setActionFeedback({
+        ok: false,
+        command,
+        actionName: name,
+        title: "ERROR",
+        headline: errMsg,
+        fullOutput: errMsg,
+        timestamp,
+      });
     } finally {
       setActionInProgress(null);
     }
@@ -1485,6 +1598,7 @@ export function OverviewSection({ onSelectTab }: OverviewSectionProps) {
       <CommandAndServicesMatrix
         actionFeedback={actionFeedback}
         actionInProgress={actionInProgress}
+        onDismissFeedback={() => setActionFeedback(null)}
         appPid={appPid}
         appRunning={appRunning}
         appState={appState}
@@ -1497,12 +1611,13 @@ export function OverviewSection({ onSelectTab }: OverviewSectionProps) {
         onPreview={handleLaunchPreview}
         onRefresh={refreshAllTelemetry}
         onRestart={() =>
-          executeQuickAction("App Restart", workstationApi.appRestart)
+          executeQuickAction("App Restart", "ai app restart", workstationApi.appRestart)
         }
-        onRun={() => executeQuickAction("Run App", workstationApi.appRun)}
+        onRun={() => executeQuickAction("Run App", "ai run", workstationApi.appRun)}
         onStart={() =>
           executeQuickAction(
             "Start Workstation",
+            "ai start",
             workstationApi.startWorkstation
           )
         }

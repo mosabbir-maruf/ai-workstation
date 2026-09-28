@@ -202,14 +202,17 @@ export const workstationApi = {
   startWorkstation: () =>
     requestJson<StandardOutputResponse>("/api/workstation/start", {
       method: "POST",
+      timeoutMs: 300000,
     }),
   stopWorkstation: () =>
     requestJson<StandardOutputResponse>("/api/workstation/stop", {
       method: "POST",
+      timeoutMs: 60000,
     }),
   restartWorkstation: () =>
     requestJson<StandardOutputResponse>("/api/workstation/restart", {
       method: "POST",
+      timeoutMs: 300000,
     }),
 
   // Projects
@@ -247,16 +250,19 @@ export const workstationApi = {
     requestJson<StandardOutputResponse>("/api/app/run", {
       method: "POST",
       body: JSON.stringify({}),
+      timeoutMs: 180000,
     }),
   appStop: () =>
     requestJson<StandardOutputResponse>("/api/app/stop", {
       method: "POST",
       body: JSON.stringify({}),
+      timeoutMs: 30000,
     }),
   appRestart: () =>
     requestJson<StandardOutputResponse>("/api/app/restart", {
       method: "POST",
       body: JSON.stringify({}),
+      timeoutMs: 180000,
     }),
   getAppStatus: () => requestJson<StandardOutputResponse>("/api/app/status"),
 

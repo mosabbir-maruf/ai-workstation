@@ -1592,7 +1592,11 @@ export function OverviewSection({ onSelectTab }: OverviewSectionProps) {
     () => lastOverviewCache?.previewData ?? null
   );
 
+  const isFetchingRef = useRef(false);
+
   const refreshAllTelemetry = useCallback(async () => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
     try {
       setLoading(true);
 
@@ -1666,7 +1670,7 @@ export function OverviewSection({ onSelectTab }: OverviewSectionProps) {
 
       const isWsRun = sRes.status === "fulfilled" && parseWorkstationRunning(sRes);
       setWorkstationRunning(isWsRun);
-      let nextMetrics = telemetryMetrics;
+      let nextMetrics: WorkstationTelemetryMetrics | null = null;
       if (sRes.status === "fulfilled" && sRes.value.metrics) {
         nextMetrics = sRes.value.metrics;
         setTelemetryMetrics(nextMetrics);
@@ -1681,13 +1685,13 @@ export function OverviewSection({ onSelectTab }: OverviewSectionProps) {
       const isTunOnl = parseTunnelOnline(tRes);
       setTunnelOnline(isTunOnl);
 
-      let nextProj = activeProject;
+      let nextProj: ActiveProjectGitInfo | null = null;
       if (pRes.status === "fulfilled" && pRes.value.activeProject) {
         nextProj = pRes.value.activeProject;
         setActiveProject(nextProj);
       }
 
-      let nextPrev = previewData;
+      let nextPrev: PreviewResponse | null = null;
       if (prevRes.status === "fulfilled") {
         nextPrev = prevRes.value;
         setPreviewData(nextPrev);
@@ -1707,8 +1711,9 @@ export function OverviewSection({ onSelectTab }: OverviewSectionProps) {
       };
     } finally {
       setLoading(false);
+      isFetchingRef.current = false;
     }
-  }, [activeProject, previewData, telemetryMetrics]);
+  }, []);
 
   useEffect(() => {
     refreshAllTelemetry();

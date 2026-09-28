@@ -410,8 +410,12 @@ export const workstationApi = {
   },
 
   // Terminal Execution
-  executeTerminalCommand: (params: { command: string; target?: "host" | "workstation" }) =>
-    requestJson<StandardOutputResponse>("/api/terminal/exec", {
+  executeTerminalCommand: (params: {
+    command: string;
+    target?: "host" | "workstation";
+    sudoPassword?: string;
+  }) =>
+    requestJson<StandardOutputResponse & { requiresSudo?: boolean }>("/api/terminal/exec", {
       method: "POST",
       body: JSON.stringify(params),
     }),

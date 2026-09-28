@@ -42,6 +42,13 @@ export function TerminalSection() {
     },
   ]);
 
+  const [sudoPromptPending, setSudoPromptPending] = useState<{
+    command: string;
+    target: "host" | "workstation";
+  } | null>(null);
+  const [sudoPasswordInput, setSudoPasswordInput] = useState("");
+  const sudoPasswordRef = useRef<HTMLInputElement>(null);
+
   const logContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -56,11 +63,25 @@ export function TerminalSection() {
     }
   }, [history]);
 
-  const handleRunCommand = async (cmdToRun?: string, explicitTarget?: "host" | "workstation") => {
+  const handleRunCommand = async (
+    cmdToRun?: string,
+    explicitTarget?: "host" | "workstation",
+    sudoPassword?: string
+  ) => {
     const cmd = (cmdToRun ?? commandInput).trim();
     if (!cmd || executing) return;
 
     const chosenTarget = explicitTarget ?? target;
+
+    // If running on host, begins with 'sudo' and no password entered yet, prompt for password interactively
+    if (chosenTarget === "host" && !sudoPassword && (cmd.startsWith("sudo ") || cmd === "sudo")) {
+      setSudoPromptPending({ command: cmd, target: chosenTarget });
+      setSudoPasswordInput("");
+      if (!cmdToRun) setCommandInput("");
+      setTimeout(() => sudoPasswordRef.current?.focus(), 50);
+      return;
+    }
+
     setExecuting(true);
     if (!cmdToRun) setCommandInput("");
 
@@ -72,7 +93,16 @@ export function TerminalSection() {
       const res = await workstationApi.executeTerminalCommand({
         command: cmd,
         target: chosenTarget,
+        sudoPassword,
       });
+
+      // If backend reports that sudo authentication is required, open sudo password prompt
+      if (!res.ok && res.requiresSudo && !sudoPassword) {
+        setSudoPromptPending({ command: cmd, target: chosenTarget });
+        setSudoPasswordInput("");
+        setTimeout(() => sudoPasswordRef.current?.focus(), 50);
+        return;
+      }
 
       setHistory((prev) => [
         ...prev,
@@ -101,6 +131,15 @@ export function TerminalSection() {
       setExecuting(false);
       setTimeout(() => inputRef.current?.focus({ preventScroll: true }), 50);
     }
+  };
+
+  const handleRunSudoWithPassword = () => {
+    if (!sudoPromptPending || !sudoPasswordInput) return;
+    const { command: pendingCmd, target: pendingTarget } = sudoPromptPending;
+    const pwd = sudoPasswordInput;
+    setSudoPromptPending(null);
+    setSudoPasswordInput("");
+    handleRunCommand(pendingCmd, pendingTarget, pwd);
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -240,36 +279,80 @@ export function TerminalSection() {
                   )}
                 </div>
 
-                {/* Input prompt line */}
-                <div className="flex items-center gap-2 p-3 bg-zinc-950 border-t border-zinc-800">
-                  <span className="text-emerald-400 select-none font-bold">
-                    {target === "host" ? "host>" : "container>"}
-                  </span>
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    value={commandInput}
-                    onChange={(e) => setCommandInput(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    disabled={executing}
-                    placeholder={
-                      target === "host"
-                        ? "Run host CLI command (e.g. ai status, ai pull, docker ps)..."
-                        : "Run container command (e.g. npm test, ls -la, git diff)..."
-                    }
-                    className="flex-1 bg-transparent border-none outline-none text-zinc-100 placeholder:text-zinc-600 font-mono text-xs focus:ring-0"
-                    autoFocus
-                  />
-                  <Button
-                    type="button"
-                    size="sm"
-                    onClick={() => handleRunCommand()}
-                    disabled={executing || !commandInput.trim()}
-                    className="h-7 px-3 text-xs font-mono rounded-none bg-emerald-600 hover:bg-emerald-500 text-white disabled:opacity-40"
+                {/* Input prompt line or Sudo password prompt */}
+                {sudoPromptPending ? (
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      handleRunSudoWithPassword();
+                    }}
+                    className="flex items-center gap-2 p-3 bg-amber-950/40 border-t border-amber-500/50 animate-in fade-in duration-150"
                   >
-                    {executing ? "Running..." : "Execute"}
-                  </Button>
-                </div>
+                    <span className="text-amber-400 select-none font-bold text-xs flex items-center gap-1.5 shrink-0">
+                      <span>🔒</span>
+                      <span>[sudo] password for host:</span>
+                    </span>
+                    <input
+                      ref={sudoPasswordRef}
+                      type="password"
+                      value={sudoPasswordInput}
+                      onChange={(e) => setSudoPasswordInput(e.target.value)}
+                      placeholder="Type VPS password (never saved)..."
+                      className="flex-1 bg-black/70 border border-amber-500/40 rounded px-2.5 py-1 text-zinc-100 placeholder:text-zinc-600 font-mono text-xs outline-none focus:border-amber-400"
+                      autoFocus
+                    />
+                    <Button
+                      type="submit"
+                      size="sm"
+                      disabled={executing || !sudoPasswordInput}
+                      className="h-7 px-3 text-xs font-mono rounded-none bg-amber-500 hover:bg-amber-400 text-black font-semibold disabled:opacity-40"
+                    >
+                      {executing ? "Authenticating..." : "Authenticate ↵"}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setSudoPromptPending(null);
+                        setSudoPasswordInput("");
+                      }}
+                      className="h-7 px-2 text-xs font-mono text-zinc-400 hover:text-zinc-100"
+                    >
+                      Cancel
+                    </Button>
+                  </form>
+                ) : (
+                  <div className="flex items-center gap-2 p-3 bg-zinc-950 border-t border-zinc-800">
+                    <span className="text-emerald-400 select-none font-bold">
+                      {target === "host" ? "host>" : "container>"}
+                    </span>
+                    <input
+                      ref={inputRef}
+                      type="text"
+                      value={commandInput}
+                      onChange={(e) => setCommandInput(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      disabled={executing}
+                      placeholder={
+                        target === "host"
+                          ? "Run host CLI command (e.g. ai status, ai pull, docker ps)..."
+                          : "Run container command (e.g. npm test, ls -la, git diff)..."
+                      }
+                      className="flex-1 bg-transparent border-none outline-none text-zinc-100 placeholder:text-zinc-600 font-mono text-xs focus:ring-0"
+                      autoFocus
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => handleRunCommand()}
+                      disabled={executing || !commandInput.trim()}
+                      className="h-7 px-3 text-xs font-mono rounded-none bg-emerald-600 hover:bg-emerald-500 text-white disabled:opacity-40"
+                    >
+                      {executing ? "Running..." : "Execute"}
+                    </Button>
+                  </div>
+                )}
               </div>
             </CadCell>
           </div>

@@ -17,6 +17,13 @@ export function PreviewSection() {
   const [loading, setLoading] = useState(false);
   const [viewportRoute, setViewportRoute] = useState<string>("/");
   const [iframeKey, setIframeKey] = useState<number>(0);
+  const [currentOrigin, setCurrentOrigin] = useState<string>("Same-origin endpoint");
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.location.origin) {
+      setCurrentOrigin(window.location.origin);
+    }
+  }, []);
 
   const fetchPreview = useCallback(async () => {
     try {
@@ -131,10 +138,7 @@ export function PreviewSection() {
                   { label: "Public Edge URL", url: appUrl || "Not configured" },
                   {
                     label: "Current Origin",
-                    url:
-                      typeof window !== "undefined"
-                        ? window.location.origin
-                        : "Same-origin endpoint",
+                    url: currentOrigin,
                   },
                 ].map((item) => (
                   <div
@@ -145,7 +149,10 @@ export function PreviewSection() {
                       <div className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-wider">
                         {item.label}
                       </div>
-                      <div className="mt-0.5 truncate font-mono text-foreground text-xs">
+                      <div
+                        className="mt-0.5 truncate font-mono text-foreground text-xs"
+                        suppressHydrationWarning
+                      >
                         {item.url}
                       </div>
                     </div>

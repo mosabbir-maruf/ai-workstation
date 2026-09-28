@@ -1252,7 +1252,10 @@ function WorkspaceAndIngressGrid({
                         <div className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-wider">
                           {endpoint.label}
                         </div>
-                        <div className="mt-0.5 truncate font-mono text-foreground text-xs">
+                        <div
+                          className="mt-0.5 truncate font-mono text-foreground text-xs"
+                          suppressHydrationWarning
+                        >
                           {endpoint.url}
                         </div>
                       </div>

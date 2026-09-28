@@ -26,6 +26,14 @@ export const DEFAULT_KEYWORDS = [
 ];
 
 export const DEFAULT_OG_IMAGE = {
+  url: "/opengraph-image.png",
+  width: 1672,
+  height: 941,
+  alt: "Ai Workstation - Development Environment Control Dashboard",
+  type: "image/png",
+};
+
+export const DEFAULT_OG_IMAGE_WEBP = {
   url: "/opengraph-image.webp",
   width: 1672,
   height: 941,
@@ -49,6 +57,7 @@ export interface PageMetadataOptions {
     width?: number;
     height?: number;
     alt?: string;
+    type?: string;
   };
   noIndex?: boolean;
 }
@@ -96,6 +105,24 @@ export function createMetadata(options: PageMetadataOptions = {}): Metadata {
       : `${title} | ${SITE_NAME}`
     : DEFAULT_TITLE;
 
+  const rawImageUrl = ogImage.url || DEFAULT_OG_IMAGE.url;
+  const ogImageUrl =
+    rawImageUrl.startsWith("http://") || rawImageUrl.startsWith("https://")
+      ? rawImageUrl
+      : `${SITE_URL}${rawImageUrl.startsWith("/") ? rawImageUrl : `/${rawImageUrl}`}`;
+  const ogImageSecureUrl = ogImageUrl.startsWith("https://")
+    ? ogImageUrl
+    : undefined;
+  const ogImageWidth = ogImage.width || DEFAULT_OG_IMAGE.width;
+  const ogImageHeight = ogImage.height || DEFAULT_OG_IMAGE.height;
+  const ogImageType =
+    ogImage.type ||
+    (ogImageUrl.endsWith(".webp")
+      ? "image/webp"
+      : ogImageUrl.endsWith(".jpg") || ogImageUrl.endsWith(".jpeg")
+        ? "image/jpeg"
+        : "image/png");
+
   return {
     metadataBase: METADATA_BASE,
     title: title
@@ -120,11 +147,12 @@ export function createMetadata(options: PageMetadataOptions = {}): Metadata {
       type: options.type || "website",
       images: [
         {
-          url: ogImage.url,
-          width: ogImage.width || DEFAULT_OG_IMAGE.width,
-          height: ogImage.height || DEFAULT_OG_IMAGE.height,
+          url: ogImageUrl,
+          ...(ogImageSecureUrl ? { secureUrl: ogImageSecureUrl } : {}),
+          width: ogImageWidth,
+          height: ogImageHeight,
           alt: ogImage.alt || (typeof title === "string" ? title : DEFAULT_TITLE),
-          type: "image/webp",
+          type: ogImageType,
         },
       ],
     },
@@ -132,7 +160,7 @@ export function createMetadata(options: PageMetadataOptions = {}): Metadata {
       card: "summary_large_image",
       title: fullTitle,
       description,
-      images: [ogImage.url],
+      images: [ogImageUrl],
     },
     robots: options.noIndex
       ? {

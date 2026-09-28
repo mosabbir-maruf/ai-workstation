@@ -31,6 +31,9 @@ export function DshKeysSection() {
   const [deepseekKey, setDeepseekKey] = useState("");
   const [openaiKey, setOpenaiKey] = useState("");
   const [anthropicKey, setAnthropicKey] = useState("");
+  const [geminiKey, setGeminiKey] = useState("");
+  const [openrouterKey, setOpenrouterKey] = useState("");
+  const [groqKey, setGroqKey] = useState("");
 
   const fetchSettings = useCallback(async () => {
     try {
@@ -45,6 +48,9 @@ export function DshKeysSection() {
           setDeepseekKey(parsed.api_providers?.deepseek?.api_key ?? "");
           setOpenaiKey(parsed.api_providers?.openai?.api_key ?? "");
           setAnthropicKey(parsed.api_providers?.anthropic?.api_key ?? "");
+          setGeminiKey(parsed.api_providers?.gemini?.api_key ?? parsed.api_providers?.google?.api_key ?? "");
+          setOpenrouterKey(parsed.api_providers?.openrouter?.api_key ?? "");
+          setGroqKey(parsed.api_providers?.groq?.api_key ?? "");
         } catch {
           // Non-JSON or custom structure
         }
@@ -67,14 +73,10 @@ export function DshKeysSection() {
         if (!parsed.api_providers || typeof parsed.api_providers !== "object") {
           parsed.api_providers = {};
         }
-        if (!parsed.api_providers.deepseek) {
-          parsed.api_providers.deepseek = {};
-        }
-        if (!parsed.api_providers.openai) {
-          parsed.api_providers.openai = {};
-        }
-        if (!parsed.api_providers.anthropic) {
-          parsed.api_providers.anthropic = {};
+        for (const prov of ["deepseek", "openai", "anthropic", "gemini", "openrouter", "groq"]) {
+          if (!parsed.api_providers[prov]) {
+            parsed.api_providers[prov] = {};
+          }
         }
 
         if (deepseekKey.trim()) {
@@ -86,13 +88,22 @@ export function DshKeysSection() {
         if (anthropicKey.trim()) {
           parsed.api_providers.anthropic.api_key = anthropicKey.trim();
         }
+        if (geminiKey.trim()) {
+          parsed.api_providers.gemini.api_key = geminiKey.trim();
+        }
+        if (openrouterKey.trim()) {
+          parsed.api_providers.openrouter.api_key = openrouterKey.trim();
+        }
+        if (groqKey.trim()) {
+          parsed.api_providers.groq.api_key = groqKey.trim();
+        }
 
         return JSON.stringify(parsed, null, 2);
       } catch {
         return rawContent;
       }
     },
-    [anthropicKey, deepseekKey, openaiKey]
+    [anthropicKey, deepseekKey, geminiKey, groqKey, openaiKey, openrouterKey]
   );
 
   const handleStageToJson = () => {
@@ -137,7 +148,7 @@ export function DshKeysSection() {
     try {
       const parsed = JSON.parse(content || "{}");
       const providers = parsed?.api_providers ?? {};
-      const configuredCount = ["deepseek", "openai", "anthropic"].filter(
+      const configuredCount = ["deepseek", "openai", "anthropic", "gemini", "openrouter", "groq"].filter(
         (key) => Boolean(providers?.[key]?.api_key?.trim?.())
       ).length;
       return {
@@ -177,8 +188,29 @@ export function DshKeysSection() {
         envVar: "ANTHROPIC_API_KEY",
         value: anthropicKey,
       },
+      {
+        id: "gemini",
+        name: "Google Gemini",
+        models: "gemini-2.0-flash / pro",
+        envVar: "GEMINI_API_KEY",
+        value: geminiKey,
+      },
+      {
+        id: "openrouter",
+        name: "OpenRouter",
+        models: "Unified gateway",
+        envVar: "OPENROUTER_API_KEY",
+        value: openrouterKey,
+      },
+      {
+        id: "groq",
+        name: "Groq",
+        models: "llama-3.3-70b-versatile",
+        envVar: "GROQ_API_KEY",
+        value: groqKey,
+      },
     ],
-    [anthropicKey, deepseekKey, openaiKey]
+    [anthropicKey, deepseekKey, geminiKey, groqKey, openaiKey, openrouterKey]
   );
 
   return (
@@ -240,12 +272,12 @@ export function DshKeysSection() {
                     api_providers.*
                   </span>
                 </div>
-                <div className="grid grid-cols-3 gap-2.5">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {providerRows.map((provider) => {
                     const isConfigured = Boolean(provider.value.trim());
                     return (
                       <div
-                        className="flex flex-col justify-between border border-border/60 bg-muted/10 px-3 py-2.5"
+                        className="flex flex-col justify-between border border-border/60 bg-muted/10 px-2.5 py-2"
                         key={provider.id}
                       >
                         <span className="font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
@@ -338,6 +370,75 @@ export function DshKeysSection() {
                     placeholder="sk-ant-..."
                     type={revealKeys ? "text" : "password"}
                     value={anthropicKey}
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <label
+                      className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest"
+                      htmlFor="gemini-key"
+                    >
+                      Google Gemini API Key
+                    </label>
+                    <span className="font-mono text-[9px] text-muted-foreground">
+                      gemini-2.0-flash / pro
+                    </span>
+                  </div>
+                  <Input
+                    className="h-8 rounded-none font-mono text-xs"
+                    disabled={loading}
+                    id="gemini-key"
+                    onChange={(e) => setGeminiKey(e.target.value)}
+                    placeholder="AIzaSy..."
+                    type={revealKeys ? "text" : "password"}
+                    value={geminiKey}
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <label
+                      className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest"
+                      htmlFor="openrouter-key"
+                    >
+                      OpenRouter API Key
+                    </label>
+                    <span className="font-mono text-[9px] text-muted-foreground">
+                      Universal gateway
+                    </span>
+                  </div>
+                  <Input
+                    className="h-8 rounded-none font-mono text-xs"
+                    disabled={loading}
+                    id="openrouter-key"
+                    onChange={(e) => setOpenrouterKey(e.target.value)}
+                    placeholder="sk-or-v1-..."
+                    type={revealKeys ? "text" : "password"}
+                    value={openrouterKey}
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <label
+                      className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest"
+                      htmlFor="groq-key"
+                    >
+                      Groq API Key
+                    </label>
+                    <span className="font-mono text-[9px] text-muted-foreground">
+                      llama-3.3-70b-versatile
+                    </span>
+                  </div>
+                  <Input
+                    className="h-8 rounded-none font-mono text-xs"
+                    disabled={loading}
+                    id="groq-key"
+                    onChange={(e) => setGroqKey(e.target.value)}
+                    placeholder="gsk_..."
+                    type={revealKeys ? "text" : "password"}
+                    value={groqKey}
                   />
                 </div>
               </div>

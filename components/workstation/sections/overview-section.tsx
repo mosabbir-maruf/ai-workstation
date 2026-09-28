@@ -48,6 +48,21 @@ const OPERATOR_NOTES_STORAGE_KEY = "aiws.workstation.operatorNotes";
 
 type ServiceStatusState = "healthy" | "inactive" | "error" | "pending";
 
+interface CachedOverviewData {
+  healthOk: boolean | null;
+  workstationRunning: boolean;
+  appRunning: boolean;
+  appPid: string | null;
+  harnessActive: boolean;
+  brokerOnline: boolean;
+  tunnelOnline: boolean;
+  activeProject: ActiveProjectGitInfo | null;
+  previewData: PreviewResponse | null;
+  telemetryMetrics: WorkstationTelemetryMetrics | null;
+}
+
+let lastOverviewCache: CachedOverviewData | null = null;
+
 interface OverviewSectionProps {
   onSelectTab?: (tabId: string) => void;
 }
@@ -236,58 +251,64 @@ function CommandAndServicesMatrix({
   onRefresh: () => void;
 }) {
 
+  const isInitialSync = loading && metrics === null;
+
   const hostLabel = metrics?.hostname
     ? `${metrics.hostname} (${metrics.cpu.cores}c)`
+    : isInitialSync
+    ? "Connecting Host..."
     : "Unconnected Host";
   const uptimeLabel = metrics?.uptime
     ? `${metrics.uptime} uptime`
+    : isInitialSync
+    ? "Syncing"
     : "Offline";
 
   const services = [
     {
       index: "S-01",
       title: "Workstation",
-      state: workstationState,
-      value: workstationRunning ? "Running" : "Stopped",
+      state: isInitialSync ? "pending" : workstationState,
+      value: isInitialSync ? "Syncing..." : workstationRunning ? "Running" : "Stopped",
       sub: `${hostLabel} · ${uptimeLabel}`,
       route: "GET /api/status",
-      badge: workstationRunning ? "ACTIVE" : "IDLE",
+      badge: isInitialSync ? "SYNC" : workstationRunning ? "ACTIVE" : "IDLE",
     },
     {
       index: "S-02",
       title: "App + PID",
-      state: appState,
-      value: appRunning ? (appPid && appPid !== "—" ? `PID ${appPid}` : "Active") : "Stopped",
-      sub: "Next.js Application Runtime",
+      state: isInitialSync ? "pending" : appState,
+      value: isInitialSync ? "Syncing..." : appRunning ? (appPid && appPid !== "—" ? `PID ${appPid}` : "Active") : "Stopped",
+      sub: isInitialSync ? "Probing runtime..." : "Next.js Application Runtime",
       route: "GET /api/app/status",
-      badge: appRunning ? "ACTIVE" : "IDLE",
+      badge: isInitialSync ? "SYNC" : appRunning ? "ACTIVE" : "IDLE",
     },
     {
       index: "S-03",
       title: "DSH + Bridge",
-      state: dshState,
-      value: harnessActive ? "Bridge Ready" : "Stopped",
-      sub: "DeepSeek Harness Engine",
+      state: isInitialSync ? "pending" : dshState,
+      value: isInitialSync ? "Syncing..." : harnessActive ? "Bridge Ready" : "Stopped",
+      sub: isInitialSync ? "Probing harness..." : "DeepSeek Harness Engine",
       route: "GET /api/harness/status",
-      badge: harnessActive ? "SANDBOX" : "IDLE",
+      badge: isInitialSync ? "SYNC" : harnessActive ? "SANDBOX" : "IDLE",
     },
     {
       index: "S-04",
       title: "Broker IPC",
-      state: brokerState,
-      value: brokerOnline ? "IPC Active" : "Offline",
-      sub: "Unix Domain Socket IPC",
+      state: isInitialSync ? "pending" : brokerState,
+      value: isInitialSync ? "Syncing..." : brokerOnline ? "IPC Active" : "Offline",
+      sub: isInitialSync ? "Probing socket..." : "Unix Domain Socket IPC",
       route: "INTERNAL BUS",
-      badge: brokerOnline ? "SYNC OK" : "DOWN",
+      badge: isInitialSync ? "SYNC" : brokerOnline ? "SYNC OK" : "DOWN",
     },
     {
       index: "S-05",
       title: "Tunnel Edge",
-      state: tunnelState,
-      value: tunnelOnline ? "Edge Ingress" : "Disconnected",
-      sub: "Cloudflare Named Tunnel",
+      state: isInitialSync ? "pending" : tunnelState,
+      value: isInitialSync ? "Syncing..." : tunnelOnline ? "Edge Ingress" : "Disconnected",
+      sub: isInitialSync ? "Probing ingress..." : "Cloudflare Named Tunnel",
       route: "GET /api/tunnel",
-      badge: tunnelOnline ? "4 COLOS" : "IDLE",
+      badge: isInitialSync ? "SYNC" : tunnelOnline ? "4 COLOS" : "IDLE",
     },
   ];
 
@@ -501,11 +522,32 @@ function ChartEmptyState({
   title = "Telemetry Offline",
   description = "Awaiting connection to workstation daemon...",
   height = "min-h-[140px]",
+  isLoading = false,
 }: {
   title?: string;
   description?: string;
   height?: string;
+  isLoading?: boolean;
 }) {
+  if (isLoading) {
+    return (
+      <div
+        className={cn(
+          "flex w-full flex-col items-center justify-center border border-dashed border-border/70 bg-muted/5 p-4 text-center",
+          height
+        )}
+      >
+        <div className="flex items-center gap-2 font-mono text-[11px] text-amber-500 animate-pulse uppercase tracking-wider">
+          <span className="size-1.5 rounded-full bg-amber-500" />
+          Synchronizing Telemetry...
+        </div>
+        <p className="mt-1 max-w-[280px] font-mono text-[10px] text-muted-foreground/70">
+          Reading real-time compute & memory timeseries from host...
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div
       className={cn(
@@ -527,15 +569,18 @@ function ChartEmptyState({
 function LiveWaveAreaChart({
   compact,
   metrics,
+  loading = false,
 }: {
   compact: boolean;
   metrics: WorkstationTelemetryMetrics | null;
+  loading?: boolean;
 }) {
   if (!metrics?.timeline || metrics.timeline.length === 0) {
     return (
       <ChartEmptyState
         description="Connect backend to stream compute & memory timeseries."
         height={compact ? "min-h-[110px]" : "min-h-[150px]"}
+        isLoading={loading}
         title="Compute Stream Inactive"
       />
     );
@@ -608,15 +653,18 @@ const PIE_SWATCH_COLORS = [
 function LiveMemoryPieChart({
   compact,
   metrics,
+  loading = false,
 }: {
   compact: boolean;
   metrics: WorkstationTelemetryMetrics | null;
+  loading?: boolean;
 }) {
   if (!metrics?.memory?.pie || metrics.memory.pie.length === 0) {
     return (
       <ChartEmptyState
         description="Physical RAM segmentation available once host connects."
         height={compact ? "min-h-[140px]" : "min-h-[160px]"}
+        isLoading={loading}
         title="Memory Metrics Inactive"
       />
     );
@@ -710,15 +758,18 @@ function LiveMemoryPieChart({
 function LiveDaemonsRingChart({
   compact,
   metrics,
+  loading = false,
 }: {
   compact: boolean;
   metrics: WorkstationTelemetryMetrics | null;
+  loading?: boolean;
 }) {
   if (!metrics?.daemons?.rings || metrics.daemons.rings.length === 0) {
     return (
       <ChartEmptyState
         description="Subsystem health quotas stream when daemon is active."
         height={compact ? "min-h-[140px]" : "min-h-[165px]"}
+        isLoading={loading}
         title="Daemon Telemetry Offline"
       />
     );
@@ -776,15 +827,18 @@ function LiveDaemonsRingChart({
 function LiveThroughputBarChart({
   compact,
   metrics,
+  loading = false,
 }: {
   compact: boolean;
   metrics: WorkstationTelemetryMetrics | null;
+  loading?: boolean;
 }) {
   if (!metrics?.throughput || metrics.throughput.length === 0) {
     return (
       <ChartEmptyState
         description="Ingress and egress throughput record upon container activity."
         height={compact ? "min-h-[110px]" : "min-h-[150px]"}
+        isLoading={loading}
         title="Throughput Monitor Idle"
       />
     );
@@ -895,19 +949,28 @@ function CadTelemetryCell({
 
 export function TelemetryShowcaseGrid({
   metrics,
+  loading = false,
 }: {
   metrics: WorkstationTelemetryMetrics | null;
+  loading?: boolean;
 }) {
   const compact = useHomeChartCompact();
+  const isInitialSync = loading && metrics === null;
 
   const cpuBadge = metrics
     ? `${metrics.cpu.usagePercent}% CPU · ${metrics.cpu.cores} Cores`
+    : isInitialSync
+    ? "Syncing Telemetry..."
     : "Offline · No Data";
   const ramBadge = metrics
     ? `${metrics.memory.usedFormatted} / ${metrics.memory.totalFormatted} (${metrics.memory.usedPercent}%)`
+    : isInitialSync
+    ? "Reading RAM..."
     : "Offline · No Data";
   const daemonBadge = metrics
     ? `${metrics.daemons.activeCount}/${metrics.daemons.totalCount} Daemons Online`
+    : isInitialSync
+    ? "Probing Subsystems..."
     : "Offline · No Data";
 
   return (
@@ -923,7 +986,7 @@ export function TelemetryShowcaseGrid({
             subtitle="CPU utilization vs Memory pressure"
             title="Compute & Memory Dynamics"
           >
-            <LiveWaveAreaChart compact={compact} metrics={metrics} />
+            <LiveWaveAreaChart compact={compact} loading={loading} metrics={metrics} />
           </CadTelemetryCell>
 
           <CadTelemetryCell
@@ -934,7 +997,7 @@ export function TelemetryShowcaseGrid({
             subtitle="Host physical RAM distribution"
             title="Memory Allocation"
           >
-            <LiveMemoryPieChart compact={compact} metrics={metrics} />
+            <LiveMemoryPieChart compact={compact} loading={loading} metrics={metrics} />
           </CadTelemetryCell>
         </div>
         <GridCornerDots
@@ -956,18 +1019,18 @@ export function TelemetryShowcaseGrid({
             subtitle="Subsystem readiness & SLA bounds"
             title="Service Health Quotas"
           >
-            <LiveDaemonsRingChart compact={compact} metrics={metrics} />
+            <LiveDaemonsRingChart compact={compact} loading={loading} metrics={metrics} />
           </CadTelemetryCell>
 
           <CadTelemetryCell
             footerMeta="Ingress vs Egress Stream"
             index="T-04"
-            metricBadge="RPC & Ingress Ops/s"
+            metricBadge={isInitialSync ? "Syncing Ingress..." : "RPC & Ingress Ops/s"}
             span={7}
             subtitle="Primary ingress vs egress stream"
             title="Container & RPC Throughput"
           >
-            <LiveThroughputBarChart compact={compact} metrics={metrics} />
+            <LiveThroughputBarChart compact={compact} loading={loading} metrics={metrics} />
           </CadTelemetryCell>
         </div>
         <GridCornerDots
@@ -1495,23 +1558,95 @@ export function OverviewSection({ onSelectTab }: OverviewSectionProps) {
     useState<ActionFeedbackInfo | null>(null);
 
   const [telemetryMetrics, setTelemetryMetrics] =
-    useState<WorkstationTelemetryMetrics | null>(null);
-  const [healthOk, setHealthOk] = useState<boolean | null>(null);
-  const [workstationRunning, setWorkstationRunning] = useState<boolean>(false);
-  const [appPid, setAppPid] = useState<string | null>(null);
-  const [appRunning, setAppRunning] = useState<boolean>(false);
-  const [harnessActive, setHarnessActive] = useState<boolean>(false);
-  const [brokerOnline, setBrokerOnline] = useState<boolean>(false);
-  const [tunnelOnline, setTunnelOnline] = useState<boolean>(false);
+    useState<WorkstationTelemetryMetrics | null>(
+      () => lastOverviewCache?.telemetryMetrics ?? null
+    );
+  const [healthOk, setHealthOk] = useState<boolean | null>(
+    () => lastOverviewCache?.healthOk ?? null
+  );
+  const [workstationRunning, setWorkstationRunning] = useState<boolean>(
+    () => lastOverviewCache?.workstationRunning ?? false
+  );
+  const [appPid, setAppPid] = useState<string | null>(
+    () => lastOverviewCache?.appPid ?? null
+  );
+  const [appRunning, setAppRunning] = useState<boolean>(
+    () => lastOverviewCache?.appRunning ?? false
+  );
+  const [harnessActive, setHarnessActive] = useState<boolean>(
+    () => lastOverviewCache?.harnessActive ?? false
+  );
+  const [brokerOnline, setBrokerOnline] = useState<boolean>(
+    () => lastOverviewCache?.brokerOnline ?? false
+  );
+  const [tunnelOnline, setTunnelOnline] = useState<boolean>(
+    () => lastOverviewCache?.tunnelOnline ?? false
+  );
 
   const [activeProject, setActiveProject] =
-    useState<ActiveProjectGitInfo | null>(null);
+    useState<ActiveProjectGitInfo | null>(
+      () => lastOverviewCache?.activeProject ?? null
+    );
 
-  const [previewData, setPreviewData] = useState<PreviewResponse | null>(null);
+  const [previewData, setPreviewData] = useState<PreviewResponse | null>(
+    () => lastOverviewCache?.previewData ?? null
+  );
 
   const refreshAllTelemetry = useCallback(async () => {
     try {
       setLoading(true);
+
+      // Fast unified overview probe (1 round-trip)
+      try {
+        const ov = await workstationApi.getOverview();
+        if (ov?.ok) {
+          const isHealthy = ov.health !== false;
+          setHealthOk(isHealthy);
+          setBrokerOnline(ov.broker?.online ?? false);
+          setWorkstationRunning(ov.workstation?.running ?? false);
+          setAppRunning(ov.app?.running ?? false);
+          setAppPid(ov.app?.pid ?? null);
+          setHarnessActive(ov.harness?.active ?? false);
+          setTunnelOnline(ov.tunnel?.online ?? false);
+          if (ov.activeProject) {
+            setActiveProject(ov.activeProject);
+          }
+          if (ov.preview) {
+            setPreviewData({
+              ok: true,
+              text: "",
+              anywhereApp: ov.preview.anywhereApp || "",
+              anywhereDsh: ov.preview.anywhereDsh || "",
+            });
+          }
+          if (ov.metrics) {
+            setTelemetryMetrics(ov.metrics);
+          }
+
+          lastOverviewCache = {
+            healthOk: isHealthy,
+            workstationRunning: ov.workstation?.running ?? false,
+            appRunning: ov.app?.running ?? false,
+            appPid: ov.app?.pid ?? null,
+            harnessActive: ov.harness?.active ?? false,
+            brokerOnline: ov.broker?.online ?? false,
+            tunnelOnline: ov.tunnel?.online ?? false,
+            activeProject: ov.activeProject ?? null,
+            previewData: {
+              ok: true,
+              text: "",
+              anywhereApp: ov.preview?.anywhereApp || "",
+              anywhereDsh: ov.preview?.anywhereDsh || "",
+            },
+            telemetryMetrics: ov.metrics ?? null,
+          };
+          return;
+        }
+      } catch {
+        // Fallback to individual requests if daemon has not updated /api/overview yet
+      }
+
+      // Legacy fallback
       const [hRes, sRes, aRes, harRes, tRes, pRes, prevRes] =
         await Promise.allSettled([
           workstationApi.getHealth(),
@@ -1529,31 +1664,51 @@ export function OverviewSection({ onSelectTab }: OverviewSectionProps) {
       setHealthOk(isHealthy);
       setBrokerOnline(isHealthy);
 
-      if (sRes.status === "fulfilled") {
-        setWorkstationRunning(parseWorkstationRunning(sRes));
-        if (sRes.value.metrics) {
-          setTelemetryMetrics(sRes.value.metrics);
-        }
+      const isWsRun = sRes.status === "fulfilled" && parseWorkstationRunning(sRes);
+      setWorkstationRunning(isWsRun);
+      let nextMetrics = telemetryMetrics;
+      if (sRes.status === "fulfilled" && sRes.value.metrics) {
+        nextMetrics = sRes.value.metrics;
+        setTelemetryMetrics(nextMetrics);
       }
 
       const appParsed = parseAppStatus(aRes);
       setAppRunning(appParsed.isRun);
       setAppPid(appParsed.pid);
 
-      setHarnessActive(parseHarnessActive(harRes));
-      setTunnelOnline(parseTunnelOnline(tRes));
+      const isHarAct = parseHarnessActive(harRes);
+      setHarnessActive(isHarAct);
+      const isTunOnl = parseTunnelOnline(tRes);
+      setTunnelOnline(isTunOnl);
 
+      let nextProj = activeProject;
       if (pRes.status === "fulfilled" && pRes.value.activeProject) {
-        setActiveProject(pRes.value.activeProject);
+        nextProj = pRes.value.activeProject;
+        setActiveProject(nextProj);
       }
 
+      let nextPrev = previewData;
       if (prevRes.status === "fulfilled") {
-        setPreviewData(prevRes.value);
+        nextPrev = prevRes.value;
+        setPreviewData(nextPrev);
       }
+
+      lastOverviewCache = {
+        healthOk: isHealthy,
+        workstationRunning: isWsRun,
+        appRunning: appParsed.isRun,
+        appPid: appParsed.pid,
+        harnessActive: isHarAct,
+        brokerOnline: isHealthy,
+        tunnelOnline: isTunOnl,
+        activeProject: nextProj,
+        previewData: nextPrev,
+        telemetryMetrics: nextMetrics,
+      };
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [activeProject, previewData, telemetryMetrics]);
 
   useEffect(() => {
     refreshAllTelemetry();
@@ -1697,7 +1852,7 @@ export function OverviewSection({ onSelectTab }: OverviewSectionProps) {
       />
 
       {/* 2. LIVE CAD TELEMETRY MATRIX */}
-      <TelemetryShowcaseGrid metrics={telemetryMetrics} />
+      <TelemetryShowcaseGrid loading={loading} metrics={telemetryMetrics} />
 
       {/* 3. WORKSPACE GIT TREE + PORT & EDGE INGRESS MAP */}
       <WorkspaceAndIngressGrid

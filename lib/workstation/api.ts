@@ -58,6 +58,34 @@ export interface ActiveProjectGitInfo {
   dirtyFilesCount: number;
 }
 
+export interface OverviewResponse {
+  ok: boolean;
+  health: boolean;
+  workstation: {
+    running: boolean;
+    status: string;
+  };
+  app: {
+    running: boolean;
+    pid: string;
+  };
+  harness: {
+    active: boolean;
+  };
+  broker: {
+    online: boolean;
+  };
+  tunnel: {
+    online: boolean;
+  };
+  activeProject?: ActiveProjectGitInfo | null;
+  preview: {
+    anywhereApp: string;
+    anywhereDsh: string;
+  };
+  metrics?: WorkstationTelemetryMetrics;
+}
+
 export interface ProjectsResponse {
   ok: boolean;
   projects: Array<{ name: string; active: boolean }>;
@@ -198,7 +226,10 @@ async function requestJson<T extends { ok?: boolean; output?: string }>(
 export const workstationApi = {
   // Health & Status
   getHealth: () => requestJson<HealthResponse>("/api/health"),
-  getStatus: () => requestJson<StatusResponse>("/api/status"),
+  getOverview: () =>
+    requestJson<OverviewResponse>("/api/overview", { timeoutMs: 25000 }),
+  getStatus: () =>
+    requestJson<StatusResponse>("/api/status", { timeoutMs: 25000 }),
   startWorkstation: () =>
     requestJson<StandardOutputResponse>("/api/workstation/start", {
       method: "POST",

@@ -43,7 +43,6 @@ import {
 } from "@/lib/workstation/api";
 import { SseLogViewer } from "../sse-log-viewer";
 
-const PID_REGEX = /PID:\s*(\d+)/i;
 const OPERATOR_NOTES_STORAGE_KEY = "aiws.workstation.operatorNotes";
 
 type ServiceStatusState = "healthy" | "inactive" | "error" | "pending";
@@ -86,64 +85,6 @@ function StatusDot({ state }: { state: ServiceStatusState }) {
   }
   return (
     <span className="inline-flex size-2 rounded-full bg-muted-foreground/40" />
-  );
-}
-
-function parseWorkstationRunning(
-  res: PromiseSettledResult<{ ok: boolean; output: string }>
-): boolean {
-  if (res.status !== "fulfilled" || !res.value.ok) {
-    return false;
-  }
-  const out = (res.value.output || "").toLowerCase();
-  return (
-    out.includes("workstation: running") ||
-    out.includes("workstation: active")
-  );
-}
-
-function parseAppStatus(
-  res: PromiseSettledResult<{ ok: boolean; output: string }>
-): { isRun: boolean; pid: string } {
-  if (res.status !== "fulfilled" || !res.value.ok) {
-    return { isRun: false, pid: "—" };
-  }
-  const out = res.value.output || "";
-  const isRun =
-    out.toLowerCase().includes("running") ||
-    out.toLowerCase().includes("active") ||
-    out.includes("PID:");
-  const pidMatch = out.match(PID_REGEX);
-  return {
-    isRun,
-    pid: pidMatch?.[1] || (isRun ? "Active" : "—"),
-  };
-}
-
-function parseHarnessActive(
-  res: PromiseSettledResult<{ ok: boolean; output: string }>
-): boolean {
-  if (res.status !== "fulfilled" || !res.value.ok) {
-    return false;
-  }
-  const out = (res.value.output || "").toLowerCase();
-  return (
-    out.includes("running") || out.includes("active") || out.includes("ok")
-  );
-}
-
-function parseTunnelOnline(
-  res: PromiseSettledResult<{ ok: boolean; output: string }>
-): boolean {
-  if (res.status !== "fulfilled" || !res.value.ok) {
-    return false;
-  }
-  const out = (res.value.output || "").toLowerCase();
-  return (
-    out.includes("active") ||
-    out.includes("connected") ||
-    out.includes("healthy") ||
-    out.includes("running")
   );
 }
 
@@ -1594,121 +1535,59 @@ export function OverviewSection({ onSelectTab }: OverviewSectionProps) {
 
   const isFetchingRef = useRef(false);
 
-  const refreshAllTelemetry = useCallback(async () => {
-    if (isFetchingRef.current) return;
+  const refreshAllTelemetry = useCallback(async (force = false) => {
+    if (isFetchingRef.current && !force) return;
     isFetchingRef.current = true;
     try {
       setLoading(true);
 
-      // Fast unified overview probe (1 round-trip)
-      try {
-        const ov = await workstationApi.getOverview();
-        if (ov?.ok) {
-          const isHealthy = ov.health !== false;
-          setHealthOk(isHealthy);
-          setBrokerOnline(ov.broker?.online ?? false);
-          setWorkstationRunning(ov.workstation?.running ?? false);
-          setAppRunning(ov.app?.running ?? false);
-          setAppPid(ov.app?.pid ?? null);
-          setHarnessActive(ov.harness?.active ?? false);
-          setTunnelOnline(ov.tunnel?.online ?? false);
-          if (ov.activeProject) {
-            setActiveProject(ov.activeProject);
-          }
-          if (ov.preview) {
-            setPreviewData({
-              ok: true,
-              text: "",
-              anywhereApp: ov.preview.anywhereApp || "",
-              anywhereDsh: ov.preview.anywhereDsh || "",
-            });
-          }
-          if (ov.metrics) {
-            setTelemetryMetrics(ov.metrics);
-          }
-
-          lastOverviewCache = {
-            healthOk: isHealthy,
-            workstationRunning: ov.workstation?.running ?? false,
-            appRunning: ov.app?.running ?? false,
-            appPid: ov.app?.pid ?? null,
-            harnessActive: ov.harness?.active ?? false,
-            brokerOnline: ov.broker?.online ?? false,
-            tunnelOnline: ov.tunnel?.online ?? false,
-            activeProject: ov.activeProject ?? null,
-            previewData: {
-              ok: true,
-              text: "",
-              anywhereApp: ov.preview?.anywhereApp || "",
-              anywhereDsh: ov.preview?.anywhereDsh || "",
-            },
-            telemetryMetrics: ov.metrics ?? null,
-          };
-          return;
+      const ov = await workstationApi.getOverview();
+      if (ov?.ok) {
+        const isHealthy = ov.health !== false;
+        setHealthOk(isHealthy);
+        setBrokerOnline(ov.broker?.online ?? false);
+        setWorkstationRunning(ov.workstation?.running ?? false);
+        setAppRunning(ov.app?.running ?? false);
+        setAppPid(ov.app?.pid ?? null);
+        setHarnessActive(ov.harness?.active ?? false);
+        setTunnelOnline(ov.tunnel?.online ?? false);
+        if (ov.activeProject) {
+          setActiveProject(ov.activeProject);
         }
-      } catch {
-        // Fallback to individual requests if daemon has not updated /api/overview yet
+        if (ov.preview) {
+          setPreviewData({
+            ok: true,
+            text: "",
+            anywhereApp: ov.preview.anywhereApp || "",
+            anywhereDsh: ov.preview.anywhereDsh || "",
+          });
+        }
+        if (ov.metrics) {
+          setTelemetryMetrics(ov.metrics);
+        }
+
+        lastOverviewCache = {
+          healthOk: isHealthy,
+          workstationRunning: ov.workstation?.running ?? false,
+          appRunning: ov.app?.running ?? false,
+          appPid: ov.app?.pid ?? null,
+          harnessActive: ov.harness?.active ?? false,
+          brokerOnline: ov.broker?.online ?? false,
+          tunnelOnline: ov.tunnel?.online ?? false,
+          activeProject: ov.activeProject ?? null,
+          previewData: {
+            ok: true,
+            text: "",
+            anywhereApp: ov.preview?.anywhereApp || "",
+            anywhereDsh: ov.preview?.anywhereDsh || "",
+          },
+          telemetryMetrics: ov.metrics ?? null,
+        };
       }
-
-      // Legacy fallback
-      const [hRes, sRes, aRes, harRes, tRes, pRes, prevRes] =
-        await Promise.allSettled([
-          workstationApi.getHealth(),
-          workstationApi.getStatus(),
-          workstationApi.getAppStatus(),
-          workstationApi.getHarnessStatus(),
-          workstationApi.getTunnelStatus(),
-          workstationApi.getProjects(),
-          workstationApi.getPreview(),
-        ]);
-
-      const isHealthy =
-        (hRes.status === "fulfilled" && hRes.value.ok) ||
-        (sRes.status === "fulfilled" && Boolean(sRes.value.metrics));
-      setHealthOk(isHealthy);
-      setBrokerOnline(isHealthy);
-
-      const isWsRun = sRes.status === "fulfilled" && parseWorkstationRunning(sRes);
-      setWorkstationRunning(isWsRun);
-      let nextMetrics: WorkstationTelemetryMetrics | null = null;
-      if (sRes.status === "fulfilled" && sRes.value.metrics) {
-        nextMetrics = sRes.value.metrics;
-        setTelemetryMetrics(nextMetrics);
-      }
-
-      const appParsed = parseAppStatus(aRes);
-      setAppRunning(appParsed.isRun);
-      setAppPid(appParsed.pid);
-
-      const isHarAct = parseHarnessActive(harRes);
-      setHarnessActive(isHarAct);
-      const isTunOnl = parseTunnelOnline(tRes);
-      setTunnelOnline(isTunOnl);
-
-      let nextProj: ActiveProjectGitInfo | null = null;
-      if (pRes.status === "fulfilled" && pRes.value.activeProject) {
-        nextProj = pRes.value.activeProject;
-        setActiveProject(nextProj);
-      }
-
-      let nextPrev: PreviewResponse | null = null;
-      if (prevRes.status === "fulfilled") {
-        nextPrev = prevRes.value;
-        setPreviewData(nextPrev);
-      }
-
-      lastOverviewCache = {
-        healthOk: isHealthy,
-        workstationRunning: isWsRun,
-        appRunning: appParsed.isRun,
-        appPid: appParsed.pid,
-        harnessActive: isHarAct,
-        brokerOnline: isHealthy,
-        tunnelOnline: isTunOnl,
-        activeProject: nextProj,
-        previewData: nextPrev,
-        telemetryMetrics: nextMetrics,
-      };
+    } catch {
+      // Backend offline or unreachable
+      setHealthOk(false);
+      setBrokerOnline(false);
     } finally {
       setLoading(false);
       isFetchingRef.current = false;
@@ -1770,7 +1649,7 @@ export function OverviewSection({ onSelectTab }: OverviewSectionProps) {
         fullOutput: trimmedOutput,
         timestamp,
       });
-      await refreshAllTelemetry();
+      await refreshAllTelemetry(true);
     } catch (err) {
       const errMsg = err instanceof Error ? err.message : String(err);
       const timestamp = new Date().toLocaleTimeString([], {
@@ -1828,7 +1707,7 @@ export function OverviewSection({ onSelectTab }: OverviewSectionProps) {
         loading={loading}
         metrics={telemetryMetrics}
         onPreview={handleLaunchPreview}
-        onRefresh={refreshAllTelemetry}
+        onRefresh={() => refreshAllTelemetry(true)}
         workstationRunning={workstationRunning}
         onStart={() =>
           executeQuickAction(

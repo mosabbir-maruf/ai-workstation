@@ -90,6 +90,10 @@ export async function proxyOrRespond(
         headers.set("Authorization", `Bearer ${apiKey.trim()}`);
       }
 
+      // Strip accept-encoding from forwarded request so upstream doesn't compress
+      // or if it does, Node fetch handles decompression transparently
+      headers.delete("accept-encoding");
+
       const fetchOptions: RequestInit = {
         method: request.method,
         headers,
@@ -102,7 +106,7 @@ export async function proxyOrRespond(
 
       const res = await fetch(targetUrl.toString(), fetchOptions);
 
-      // Pass response through directly
+      // Pass response through with stripped hop-by-hop & compression headers
       const responseHeaders = new Headers(res.headers);
       if (origin) {
         responseHeaders.set("Access-Control-Allow-Origin", origin);
@@ -115,6 +119,16 @@ export async function proxyOrRespond(
           "Content-Type, Authorization"
         );
       }
+
+      // Node fetch() automatically decodes gzip/br/deflate response bodies.
+      // Forwarding upstream's Content-Encoding or Content-Length headers causes
+      // the browser to throw net::ERR_CONTENT_DECODING_FAILED 200 (OK) because
+      // the browser attempts to decompress an already uncompressed payload.
+      responseHeaders.delete("content-encoding");
+      responseHeaders.delete("content-length");
+      responseHeaders.delete("transfer-encoding");
+      responseHeaders.delete("connection");
+      responseHeaders.delete("keep-alive");
 
       return new Response(res.body, {
         status: res.status,

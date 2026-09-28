@@ -249,7 +249,7 @@ export function HomeHowItWorksSection() {
       aria-labelledby="how-it-works-heading"
       className="relative w-full pt-12 md:pt-24"
     >
-      <div className="container mx-auto w-full overflow-visible">
+      <div className="container mx-auto w-full overflow-visible px-[17px] sm:px-10">
         <DesignSectionHeader
           subtitle="One VPS, one CLI, one isolated container — your AI dev environment up in minutes"
           title="How it works"

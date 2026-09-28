@@ -144,11 +144,13 @@ function PartnerLogoPanel({
   logoClassName,
   minHeight,
   tier,
+  className,
 }: {
   partner: Partner;
   logoClassName: string;
   minHeight: number;
   tier: PartnerTier;
+  className?: string;
 }) {
   const [active, setActive] = useState(false);
   const { href, name } = partner;
@@ -157,6 +159,7 @@ function PartnerLogoPanel({
   return (
     <DesignPartnerPanel
       ariaLabel={`${name}, ${tierLabel}`}
+      className={className}
       href={href}
       minHeight={minHeight}
       onBlur={(event) => {
@@ -179,19 +182,8 @@ function PartnerLogoPanel({
   );
 }
 
-function getMobilePartnerSlots(
-  slots: PartnerSlot[],
-  variant: "premium" | "silver"
-): PartnerSlot[] {
-  const partners = slots.filter(
-    (slot): slot is Partner => slot !== "placeholder"
-  );
-
-  if (variant === "silver" && partners.length % 2 === 1) {
-    return [...partners, "placeholder"];
-  }
-
-  return partners;
+function getMobilePartnerSlots(slots: PartnerSlot[]): PartnerSlot[] {
+  return slots.filter((slot): slot is Partner => slot !== "placeholder");
 }
 
 function PartnerSlotItems({
@@ -201,6 +193,7 @@ function PartnerSlotItems({
   logoClassName,
   placeholderOffset = 0,
   keyPrefix,
+  spanOddLastOnTwoCol = false,
 }: {
   slots: PartnerSlot[];
   minHeight: number;
@@ -208,11 +201,17 @@ function PartnerSlotItems({
   logoClassName: string;
   placeholderOffset?: number;
   keyPrefix: string;
+  spanOddLastOnTwoCol?: boolean;
 }) {
   let placeholderIndex = placeholderOffset;
 
-  return slots.map((slot, index) =>
-    slot === "placeholder" ? (
+  return slots.map((slot, index) => {
+    const isOddLast =
+      spanOddLastOnTwoCol &&
+      slots.length % 2 === 1 &&
+      index === slots.length - 1;
+
+    return slot === "placeholder" ? (
       <PartnerPlaceholder
         // biome-ignore lint/suspicious/noArrayIndexKey: fixed placeholder slots
         key={`${keyPrefix}-placeholder-${index}`}
@@ -221,14 +220,15 @@ function PartnerSlotItems({
       />
     ) : (
       <PartnerLogoPanel
+        className={isOddLast ? "col-span-2" : undefined}
         key={`${keyPrefix}-${slot.id}`}
         logoClassName={logoClassName}
         minHeight={minHeight}
         partner={slot}
         tier={variant}
       />
-    )
-  );
+    );
+  });
 }
 
 function PartnerRow({
@@ -244,7 +244,7 @@ function PartnerRow({
   logoClassName: string;
   placeholderOffset?: number;
 }) {
-  const mobileSlots = getMobilePartnerSlots(slots, variant);
+  const mobileSlots = getMobilePartnerSlots(slots);
   const mobileColumns = variant === "premium" ? 1 : 2;
   const mobileRows = Math.ceil(mobileSlots.length / mobileColumns);
   const desktopColumns = slots.length;
@@ -264,6 +264,7 @@ function PartnerRow({
           minHeight={minHeight}
           placeholderOffset={placeholderOffset}
           slots={mobileSlots}
+          spanOddLastOnTwoCol={variant === "silver"}
           variant={variant}
         />
       </div>

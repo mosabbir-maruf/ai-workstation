@@ -16,7 +16,7 @@ export function HomeFaqSection() {
       aria-labelledby="faq-heading"
       className="relative w-full pt-12 md:pt-24"
     >
-      <div className="container mx-auto w-full overflow-visible">
+      <div className="container mx-auto w-full overflow-visible px-[17px] sm:px-10">
         <DesignSectionHeader
           subtitle="Architecture, container isolation, DeepSeek Harness persistence, and GitHub broker runtime"
           title="Frequently asked questions"

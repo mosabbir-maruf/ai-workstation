@@ -24,7 +24,7 @@ export function DesignSectionHeader({
       >
         {title}
       </h2>
-      <p className="font-mono text-base text-muted-foreground uppercase tracking-widest sm:text-lg md:text-lg">
+      <p className="font-mono text-muted-foreground text-xs uppercase leading-relaxed tracking-widest sm:text-base md:text-lg">
         {subtitle}
         <span className="animate-caret-blink">_</span>
       </p>

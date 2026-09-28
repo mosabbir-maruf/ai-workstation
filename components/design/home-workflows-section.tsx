@@ -7,7 +7,7 @@ export function HomeWorkflowsSection() {
       aria-labelledby="workflows-heading"
       className="relative w-full pt-12 md:pt-24"
     >
-      <div className="container mx-auto w-full overflow-visible">
+      <div className="container mx-auto w-full overflow-visible px-[17px] sm:px-10">
         <DesignSectionHeader
           subtitle="Everything you need to orchestrate projects, runtimes, and tunnels from one CLI"
           title="Developer workflows"

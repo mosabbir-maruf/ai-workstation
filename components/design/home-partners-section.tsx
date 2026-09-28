@@ -8,7 +8,7 @@ export function HomePartnersSection() {
       aria-labelledby="ecosystem-heading"
       className="relative w-full pt-12 md:pt-24"
     >
-      <div className="container mx-auto w-full overflow-visible">
+      <div className="container mx-auto w-full overflow-visible px-[17px] sm:px-10">
         <DesignSectionHeader
           className="pb-6"
           subtitle="Backed by open infrastructure and platform partners"

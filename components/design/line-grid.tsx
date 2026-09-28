@@ -142,7 +142,7 @@ export function GridCornerDots({
     >
       {dots.map(({ col, row, key }) => (
         <span
-          className="absolute size-2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-border bg-white md:size-3 dark:bg-background"
+          className="absolute size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border border-border bg-white sm:size-3 dark:bg-background"
           key={key}
           style={{
             left: gridAxisPosition(col, columns, columnWeights),

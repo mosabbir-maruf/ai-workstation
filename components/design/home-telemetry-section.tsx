@@ -64,7 +64,7 @@ export function HomeTelemetrySection() {
       aria-labelledby="telemetry-heading"
       className="relative w-full pt-12 md:pt-24"
     >
-      <div className="container mx-auto w-full overflow-visible px-4">
+      <div className="container mx-auto w-full overflow-visible px-[17px] sm:px-10">
         <DesignSectionHeader
           subtitle="Real-time CPU dynamics, physical RAM distribution, daemon SLAs & container throughput"
           title="Runtime telemetry"

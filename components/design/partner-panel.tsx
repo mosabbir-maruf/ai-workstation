@@ -64,7 +64,7 @@ export function DesignPartnerPanel({
           ariaLabel ??
           (variant === "placeholder" ? "Become a partner" : undefined)
         }
-        className="group block w-full min-w-0"
+        className={cn("group block w-full min-w-0", className)}
         href={href}
         onBlur={onBlur}
         onClick={onClick}

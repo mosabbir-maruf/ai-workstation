@@ -6,7 +6,7 @@ export function UsedBySection({ className }: { className?: string }) {
     <section
       aria-label="Ecosystem partners"
       className={cn(
-        "container mx-auto px-4 py-10 text-left sm:py-16",
+        "container mx-auto px-[17px] py-10 text-left sm:px-10 sm:py-16",
         className
       )}
     >

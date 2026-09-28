@@ -64,7 +64,7 @@ export function HomeFooter() {
 
   return (
     <footer className="relative w-full pt-16 pb-8 md:pt-24">
-      <div className="container mx-auto w-full px-4">
+      <div className="container mx-auto w-full px-[17px] sm:px-10">
         <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-4">
           {/* Column 1: Brand */}
           <div className="flex flex-col gap-4">

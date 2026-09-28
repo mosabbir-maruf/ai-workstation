@@ -20,13 +20,13 @@ export const metadata: Metadata = createMetadata({
 
 export default function HomePage() {
   return (
-    <main className="flex flex-1 flex-col">
+    <main className="flex flex-1 flex-col overflow-x-clip">
       <JsonLd schema={getFaqSchema(HOME_FAQ_ITEMS)} />
       <div className="flex w-full flex-col gap-0">
         <HomeHeroSection>
-          <div className="container mx-auto w-full overflow-visible pt-8 md:pt-16">
+          <div className="container mx-auto w-full overflow-visible px-[17px] pt-8 sm:px-10 md:pt-16">
             <LineGrid
-              className="aspect-3/2 [--grid-cell-height:calc(100%/2)] [--grid-cell-width:calc(100%/3)] md:aspect-4/2 lg:aspect-6/3 md:[--grid-cell-height:calc(100%/2)] md:[--grid-cell-width:calc(100%/4)] lg:[--grid-cell-height:calc(100%/3)] lg:[--grid-cell-width:calc(100%/6)]"
+              className="aspect-3/2 min-h-[360px] [--grid-cell-height:calc(100%/2)] [--grid-cell-width:calc(100%/3)] sm:min-h-0 md:aspect-4/2 lg:aspect-6/3 md:[--grid-cell-height:calc(100%/2)] md:[--grid-cell-width:calc(100%/4)] lg:[--grid-cell-height:calc(100%/3)] lg:[--grid-cell-width:calc(100%/6)]"
               columns={3}
               columnsLg={6}
               columnsMd={4}

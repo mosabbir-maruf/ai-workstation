@@ -288,6 +288,43 @@ body,
   }
 }
 
+/* Proportional 1:1 CAD corner rulers on mobile (<640px) so horizontal & vertical ticks match PC geometry */
+@media (max-width: 639px) {
+  [data-grid-rulers] > .w-px.-top-8 {
+    top: -16px;
+    height: 22px;
+  }
+
+  [data-grid-rulers] > .w-px.-bottom-8 {
+    bottom: -16px;
+    height: 22px;
+  }
+
+  [data-grid-rulers] > .h-px.-left-8 {
+    left: -16px;
+    width: 22px;
+  }
+
+  [data-grid-rulers] > .h-px.-right-8 {
+    right: -16px;
+    width: 22px;
+  }
+
+  [data-grid-rulers] > .h-6.w-6.-top-8.-right-8 {
+    top: -16px;
+    right: -16px;
+    width: 11px;
+    height: 11px;
+  }
+
+  [data-grid-rulers] > .h-6.w-6.-bottom-8.-left-8 {
+    bottom: -16px;
+    left: -16px;
+    width: 11px;
+    height: 11px;
+  }
+}
+
 /* Align Fumadocs UI tokens with shadcn card surfaces */
 :root {
   --color-fd-background: var(--background);

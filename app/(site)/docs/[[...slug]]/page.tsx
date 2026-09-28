@@ -67,17 +67,17 @@ export default async function Page(props: {
   ];
 
   return (
-    <div className="flex w-full justify-center">
+    <div className="flex w-full min-w-0 justify-center">
       <JsonLd schema={schemas} />
-      <article className="w-full max-w-[790px] px-10 pt-24 pb-16">
-        <header className="mb-8">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h1 className="m-0 font-bold text-3xl text-foreground leading-tight">
+      <article className="min-w-0 w-full max-w-[790px] px-4 pt-6 pb-12 sm:px-8 sm:pt-12 md:px-10 lg:pt-24 lg:pb-16">
+        <header className="mb-6 sm:mb-8">
+          <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-start sm:gap-4">
+            <div className="min-w-0">
+              <h1 className="m-0 font-bold text-2xl text-foreground leading-tight sm:text-3xl">
                 {data.title}
               </h1>
               {data.description && (
-                <p className="mt-2 text-lg text-muted-foreground">
+                <p className="mt-2 text-base text-muted-foreground sm:text-lg">
                   {data.description}
                 </p>
               )}
@@ -89,7 +89,7 @@ export default async function Page(props: {
             />
           </div>
         </header>
-        <div className="prose prose-neutral dark:prose-invert max-w-none">
+        <div className="prose prose-neutral dark:prose-invert max-w-none min-w-0 overflow-x-hidden [&_pre]:overflow-x-auto [&_table]:block [&_table]:w-full [&_table]:overflow-x-auto">
           <MDX components={defaultMdxComponents} />
         </div>
         <PageFooter next={neighbours.next} previous={neighbours.previous} />

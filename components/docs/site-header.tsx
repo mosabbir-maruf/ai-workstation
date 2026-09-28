@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { ChartThemeSelector } from "@/components/chart-theme/chart-theme-selector";
@@ -90,6 +91,39 @@ interface MobileMenuProps {
   staggerDelay: number;
 }
 
+const MOBILE_DOCS_SECTIONS = [
+  {
+    title: "Getting Started",
+    items: [
+      { text: "Overview", url: "/docs" },
+      { text: "Installation", url: "/docs/installation" },
+      { text: "CLI Reference", url: "/docs/cli-reference" },
+    ],
+  },
+  {
+    title: "Authentication & Access",
+    items: [
+      { text: "GitHub Setup", url: "/docs/github-app-setup" },
+      { text: "Cloudflare Tunnel", url: "/docs/cloudflare-tunnel" },
+    ],
+  },
+  {
+    title: "Runtime & Operations",
+    items: [
+      { text: "Harness & DSH", url: "/docs/harness-and-dsh" },
+      { text: "Cache & State Backup", url: "/docs/cache-and-state" },
+      { text: "Operations & Runbook", url: "/docs/operations" },
+    ],
+  },
+  {
+    title: "Security & Governance",
+    items: [
+      { text: "Security Policy", url: "/docs/security" },
+      { text: "Contributing", url: "/docs/contributing" },
+    ],
+  },
+] as const;
+
 function MobileMenu({
   links,
   githubUrl,
@@ -98,6 +132,8 @@ function MobileMenu({
   onClose,
   staggerDelay,
 }: MobileMenuProps) {
+  const pathname = usePathname();
+
   useEffect(() => {
     if (!isOpen) {
       return;
@@ -159,6 +195,36 @@ function MobileMenu({
                   <NavLinkLabel text={link.text} url={link.url} />
                 </Button>
               </Link>
+            ))}
+          </div>
+
+          {/* Documentation Sections */}
+          <div className="mt-3 flex flex-col gap-3 border-border border-t pt-3">
+            {MOBILE_DOCS_SECTIONS.map((section) => (
+              <div className="flex flex-col gap-1" key={section.title}>
+                <span className="px-3 font-medium font-mono text-[11px] text-muted-foreground uppercase tracking-wider">
+                  {section.title}
+                </span>
+                <div className="flex flex-col gap-0.5">
+                  {section.items.map((item) => {
+                    const isActive = pathname === item.url;
+                    return (
+                      <Link
+                        className={`rounded-md px-3 py-2 font-medium text-xs no-underline transition-colors ${
+                          isActive
+                            ? "bg-muted text-foreground"
+                            : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                        }`}
+                        href={item.url}
+                        key={item.url}
+                        onClick={onClose}
+                      >
+                        {item.text}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
             ))}
           </div>
 

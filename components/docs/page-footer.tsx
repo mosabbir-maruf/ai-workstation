@@ -24,13 +24,13 @@ export function PageFooter({ previous, next }: PageFooterProps) {
     <footer className="mt-12 flex items-center justify-between gap-4 border-border border-t pt-6">
       {previous ? (
         <Link
-          className="group flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground"
+          className="group flex min-w-0 max-w-[48%] items-center gap-2 text-muted-foreground transition-colors hover:text-foreground"
           href={previous.url}
         >
-          <Icon className="size-4" name="IconChevronLeft" />
-          <div className="flex flex-col">
+          <Icon className="size-4 shrink-0" name="IconChevronLeft" />
+          <div className="flex min-w-0 flex-col">
             <span className="text-xs">Previous</span>
-            <span className="font-medium text-foreground text-sm group-hover:underline">
+            <span className="truncate font-medium text-foreground text-sm group-hover:underline">
               {previous.name}
             </span>
           </div>
@@ -40,16 +40,16 @@ export function PageFooter({ previous, next }: PageFooterProps) {
       )}
       {next ? (
         <Link
-          className="group flex items-center gap-2 text-right text-muted-foreground transition-colors hover:text-foreground"
+          className="group flex min-w-0 max-w-[48%] items-center justify-end gap-2 text-right text-muted-foreground transition-colors hover:text-foreground"
           href={next.url}
         >
-          <div className="flex flex-col">
+          <div className="flex min-w-0 flex-col">
             <span className="text-xs">Next</span>
-            <span className="font-medium text-foreground text-sm group-hover:underline">
+            <span className="truncate font-medium text-foreground text-sm group-hover:underline">
               {next.name}
             </span>
           </div>
-          <Icon className="size-4" name="IconChevronRight" />
+          <Icon className="size-4 shrink-0" name="IconChevronRight" />
         </Link>
       ) : (
         <div />

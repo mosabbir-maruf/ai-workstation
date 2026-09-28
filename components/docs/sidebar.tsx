@@ -27,40 +27,110 @@ interface SidebarProps {
   links?: NavLink[];
 }
 
+function findActivePageTitle(
+  nodes: PageTree.Node[],
+  pathname: string
+): React.ReactNode | null {
+  for (const node of nodes) {
+    if (node.type === "page" && node.url === pathname) {
+      return node.name;
+    }
+    if (node.type === "folder") {
+      if (node.index?.url === pathname) {
+        return node.index.name;
+      }
+      const found = findActivePageTitle(node.children, pathname);
+      if (found) {
+        return found;
+      }
+    }
+  }
+  return null;
+}
+
 export function Sidebar({ tree, links = [] }: SidebarProps) {
   const pathname = usePathname();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const activeTitle = findActivePageTitle(tree.children, pathname) ?? "Menu";
+
+  const navContent = (
+    <>
+      {links.length > 0 && (
+        <ul className="m-0 mb-4 list-none space-y-0.5 p-0">
+          <li className={linkStyles.heading}>Getting Started</li>
+          {links.map((link) => {
+            const isActive = pathname === link.url;
+            return (
+              <li key={link.url}>
+                <Link
+                  className={cn(
+                    linkStyles.base,
+                    isActive ? linkStyles.active : linkStyles.inactive
+                  )}
+                  href={link.url}
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <NavLinkLabel text={link.text} url={link.url} />
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      <div onClick={() => setMobileOpen(false)}>
+        <SidebarNodes nodes={tree.children} />
+      </div>
+    </>
+  );
 
   return (
-    <aside className="fixed top-(--site-header-height) left-0 hidden h-[calc(100vh-var(--site-header-height))] w-64 overflow-hidden bg-background lg:block">
-      <DocsScrollArea className="h-full py-4 pt-16" showEdgeGradient>
-        <nav className="px-4 py-8 pl-8">
-          {/* Top-level navigation links */}
-          {links.length > 0 && (
-            <ul className="m-0 mb-4 list-none space-y-0.5 p-0">
-              <li className={linkStyles.heading}>Getting Started</li>
-              {links.map((link) => {
-                // Only exact match for sidebar top-level links
-                const isActive = pathname === link.url;
-                return (
-                  <li key={link.url}>
-                    <Link
-                      className={cn(
-                        linkStyles.base,
-                        isActive ? linkStyles.active : linkStyles.inactive
-                      )}
-                      href={link.url}
-                    >
-                      <NavLinkLabel text={link.text} url={link.url} />
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-          <SidebarNodes nodes={tree.children} />
-        </nav>
-      </DocsScrollArea>
-    </aside>
+    <>
+      {/* Mobile / Tablet sticky docs navigation bar (< lg) */}
+      <div className="sticky top-(--site-header-height) z-30 border-border border-b bg-background/95 backdrop-blur-md lg:hidden">
+        <button
+          aria-expanded={mobileOpen}
+          className="flex w-full items-center justify-between gap-2 px-4 py-2.5 text-left font-medium text-foreground text-xs sm:px-8"
+          onClick={() => setMobileOpen((prev) => !prev)}
+          type="button"
+        >
+          <span className="flex min-w-0 items-center gap-2">
+            <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
+              Docs
+            </span>
+            <span className="text-muted-foreground/50">/</span>
+            <span className="truncate font-semibold text-foreground">
+              {activeTitle}
+            </span>
+          </span>
+          <svg
+            aria-hidden="true"
+            className={cn(
+              "size-4 shrink-0 text-muted-foreground transition-transform duration-200",
+              mobileOpen && "rotate-180"
+            )}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            viewBox="0 0 24 24"
+          >
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </button>
+
+        {mobileOpen && (
+          <nav className="max-h-[70vh] overflow-y-auto overscroll-contain border-border border-t bg-background px-4 py-4 sm:px-8">
+            {navContent}
+          </nav>
+        )}
+      </div>
+
+      {/* Desktop fixed left sidebar (lg+) */}
+      <aside className="fixed top-(--site-header-height) left-0 hidden h-[calc(100vh-var(--site-header-height))] w-64 overflow-hidden bg-background lg:block">
+        <DocsScrollArea className="h-full py-4 pt-16" showEdgeGradient>
+          <nav className="px-4 py-8 pl-8">{navContent}</nav>
+        </DocsScrollArea>
+      </aside>
+    </>
   );
 }
 

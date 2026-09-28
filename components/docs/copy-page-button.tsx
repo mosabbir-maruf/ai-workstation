@@ -39,7 +39,7 @@ export function CopyPageButton({ content, url }: CopyPageButtonProps) {
   const fullUrl = typeof window === "undefined" ? url : window.location.href;
 
   return (
-    <div className="hidden md:flex">
+    <div className="flex shrink-0">
       <Button
         className="rounded-r-none border-r-0"
         onClick={handleCopy}

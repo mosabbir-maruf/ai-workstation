@@ -22,7 +22,7 @@ export function PreviewSection() {
     try {
       setLoading(true);
       const res = await workstationApi.getPreview();
-      if (res.ok) {
+      if (res && (res.ok || res.anywhereApp || res.anywhereDsh || res.text)) {
         setPreviewData({
           text: res.text,
           anywhereApp: res.anywhereApp,

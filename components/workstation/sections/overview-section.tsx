@@ -74,6 +74,19 @@ function StatusDot({ state }: { state: ServiceStatusState }) {
   );
 }
 
+function parseWorkstationRunning(
+  res: PromiseSettledResult<{ ok: boolean; output: string }>
+): boolean {
+  if (res.status !== "fulfilled" || !res.value.ok) {
+    return false;
+  }
+  const out = (res.value.output || "").toLowerCase();
+  return (
+    out.includes("workstation: running") ||
+    out.includes("workstation: active")
+  );
+}
+
 function parseAppStatus(
   res: PromiseSettledResult<{ ok: boolean; output: string }>
 ): { isRun: boolean; pid: string } {
@@ -175,6 +188,7 @@ export interface ActionFeedbackInfo {
 
 function CommandAndServicesMatrix({
   workstationState,
+  workstationRunning,
   appState,
   appPid,
   appRunning,
@@ -190,12 +204,15 @@ function CommandAndServicesMatrix({
   actionFeedback,
   onDismissFeedback,
   onStart,
+  onStop,
   onRun,
+  onStopApp,
   onPreview,
   onRestart,
   onRefresh,
 }: {
   workstationState: ServiceStatusState;
+  workstationRunning: boolean;
   appState: ServiceStatusState;
   appPid: string | null;
   appRunning: boolean;
@@ -211,7 +228,9 @@ function CommandAndServicesMatrix({
   actionFeedback: ActionFeedbackInfo | null;
   onDismissFeedback?: () => void;
   onStart: () => void;
+  onStop: () => void;
   onRun: () => void;
+  onStopApp: () => void;
   onPreview: () => void;
   onRestart: () => void;
   onRefresh: () => void;
@@ -229,10 +248,10 @@ function CommandAndServicesMatrix({
       index: "S-01",
       title: "Workstation",
       state: workstationState,
-      value: workstationState === "healthy" ? "Healthy" : "Offline",
+      value: workstationRunning ? "Running" : "Stopped",
       sub: `${hostLabel} · ${uptimeLabel}`,
-      route: "GET /api/health",
-      badge: workstationState === "healthy" ? "200 OK" : "DOWN",
+      route: "GET /api/status",
+      badge: workstationRunning ? "ACTIVE" : "IDLE",
     },
     {
       index: "S-02",
@@ -287,27 +306,53 @@ function CommandAndServicesMatrix({
           </div>
 
           <div className="ml-auto flex shrink-0 items-center gap-1.5">
-            <Button
-              className="h-6 rounded-none px-2.5 font-mono text-[10px] uppercase tracking-wider"
-              disabled={loading || actionInProgress !== null}
-              onClick={onStart}
-              size="xs"
-              variant="outline"
-            >
-              {actionInProgress === "Start Workstation"
-                ? "Starting..."
-                : "Start"}
-            </Button>
+            {workstationRunning ? (
+              <Button
+                className="h-6 rounded-none px-2.5 font-mono text-[10px] uppercase tracking-wider text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 border-rose-500/30"
+                disabled={loading || actionInProgress !== null}
+                onClick={onStop}
+                size="xs"
+                variant="outline"
+              >
+                {actionInProgress === "Stop Workstation"
+                  ? "Stopping..."
+                  : "Stop"}
+              </Button>
+            ) : (
+              <Button
+                className="h-6 rounded-none px-2.5 font-mono text-[10px] uppercase tracking-wider"
+                disabled={loading || actionInProgress !== null}
+                onClick={onStart}
+                size="xs"
+                variant="outline"
+              >
+                {actionInProgress === "Start Workstation"
+                  ? "Starting..."
+                  : "Start"}
+              </Button>
+            )}
 
-            <Button
-              className="h-6 rounded-none px-2.5 font-mono text-[10px] uppercase tracking-wider"
-              disabled={loading || actionInProgress !== null}
-              onClick={onRun}
-              size="xs"
-              variant="default"
-            >
-              {actionInProgress === "Run App" ? "Launching..." : "Run App"}
-            </Button>
+            {appRunning ? (
+              <Button
+                className="h-6 rounded-none px-2.5 font-mono text-[10px] uppercase tracking-wider text-amber-500 hover:text-amber-600 hover:bg-amber-500/10 border-amber-500/30"
+                disabled={loading || actionInProgress !== null}
+                onClick={onStopApp}
+                size="xs"
+                variant="outline"
+              >
+                {actionInProgress === "Stop App" ? "Stopping..." : "Stop App"}
+              </Button>
+            ) : (
+              <Button
+                className="h-6 rounded-none px-2.5 font-mono text-[10px] uppercase tracking-wider"
+                disabled={loading || actionInProgress !== null || !workstationRunning}
+                onClick={onRun}
+                size="xs"
+                variant="default"
+              >
+                {actionInProgress === "Run App" ? "Launching..." : "Run App"}
+              </Button>
+            )}
 
             <Button
               className="h-6 rounded-none px-2.5 font-mono text-[10px] uppercase tracking-wider"
@@ -1449,6 +1494,7 @@ export function OverviewSection({ onSelectTab }: OverviewSectionProps) {
   const [telemetryMetrics, setTelemetryMetrics] =
     useState<WorkstationTelemetryMetrics | null>(null);
   const [healthOk, setHealthOk] = useState<boolean | null>(null);
+  const [workstationRunning, setWorkstationRunning] = useState<boolean>(false);
   const [appPid, setAppPid] = useState<string | null>(null);
   const [appRunning, setAppRunning] = useState<boolean>(false);
   const [harnessActive, setHarnessActive] = useState<boolean>(false);
@@ -1480,8 +1526,11 @@ export function OverviewSection({ onSelectTab }: OverviewSectionProps) {
       setHealthOk(isHealthy);
       setBrokerOnline(isHealthy);
 
-      if (sRes.status === "fulfilled" && sRes.value.metrics) {
-        setTelemetryMetrics(sRes.value.metrics);
+      if (sRes.status === "fulfilled") {
+        setWorkstationRunning(parseWorkstationRunning(sRes));
+        if (sRes.value.metrics) {
+          setTelemetryMetrics(sRes.value.metrics);
+        }
       }
 
       const appParsed = parseAppStatus(aRes);
@@ -1542,6 +1591,13 @@ export function OverviewSection({ onSelectTab }: OverviewSectionProps) {
         second: "2-digit",
       });
 
+      if (res.ok) {
+        if (name === "Start Workstation") setWorkstationRunning(true);
+        if (name === "Stop Workstation") setWorkstationRunning(false);
+        if (name === "Run App") setAppRunning(true);
+        if (name === "Stop App") setAppRunning(false);
+      }
+
       setActionFeedback({
         ok: Boolean(res.ok),
         command,
@@ -1582,7 +1638,7 @@ export function OverviewSection({ onSelectTab }: OverviewSectionProps) {
 
   let workstationState: ServiceStatusState = "pending";
   if (healthOk === true) {
-    workstationState = "healthy";
+    workstationState = workstationRunning ? "healthy" : "inactive";
   } else if (healthOk === false) {
     workstationState = "error";
   }
@@ -1610,16 +1666,27 @@ export function OverviewSection({ onSelectTab }: OverviewSectionProps) {
         metrics={telemetryMetrics}
         onPreview={handleLaunchPreview}
         onRefresh={refreshAllTelemetry}
-        onRestart={() =>
-          executeQuickAction("App Restart", "ai app restart", workstationApi.appRestart)
-        }
-        onRun={() => executeQuickAction("Run App", "ai run", workstationApi.appRun)}
+        workstationRunning={workstationRunning}
         onStart={() =>
           executeQuickAction(
             "Start Workstation",
             "ai start",
             workstationApi.startWorkstation
           )
+        }
+        onStop={() =>
+          executeQuickAction(
+            "Stop Workstation",
+            "ai stop",
+            workstationApi.stopWorkstation
+          )
+        }
+        onRun={() => executeQuickAction("Run App", "ai run", workstationApi.appRun)}
+        onStopApp={() =>
+          executeQuickAction("Stop App", "ai app stop", workstationApi.appStop)
+        }
+        onRestart={() =>
+          executeQuickAction("App Restart", "ai app restart", workstationApi.appRestart)
         }
         tunnelOnline={tunnelOnline}
         tunnelState={tunnelState}

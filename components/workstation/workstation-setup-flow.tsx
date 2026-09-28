@@ -53,6 +53,20 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
   const [customModel, setCustomModel] = useState("");
   const [revealKey, setRevealKey] = useState(false);
 
+  // Model Auto-Discovery and Identifier state
+  const [providerModels, setProviderModels] = useState<Record<string, string>>({
+    deepseek: "",
+    openai: "",
+    anthropic: "",
+    gemini: "",
+    openrouter: "",
+    groq: "",
+    custom: "",
+  });
+  const [availableModels, setAvailableModels] = useState<Record<string, string[]>>({});
+  const [fetchingModels, setFetchingModels] = useState<boolean>(false);
+  const [modelFetchNotice, setModelFetchNotice] = useState<string | null>(null);
+
   const handlePemFileSelected = (file: File) => {
     if (!file) return;
     setPemFileName(file.name);
@@ -132,6 +146,16 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
             setCustomBaseUrl(providers.custom.base_url || "");
             setCustomModel(providers.custom.model || "");
           }
+
+          setProviderModels({
+            deepseek: providers.deepseek?.model || "",
+            openai: providers.openai?.model || "",
+            anthropic: providers.anthropic?.model || "",
+            gemini: providers.gemini?.model || providers.google?.model || "",
+            openrouter: providers.openrouter?.model || "",
+            groq: providers.groq?.model || "",
+            custom: providers.custom?.model || "",
+          });
 
           const hasAny = Boolean(
             providers.deepseek?.api_key ||
@@ -230,6 +254,54 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
     }
   };
 
+  const getProviderApiKey = (prov: string): string => {
+    switch (prov) {
+      case "deepseek": return deepseekKey;
+      case "openai": return openaiKey;
+      case "anthropic": return anthropicKey;
+      case "gemini": return geminiKey;
+      case "openrouter": return openrouterKey;
+      case "groq": return groqKey;
+      case "custom": return customApiKey;
+      default: return "";
+    }
+  };
+
+  const handleFetchModels = async (prov: string) => {
+    try {
+      setFetchingModels(true);
+      setModelFetchNotice(null);
+      const apiKey = getProviderApiKey(prov).trim();
+      const baseUrl = prov === "custom" ? customBaseUrl.trim() : undefined;
+
+      const res = await workstationApi.fetchAvailableModels({
+        provider: prov,
+        apiKey: apiKey || undefined,
+        baseUrl: baseUrl || undefined,
+      });
+
+      if (res.ok && res.models && res.models.length > 0) {
+        setAvailableModels((prev) => ({ ...prev, [prov]: res.models }));
+        setProviderModels((prev) => {
+          if (!prev[prov]?.trim()) {
+            return { ...prev, [prov]: res.models[0] };
+          }
+          return prev;
+        });
+        if (prov === "custom") {
+          setCustomModel((prev) => prev || res.models[0]);
+        }
+        setModelFetchNotice(`Found ${res.models.length} available model(s).`);
+      } else {
+        setModelFetchNotice(res.error || "No models returned. Check credentials or host URL.");
+      }
+    } catch (err: any) {
+      setModelFetchNotice(`Error fetching models: ${err?.message || String(err)}`);
+    } finally {
+      setFetchingModels(false);
+    }
+  };
+
   const handleSaveModelKey = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -251,48 +323,54 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
         parsedSettings.api_providers = {};
       }
 
-      if (deepseekKey.trim()) {
+      if (deepseekKey.trim() || providerModels.deepseek?.trim()) {
         parsedSettings.api_providers.deepseek = {
           ...parsedSettings.api_providers.deepseek,
-          api_key: deepseekKey.trim(),
+          ...(deepseekKey.trim() ? { api_key: deepseekKey.trim() } : {}),
+          ...(providerModels.deepseek?.trim() ? { model: providerModels.deepseek.trim() } : {}),
         };
       }
-      if (openaiKey.trim()) {
+      if (openaiKey.trim() || providerModels.openai?.trim()) {
         parsedSettings.api_providers.openai = {
           ...parsedSettings.api_providers.openai,
-          api_key: openaiKey.trim(),
+          ...(openaiKey.trim() ? { api_key: openaiKey.trim() } : {}),
+          ...(providerModels.openai?.trim() ? { model: providerModels.openai.trim() } : {}),
         };
       }
-      if (anthropicKey.trim()) {
+      if (anthropicKey.trim() || providerModels.anthropic?.trim()) {
         parsedSettings.api_providers.anthropic = {
           ...parsedSettings.api_providers.anthropic,
-          api_key: anthropicKey.trim(),
+          ...(anthropicKey.trim() ? { api_key: anthropicKey.trim() } : {}),
+          ...(providerModels.anthropic?.trim() ? { model: providerModels.anthropic.trim() } : {}),
         };
       }
-      if (geminiKey.trim()) {
+      if (geminiKey.trim() || providerModels.gemini?.trim()) {
         parsedSettings.api_providers.gemini = {
           ...parsedSettings.api_providers.gemini,
-          api_key: geminiKey.trim(),
+          ...(geminiKey.trim() ? { api_key: geminiKey.trim() } : {}),
+          ...(providerModels.gemini?.trim() ? { model: providerModels.gemini.trim() } : {}),
         };
       }
-      if (openrouterKey.trim()) {
+      if (openrouterKey.trim() || providerModels.openrouter?.trim()) {
         parsedSettings.api_providers.openrouter = {
           ...parsedSettings.api_providers.openrouter,
-          api_key: openrouterKey.trim(),
+          ...(openrouterKey.trim() ? { api_key: openrouterKey.trim() } : {}),
+          ...(providerModels.openrouter?.trim() ? { model: providerModels.openrouter.trim() } : {}),
         };
       }
-      if (groqKey.trim()) {
+      if (groqKey.trim() || providerModels.groq?.trim()) {
         parsedSettings.api_providers.groq = {
           ...parsedSettings.api_providers.groq,
-          api_key: groqKey.trim(),
+          ...(groqKey.trim() ? { api_key: groqKey.trim() } : {}),
+          ...(providerModels.groq?.trim() ? { model: providerModels.groq.trim() } : {}),
         };
       }
-      if (customApiKey.trim() || customBaseUrl.trim()) {
+      if (customApiKey.trim() || customBaseUrl.trim() || customModel.trim() || providerModels.custom?.trim()) {
         parsedSettings.api_providers.custom = {
           ...parsedSettings.api_providers.custom,
           api_key: customApiKey.trim(),
           base_url: customBaseUrl.trim(),
-          model: customModel.trim(),
+          model: (customModel || providerModels.custom || "").trim(),
         };
       }
 
@@ -857,13 +935,13 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
               {/* Provider Selection Tabs */}
               <div className="flex flex-wrap gap-1.5 p-1 bg-muted/20 border border-border/60 rounded-md">
                 {[
-                  { id: "deepseek", name: "DeepSeek", keyVal: deepseekKey },
-                  { id: "openai", name: "OpenAI", keyVal: openaiKey },
-                  { id: "anthropic", name: "Anthropic", keyVal: anthropicKey },
-                  { id: "gemini", name: "Google Gemini", keyVal: geminiKey },
-                  { id: "openrouter", name: "OpenRouter", keyVal: openrouterKey },
-                  { id: "groq", name: "Groq", keyVal: groqKey },
-                  { id: "custom", name: "Custom / Local", keyVal: customApiKey || customBaseUrl },
+                  { id: "deepseek", name: "DeepSeek", keyVal: deepseekKey || providerModels.deepseek },
+                  { id: "openai", name: "OpenAI", keyVal: openaiKey || providerModels.openai },
+                  { id: "anthropic", name: "Anthropic", keyVal: anthropicKey || providerModels.anthropic },
+                  { id: "gemini", name: "Google Gemini", keyVal: geminiKey || providerModels.gemini },
+                  { id: "openrouter", name: "OpenRouter", keyVal: openrouterKey || providerModels.openrouter },
+                  { id: "groq", name: "Groq", keyVal: groqKey || providerModels.groq },
+                  { id: "custom", name: "Custom / Local", keyVal: customApiKey || customBaseUrl || customModel || providerModels.custom },
                 ].map((prov) => {
                   const isSelected = selectedProvider === prov.id;
                   const isConfigured = Boolean(prov.keyVal?.trim());
@@ -871,7 +949,10 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
                     <button
                       key={prov.id}
                       type="button"
-                      onClick={() => setSelectedProvider(prov.id as any)}
+                      onClick={() => {
+                        setSelectedProvider(prov.id as any);
+                        setModelFetchNotice(null);
+                      }}
                       className={cn(
                         "flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-mono transition-all",
                         isSelected
@@ -984,7 +1065,7 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
 
                 {selectedProvider === "custom" && (
                   <div className="space-y-3">
-                    <div className="space-y-1">
+                    <div className="space-y-1.5">
                       <label className="text-xs font-medium text-foreground">
                         Base URL
                       </label>
@@ -996,46 +1077,134 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
                         className="text-xs font-mono"
                       />
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <label className="text-xs font-medium text-foreground">
-                          API Key (optional)
-                        </label>
-                        <Input
-                          type={revealKey ? "text" : "password"}
-                          value={customApiKey}
-                          onChange={(e) => setCustomApiKey(e.target.value)}
-                          placeholder="sk-..."
-                          className="text-xs font-mono"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-xs font-medium text-foreground">
-                          Model Identifier (optional)
-                        </label>
-                        <Input
-                          type="text"
-                          value={customModel}
-                          onChange={(e) => setCustomModel(e.target.value)}
-                          placeholder="deepseek-r1 or qwen2.5-coder"
-                          className="text-xs font-mono"
-                        />
-                      </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-foreground">
+                        API Key (optional)
+                      </label>
+                      <Input
+                        type={revealKey ? "text" : "password"}
+                        value={customApiKey}
+                        onChange={(e) => setCustomApiKey(e.target.value)}
+                        placeholder="sk-..."
+                        className="text-xs font-mono"
+                      />
                     </div>
                   </div>
                 )}
+
+                {/* Common Model Identifier & Auto-Discovery */}
+                <div className="space-y-2 pt-2 border-t border-border/40">
+                  <div className="flex items-center justify-between gap-2">
+                    <label className="text-xs font-medium text-foreground">
+                      Model Identifier
+                    </label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={fetchingModels}
+                      onClick={() => handleFetchModels(selectedProvider)}
+                      className="h-7 px-2.5 text-[11px] font-mono gap-1.5"
+                    >
+                      <svg
+                        className={cn("size-3", fetchingModels && "animate-spin")}
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                        />
+                      </svg>
+                      <span>{fetchingModels ? "Fetching..." : "Fetch Models"}</span>
+                    </Button>
+                  </div>
+
+                  <Input
+                    type="text"
+                    value={
+                      selectedProvider === "custom"
+                        ? (customModel || providerModels.custom || "")
+                        : (providerModels[selectedProvider] || "")
+                    }
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (selectedProvider === "custom") {
+                        setCustomModel(val);
+                      }
+                      setProviderModels((prev) => ({ ...prev, [selectedProvider]: val }));
+                    }}
+                    placeholder={
+                      selectedProvider === "deepseek"
+                        ? "deepseek-chat"
+                        : selectedProvider === "openai"
+                        ? "gpt-4o"
+                        : selectedProvider === "anthropic"
+                        ? "claude-3-7-sonnet-20250219"
+                        : selectedProvider === "gemini"
+                        ? "gemini-2.0-flash"
+                        : selectedProvider === "openrouter"
+                        ? "deepseek/deepseek-r1"
+                        : selectedProvider === "groq"
+                        ? "llama-3.3-70b-versatile"
+                        : "deepseek-r1 or qwen2.5-coder"
+                    }
+                    className="text-xs font-mono"
+                  />
+
+                  {availableModels[selectedProvider] && availableModels[selectedProvider].length > 0 && (
+                    <div className="flex items-center gap-2 pt-1">
+                      <span className="text-[11px] font-mono text-muted-foreground shrink-0">
+                        Available:
+                      </span>
+                      <select
+                        value={
+                          selectedProvider === "custom"
+                            ? (customModel || providerModels.custom || "")
+                            : (providerModels[selectedProvider] || "")
+                        }
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (selectedProvider === "custom") {
+                            setCustomModel(val);
+                          }
+                          setProviderModels((prev) => ({ ...prev, [selectedProvider]: val }));
+                        }}
+                        className="h-7 w-full text-xs font-mono bg-background border border-border/80 rounded px-2 text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                      >
+                        <option value="" disabled>
+                          Select from {availableModels[selectedProvider].length} available models...
+                        </option>
+                        {availableModels[selectedProvider].map((m) => (
+                          <option key={m} value={m}>
+                            {m}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {modelFetchNotice && (
+                    <p className="text-[11px] font-mono text-muted-foreground pt-0.5">
+                      {modelFetchNotice}
+                    </p>
+                  )}
+                </div>
 
                 {/* Configured Status Summary */}
                 <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border/40 text-[11px] font-mono text-muted-foreground">
                   <span>Configured:</span>
                   {[
-                    { name: "DeepSeek", has: Boolean(deepseekKey.trim()) },
-                    { name: "OpenAI", has: Boolean(openaiKey.trim()) },
-                    { name: "Anthropic", has: Boolean(anthropicKey.trim()) },
-                    { name: "Gemini", has: Boolean(geminiKey.trim()) },
-                    { name: "OpenRouter", has: Boolean(openrouterKey.trim()) },
-                    { name: "Groq", has: Boolean(groqKey.trim()) },
-                    { name: "Custom", has: Boolean(customApiKey.trim() || customBaseUrl.trim()) },
+                    { name: "DeepSeek", has: Boolean(deepseekKey.trim() || providerModels.deepseek?.trim()) },
+                    { name: "OpenAI", has: Boolean(openaiKey.trim() || providerModels.openai?.trim()) },
+                    { name: "Anthropic", has: Boolean(anthropicKey.trim() || providerModels.anthropic?.trim()) },
+                    { name: "Gemini", has: Boolean(geminiKey.trim() || providerModels.gemini?.trim()) },
+                    { name: "OpenRouter", has: Boolean(openrouterKey.trim() || providerModels.openrouter?.trim()) },
+                    { name: "Groq", has: Boolean(groqKey.trim() || providerModels.groq?.trim()) },
+                    { name: "Custom", has: Boolean(customApiKey.trim() || customBaseUrl.trim() || customModel.trim() || providerModels.custom?.trim()) },
                   ]
                     .filter((p) => p.has)
                     .map((p) => (
@@ -1047,7 +1216,18 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
                         {p.name}
                       </span>
                     ))}
-                  {![deepseekKey, openaiKey, anthropicKey, geminiKey, openrouterKey, groqKey, customApiKey, customBaseUrl].some((k) => Boolean(k?.trim())) && (
+                  {![
+                    deepseekKey,
+                    openaiKey,
+                    anthropicKey,
+                    geminiKey,
+                    openrouterKey,
+                    groqKey,
+                    customApiKey,
+                    customBaseUrl,
+                    customModel,
+                    ...Object.values(providerModels),
+                  ].some((k) => Boolean(k?.trim())) && (
                     <span className="italic text-muted-foreground/60">No keys configured yet</span>
                   )}
                 </div>
@@ -1057,7 +1237,18 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
                     type="submit"
                     disabled={
                       actionLoading ||
-                      ![deepseekKey, openaiKey, anthropicKey, geminiKey, openrouterKey, groqKey, customApiKey, customBaseUrl].some((k) => Boolean(k?.trim()))
+                      ![
+                        deepseekKey,
+                        openaiKey,
+                        anthropicKey,
+                        geminiKey,
+                        openrouterKey,
+                        groqKey,
+                        customApiKey,
+                        customBaseUrl,
+                        customModel,
+                        ...Object.values(providerModels),
+                      ].some((k) => Boolean(k?.trim()))
                     }
                     className="font-mono text-xs px-5"
                   >

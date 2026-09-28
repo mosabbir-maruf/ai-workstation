@@ -85,6 +85,13 @@ export interface DshSettingsResponse {
   mtime: string;
 }
 
+export interface FetchModelsResponse {
+  ok: boolean;
+  provider: string;
+  models: string[];
+  error?: string | null;
+}
+
 export interface RequestOptions extends RequestInit {
   timeoutMs?: number;
 }
@@ -426,5 +433,16 @@ export const workstationApi = {
     requestJson<StandardOutputResponse>("/api/dsh-settings", {
       method: "POST",
       body: JSON.stringify({ content }),
+    }),
+
+  // Model Auto-Discovery
+  fetchAvailableModels: (params: {
+    provider: string;
+    apiKey?: string;
+    baseUrl?: string;
+  }) =>
+    requestJson<FetchModelsResponse>("/api/models/fetch", {
+      method: "POST",
+      body: JSON.stringify(params),
     }),
 };

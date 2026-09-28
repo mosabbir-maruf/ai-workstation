@@ -144,9 +144,7 @@ export function getApiBaseUrl(): string {
 }
 
 export function getWorkstationApiKey(): string {
-  const key =
-    getServerEnv("WORKSTATION_API_KEY") ||
-    getServerEnv("NEXT_PUBLIC_WORKSTATION_API_KEY");
+  const key = getServerEnv("WORKSTATION_API_KEY");
   if (typeof key === "string" && key.trim().length > 0) {
     return key.trim();
   }

@@ -85,9 +85,7 @@ export async function proxyOrRespond(
       }
 
       // Inject server-side secret API Key / Bearer token if configured
-      const apiKey =
-        getRuntimeEnv("WORKSTATION_API_KEY") ||
-        getRuntimeEnv("NEXT_PUBLIC_WORKSTATION_API_KEY");
+      const apiKey = getRuntimeEnv("WORKSTATION_API_KEY");
       if (apiKey && !headers.has("authorization")) {
         headers.set("Authorization", `Bearer ${apiKey.trim()}`);
       }

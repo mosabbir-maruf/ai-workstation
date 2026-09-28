@@ -238,10 +238,10 @@ export default function ContactPage() {
   };
 
   return (
-    <main className="flex flex-1 flex-col space-y-10 md:space-y-12">
+    <main className="flex flex-1 flex-col space-y-10 overflow-x-clip md:space-y-12">
       {/* Same Hero Pattern as Console (/workstation) */}
       <section className="relative w-full">
-        <div className="container mx-auto w-full overflow-visible">
+        <div className="container mx-auto w-full overflow-visible px-[17px] sm:px-10">
           <GridPageHero
             action={
               <Button
@@ -267,9 +267,9 @@ export default function ContactPage() {
         className="relative w-full space-y-10 pb-16 md:space-y-12 md:pb-24"
         id="contact-dispatch"
       >
-        <div className="container mx-auto w-full space-y-10 overflow-visible md:space-y-12">
+        <div className="container mx-auto flex w-full flex-col gap-10 overflow-visible px-[17px] sm:px-10 md:gap-12">
           {/* 1. Direct Communication Channels Matrix */}
-          <CadGridFrame showRulers>
+          <CadGridFrame className="order-2 lg:order-1" showRulers>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
               {CHANNELS.map((channel) => (
                 <CadCell
@@ -314,7 +314,7 @@ export default function ContactPage() {
           </CadGridFrame>
 
           {/* 2. Interactive Transmission Dispatch Console + Live Markdown Blueprint Preview */}
-          <CadGridFrame showRulers>
+          <CadGridFrame className="order-1 lg:order-2" showRulers>
             <div className="grid grid-cols-1 lg:grid-cols-12">
               <CadCell
                 className="lg:col-span-7"
@@ -540,9 +540,9 @@ export default function ContactPage() {
                     </div>
                   )}
 
-                  <div className="flex flex-wrap items-center gap-3 pt-1">
+                  <div className="flex flex-col gap-2.5 pt-1 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
                     <button
-                      className="inline-flex items-center gap-2 border border-border bg-foreground px-4 py-2.5 font-mono text-background text-xs uppercase tracking-wider transition-opacity hover:opacity-90"
+                      className="inline-flex items-center justify-center gap-2 border border-border bg-foreground px-3.5 py-2.5 font-mono text-background text-[11px] uppercase tracking-wider transition-opacity hover:opacity-90 sm:px-4 sm:text-xs"
                       type="submit"
                     >
                       <Send className="size-3.5" />
@@ -550,7 +550,7 @@ export default function ContactPage() {
                     </button>
 
                     <a
-                      className="inline-flex items-center gap-2 border border-border bg-muted/30 px-4 py-2.5 font-mono text-foreground text-xs uppercase tracking-wider hover:bg-muted"
+                      className="inline-flex items-center justify-center gap-2 border border-border bg-muted/30 px-3.5 py-2.5 font-mono text-foreground text-[11px] uppercase tracking-wider hover:bg-muted sm:px-4 sm:text-xs"
                       href={githubIssueUrl}
                       rel="noreferrer"
                       target="_blank"
@@ -590,24 +590,24 @@ export default function ContactPage() {
                 title="Live Payload Preview & SLA Matrix"
               >
                 <div className="flex flex-1 flex-col justify-between gap-4">
-                  <pre className="min-h-[240px] flex-1 overflow-x-auto whitespace-pre-wrap border border-border bg-muted/15 p-4 font-mono text-foreground text-xs leading-relaxed">
+                  <pre className="min-h-[180px] flex-1 overflow-x-auto whitespace-pre-wrap border border-border bg-muted/15 p-3 font-mono text-foreground text-xs leading-relaxed sm:min-h-[240px] sm:p-4">
                     <code>{formattedPayload}</code>
                   </pre>
 
                   <div className="grid grid-cols-2 gap-2.5 font-mono text-xs">
-                    <div className="border border-border bg-muted/15 p-3">
+                    <div className="min-w-0 border border-border bg-muted/15 p-2.5 sm:p-3">
                       <div className="text-[10px] text-muted-foreground uppercase">
                         Security Ack
                       </div>
-                      <div className="mt-1 font-semibold text-emerald-500">
+                      <div className="mt-1 break-words font-semibold text-emerald-500 text-[11px] sm:text-xs">
                         &lt; 72 Hours
                       </div>
                     </div>
-                    <div className="border border-border bg-muted/15 p-3">
+                    <div className="min-w-0 border border-border bg-muted/15 p-2.5 sm:p-3">
                       <div className="text-[10px] text-muted-foreground uppercase">
                         Triage Update
                       </div>
-                      <div className="mt-1 font-semibold text-foreground">
+                      <div className="mt-1 break-words font-semibold text-foreground text-[11px] sm:text-xs">
                         &lt; 7 Days
                       </div>
                     </div>

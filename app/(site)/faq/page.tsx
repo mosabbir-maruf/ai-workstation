@@ -104,10 +104,10 @@ export default function FaqPage() {
   };
 
   return (
-    <main className="flex flex-1 flex-col space-y-10 md:space-y-12">
+    <main className="flex flex-1 flex-col space-y-10 overflow-x-clip md:space-y-12">
       {/* Same Hero Pattern as Console (/workstation) */}
       <section className="relative w-full">
-        <div className="container mx-auto w-full overflow-visible">
+        <div className="container mx-auto w-full overflow-visible px-[17px] sm:px-10">
           <GridPageHero
             action={
               <Button
@@ -133,7 +133,7 @@ export default function FaqPage() {
         className="relative w-full space-y-10 pb-16 md:space-y-12 md:pb-24"
         id="faq-matrix"
       >
-        <div className="container mx-auto w-full space-y-10 overflow-visible md:space-y-12">
+        <div className="container mx-auto w-full space-y-10 overflow-visible px-[17px] sm:px-10 md:space-y-12">
           {/* 1. Filter & Telemetry Control Matrix */}
           <CadGridFrame showRulers>
             <div className="grid grid-cols-1 lg:grid-cols-12">
@@ -170,7 +170,9 @@ export default function FaqPage() {
                     <Search className="pointer-events-none absolute left-3.5 size-4 text-muted-foreground" />
                     <input
                       aria-label="Search FAQ entries"
-                      className="h-10 w-full border border-border bg-muted/20 pr-20 pl-10 font-mono text-foreground text-xs placeholder:text-muted-foreground focus:border-foreground/40 focus:bg-background focus:outline-none"
+                      className={`h-10 w-full border border-border bg-muted/20 pl-10 font-mono text-foreground text-xs placeholder:text-muted-foreground focus:border-foreground/40 focus:bg-background focus:outline-none ${
+                        searchQuery ? "pr-20" : "pr-3.5"
+                      }`}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="Filter by keyword, CLI flag, port, or code (e.g. FAQ-04, 3001, dsh, pem)..."
                       type="text"
@@ -198,7 +200,7 @@ export default function FaqPage() {
                               .length;
                       return (
                         <button
-                          className={`inline-flex items-center gap-2 border px-3 py-1.5 font-mono text-xs transition-colors ${
+                          className={`inline-flex items-center gap-1.5 border px-2.5 py-1.5 font-mono text-[11px] transition-colors sm:gap-2 sm:px-3 sm:text-xs ${
                             active
                               ? "border-foreground bg-foreground text-background"
                               : "border-border bg-muted/20 text-muted-foreground hover:border-foreground/40 hover:text-foreground"
@@ -235,35 +237,35 @@ export default function FaqPage() {
                 title="Runtime Specification Telemetry"
               >
                 <div className="grid grid-cols-2 gap-2.5 font-mono text-xs">
-                  <div className="border border-border bg-muted/15 p-3">
+                  <div className="min-w-0 border border-border bg-muted/15 p-2.5 sm:p-3">
                     <div className="text-[10px] text-muted-foreground uppercase">
                       Control Port
                     </div>
-                    <div className="mt-1 font-semibold text-foreground">
+                    <div className="mt-1 break-words font-semibold text-foreground text-[11px] sm:text-xs">
                       :3001 (HTTP/API)
                     </div>
                   </div>
-                  <div className="border border-border bg-muted/15 p-3">
+                  <div className="min-w-0 border border-border bg-muted/15 p-2.5 sm:p-3">
                     <div className="text-[10px] text-muted-foreground uppercase">
                       Preview Proxy
                     </div>
-                    <div className="mt-1 font-semibold text-emerald-500">
+                    <div className="mt-1 break-words font-semibold text-emerald-500 text-[11px] sm:text-xs">
                       :3000 (Auto-Proxy)
                     </div>
                   </div>
-                  <div className="border border-border bg-muted/15 p-3">
+                  <div className="min-w-0 border border-border bg-muted/15 p-2.5 sm:p-3">
                     <div className="text-[10px] text-muted-foreground uppercase">
                       LLM Providers
                     </div>
-                    <div className="mt-1 font-semibold text-foreground">
+                    <div className="mt-1 break-words font-semibold text-foreground text-[11px] sm:text-xs">
                       8 Backends
                     </div>
                   </div>
-                  <div className="border border-border bg-muted/15 p-3">
+                  <div className="min-w-0 border border-border bg-muted/15 p-2.5 sm:p-3">
                     <div className="text-[10px] text-muted-foreground uppercase">
                       Token Rotation
                     </div>
-                    <div className="mt-1 font-semibold text-foreground">
+                    <div className="mt-1 break-words font-semibold text-foreground text-[11px] sm:text-xs">
                       45m Auto-Sync
                     </div>
                   </div>
@@ -304,7 +306,7 @@ export default function FaqPage() {
                   </Button>
                 </div>
               ) : (
-                <div className="-m-5 divide-y divide-border">
+                <div className="-m-4 divide-y divide-border sm:-m-5">
                   {filteredItems.map((item) => {
                     const isOpen = Boolean(openIds[item.id]);
                     return (
@@ -314,20 +316,20 @@ export default function FaqPage() {
                       >
                         <button
                           aria-expanded={isOpen}
-                          className="flex w-full items-start justify-between gap-4 p-5 text-left"
+                          className="flex w-full items-start justify-between gap-3 p-4 text-left sm:gap-4 sm:p-5"
                           onClick={() => toggleItem(item.id)}
                           type="button"
                         >
                           <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
-                            <div className="flex shrink-0 items-center gap-2">
+                            <div className="flex shrink-0 flex-wrap items-center gap-1.5 sm:gap-2">
                               <span className="w-16 border border-border bg-muted/30 px-2 py-0.5 text-center font-mono text-[10px] text-muted-foreground uppercase tracking-wider">
                                 {item.code}
                               </span>
-                              <span className="w-32 border border-border/60 bg-muted/20 px-2 py-0.5 text-center font-mono text-[10px] text-emerald-500 uppercase tracking-wider">
+                              <span className="min-w-28 border border-border/60 bg-muted/20 px-2 py-0.5 text-center font-mono text-[10px] text-emerald-500 uppercase tracking-wider sm:w-32">
                                 [{item.categoryLabel}]
                               </span>
                             </div>
-                            <h2 className="min-w-0 font-semibold text-foreground text-sm tracking-tight sm:text-base">
+                            <h2 className="min-w-0 font-semibold text-foreground text-sm leading-snug tracking-tight sm:text-base">
                               {item.question}
                             </h2>
                           </div>
@@ -341,25 +343,25 @@ export default function FaqPage() {
                         </button>
 
                         {isOpen && (
-                          <div className="border-border/60 border-t bg-muted/10 px-5 pt-4 pb-6">
-                            <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-                              <div className="flex flex-col gap-4 lg:col-span-8">
+                          <div className="border-border/60 border-t bg-muted/10 px-4 pt-3.5 pb-5 sm:px-5 sm:pt-4 sm:pb-6">
+                            <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-12">
+                              <div className="flex min-w-0 flex-col gap-4 lg:col-span-8">
                                 <p className="text-muted-foreground text-sm leading-relaxed">
                                   {item.answer}
                                 </p>
                                 {item.command && (
-                                  <div className="flex flex-col gap-1.5">
+                                  <div className="flex min-w-0 flex-col gap-1.5">
                                     <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
                                       CLI VERIFICATION COMMAND
                                     </span>
-                                    <pre className="overflow-x-auto border border-border bg-background px-3.5 py-2.5 font-mono text-emerald-500 text-xs">
+                                    <pre className="max-w-full overflow-x-auto border border-border bg-background px-3.5 py-2.5 font-mono text-emerald-500 text-xs">
                                       <code>$ {item.command}</code>
                                     </pre>
                                   </div>
                                 )}
                               </div>
 
-                              <div className="flex flex-col justify-between gap-3 border border-border bg-background p-4 lg:col-span-4">
+                              <div className="flex min-w-0 flex-col justify-between gap-3 border border-border bg-background p-3.5 sm:p-4 lg:col-span-4">
                                 <div className="flex flex-col gap-1">
                                   <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
                                     REFERENCE SPECIFICATION

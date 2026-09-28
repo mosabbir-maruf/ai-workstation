@@ -17,7 +17,7 @@ export function SubPageHeroGrid({
       <div className="w-full overflow-visible pt-8 md:pt-16">
         <LineGrid
           className={cn(
-            "aspect-3/1 [--grid-cell-height:calc(100%/1)] [--grid-cell-width:calc(100%/3)] md:aspect-4/1 md:[--grid-cell-width:calc(100%/4)]",
+            "aspect-3/1 min-h-[190px] [--grid-cell-height:calc(100%/1)] [--grid-cell-width:calc(100%/3)] sm:min-h-0 md:aspect-4/1 md:[--grid-cell-width:calc(100%/4)]",
             className
           )}
           columns={3}
@@ -48,15 +48,15 @@ export function GridPageHero({
   return (
     <SubPageHeroGrid>
       <div
-        className="pointer-events-none absolute inset-0 flex min-h-0 min-w-0 flex-col justify-center px-4 text-left sm:px-8 md:px-12"
+        className="pointer-events-none absolute inset-0 flex min-h-0 min-w-0 flex-col justify-center px-4 py-4 text-left sm:px-8 sm:py-0 md:px-12"
         data-grid-fill
       >
-        <div className="flex flex-col items-start gap-3 sm:gap-4">
-          <div className="flex max-w-full flex-col items-start">
+        <div className="flex flex-col items-start gap-2.5 sm:gap-4">
+          <div className="flex max-w-full flex-col items-start gap-1 sm:gap-0">
             <h1 className="font-bold text-2xl tracking-tight sm:text-4xl md:text-5xl">
               {title}
             </h1>
-            <p className="font-mono text-muted-foreground text-xs uppercase tracking-widest sm:text-sm md:text-base">
+            <p className="font-mono text-[11px] text-muted-foreground uppercase leading-relaxed tracking-widest sm:text-sm md:text-base">
               {subtitle}
               <span className="animate-caret-blink">_</span>
             </p>

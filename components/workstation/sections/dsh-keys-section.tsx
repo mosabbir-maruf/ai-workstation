@@ -220,12 +220,12 @@ export function DshKeysSection() {
     );
   };
 
-  const handleSave = async (payloadOverride?: string) => {
+  const handleSave = async (payloadOverride?: string, logHeader = "[POST /api/dsh-settings]") => {
     const payloadToSave = payloadOverride ?? content;
     try {
       setLoading(true);
       const res = await workstationApi.saveDshSettings(payloadToSave);
-      setActionOutput(`[POST /api/dsh-settings]\n${res.output || "Settings saved successfully."}`);
+      setActionOutput(`${logHeader}\n${res.output || "Settings saved successfully."}`);
       await fetchSettings();
     } catch (err) {
       setActionOutput(`Failed to save settings: ${String(err)}`);
@@ -277,18 +277,7 @@ export function DshKeysSection() {
     }
 
     setContent(nextJson);
-    try {
-      setLoading(true);
-      const res = await workstationApi.saveDshSettings(nextJson);
-      setActionOutput(
-        `[DELETE Provider → ${provName}]\nRemoved ${provName} credentials and routing entry.\n${res.output || "Settings saved successfully."}`
-      );
-      await fetchSettings();
-    } catch (err) {
-      setActionOutput(`Failed to delete provider ${provName}: ${String(err)}`);
-    } finally {
-      setLoading(false);
-    }
+    await handleSave(nextJson, `[DELETE Provider → ${provName}]`);
   };
 
   const handleSyncAndSave = async (e?: React.FormEvent) => {
@@ -340,84 +329,75 @@ export function DshKeysSection() {
     }
   }, [content]);
 
-  const providerTabs = useMemo<Array<{ id: ProviderId; name: string; keyVal: string }>>(
-    () => [
-      { id: "deepseek", name: "DeepSeek", keyVal: deepseekKey || providerModels.deepseek },
-      { id: "openai", name: "OpenAI", keyVal: openaiKey || providerModels.openai },
-      { id: "anthropic", name: "Anthropic", keyVal: anthropicKey || providerModels.anthropic },
-      { id: "gemini", name: "Google Gemini", keyVal: geminiKey || providerModels.gemini },
-      { id: "openrouter", name: "OpenRouter", keyVal: openrouterKey || providerModels.openrouter },
-      { id: "groq", name: "Groq", keyVal: groqKey || providerModels.groq },
-      {
-        id: "custom",
-        name: "Custom / Local",
-        keyVal: customApiKey || customBaseUrl || customModel || providerModels.custom,
-      },
-    ],
-    [
-      anthropicKey,
-      customApiKey,
-      customBaseUrl,
-      customModel,
-      deepseekKey,
-      geminiKey,
-      groqKey,
-      openaiKey,
-      openrouterKey,
-      providerModels,
-    ]
-  );
-
   const providerRows = useMemo(
     () => [
       {
-        id: "deepseek",
+        id: "deepseek" as ProviderId,
         name: "DeepSeek",
+        tabName: "DeepSeek",
         models: providerModels.deepseek || "deepseek-chat",
         envVar: "DEEPSEEK_API_KEY",
         value: deepseekKey,
+        configured: Boolean(deepseekKey.trim() || providerModels.deepseek?.trim()),
       },
       {
-        id: "openai",
+        id: "openai" as ProviderId,
         name: "OpenAI",
+        tabName: "OpenAI",
         models: providerModels.openai || "gpt-4o",
         envVar: "OPENAI_API_KEY",
         value: openaiKey,
+        configured: Boolean(openaiKey.trim() || providerModels.openai?.trim()),
       },
       {
-        id: "anthropic",
+        id: "anthropic" as ProviderId,
         name: "Anthropic Claude",
+        tabName: "Anthropic",
         models: providerModels.anthropic || "claude-3-7-sonnet-20250219",
         envVar: "ANTHROPIC_API_KEY",
         value: anthropicKey,
+        configured: Boolean(anthropicKey.trim() || providerModels.anthropic?.trim()),
       },
       {
-        id: "gemini",
+        id: "gemini" as ProviderId,
         name: "Google Gemini",
+        tabName: "Google Gemini",
         models: providerModels.gemini || "gemini-2.0-flash",
         envVar: "GEMINI_API_KEY",
         value: geminiKey,
+        configured: Boolean(geminiKey.trim() || providerModels.gemini?.trim()),
       },
       {
-        id: "openrouter",
+        id: "openrouter" as ProviderId,
         name: "OpenRouter",
+        tabName: "OpenRouter",
         models: providerModels.openrouter || "deepseek/deepseek-r1",
         envVar: "OPENROUTER_API_KEY",
         value: openrouterKey,
+        configured: Boolean(openrouterKey.trim() || providerModels.openrouter?.trim()),
       },
       {
-        id: "groq",
+        id: "groq" as ProviderId,
         name: "Groq",
+        tabName: "Groq",
         models: providerModels.groq || "llama-3.3-70b-versatile",
         envVar: "GROQ_API_KEY",
         value: groqKey,
+        configured: Boolean(groqKey.trim() || providerModels.groq?.trim()),
       },
       {
-        id: "custom",
+        id: "custom" as ProviderId,
         name: "Custom / Local",
+        tabName: "Custom / Local",
         models: customModel || providerModels.custom || "deepseek-r1",
         envVar: customBaseUrl || "CUSTOM_ENDPOINT",
         value: customApiKey || customBaseUrl,
+        configured: Boolean(
+          customApiKey.trim() ||
+            customBaseUrl.trim() ||
+            customModel.trim() ||
+            providerModels.custom?.trim()
+        ),
       },
     ],
     [
@@ -434,18 +414,10 @@ export function DshKeysSection() {
     ]
   );
 
-  const isAnyConfigured = [
-    deepseekKey,
-    openaiKey,
-    anthropicKey,
-    geminiKey,
-    openrouterKey,
-    groqKey,
-    customApiKey,
-    customBaseUrl,
-    customModel,
-    ...Object.values(providerModels),
-  ].some((k) => Boolean(k?.trim()));
+  const isAnyConfigured = useMemo(
+    () => providerRows.some((r) => r.configured),
+    [providerRows]
+  );
 
   return (
     <div className="space-y-10 md:space-y-11">
@@ -499,9 +471,8 @@ export function DshKeysSection() {
               <div className="space-y-4">
                 {/* Provider Selection Tabs */}
                 <div className="flex flex-wrap gap-1 p-1 bg-muted/20 border border-border/60 rounded">
-                  {providerTabs.map((prov) => {
+                  {providerRows.map((prov) => {
                     const isSelected = selectedProvider === prov.id;
-                    const isConfigured = Boolean(prov.keyVal?.trim());
                     return (
                       <button
                         key={prov.id}
@@ -520,12 +491,12 @@ export function DshKeysSection() {
                         <span
                           className={cn(
                             "size-1.5 rounded-full shrink-0",
-                            isConfigured
+                            prov.configured
                               ? "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)]"
                               : "bg-muted-foreground/30"
                           )}
                         />
-                        <span>{prov.name}</span>
+                        <span>{prov.tabName}</span>
                       </button>
                     );
                   })}
@@ -750,31 +721,15 @@ export function DshKeysSection() {
                 {/* Configured Status Summary */}
                 <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border/40 text-[11px] font-mono text-muted-foreground">
                   <span className="text-[10px] uppercase tracking-wider">Configured:</span>
-                  {[
-                    { name: "DeepSeek", has: Boolean(deepseekKey.trim() || providerModels.deepseek?.trim()) },
-                    { name: "OpenAI", has: Boolean(openaiKey.trim() || providerModels.openai?.trim()) },
-                    { name: "Anthropic", has: Boolean(anthropicKey.trim() || providerModels.anthropic?.trim()) },
-                    { name: "Gemini", has: Boolean(geminiKey.trim() || providerModels.gemini?.trim()) },
-                    { name: "OpenRouter", has: Boolean(openrouterKey.trim() || providerModels.openrouter?.trim()) },
-                    { name: "Groq", has: Boolean(groqKey.trim() || providerModels.groq?.trim()) },
-                    {
-                      name: "Custom",
-                      has: Boolean(
-                        customApiKey.trim() ||
-                        customBaseUrl.trim() ||
-                        customModel.trim() ||
-                        providerModels.custom?.trim()
-                      ),
-                    },
-                  ]
-                    .filter((p) => p.has)
+                  {providerRows
+                    .filter((p) => p.configured)
                     .map((p) => (
                       <span
-                        key={p.name}
+                        key={p.id}
                         className="inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20"
                       >
                         <span className="size-1 rounded-full bg-emerald-500" />
-                        {p.name}
+                        {p.tabName}
                       </span>
                     ))}
                   {!isAnyConfigured && (
@@ -930,10 +885,7 @@ export function DshKeysSection() {
             >
               <div className="divide-y divide-border/60 border border-border/60 bg-muted/5">
                 {providerRows.map((provider) => {
-                  const provId = provider.id as ProviderId;
-                  const configured = Boolean(
-                    provider.value.trim() || providerModels[provId]?.trim()
-                  );
+                  const { id: provId, configured } = provider;
                   return (
                     <div
                       className="flex items-center justify-between gap-3 px-3.5 py-2.5"

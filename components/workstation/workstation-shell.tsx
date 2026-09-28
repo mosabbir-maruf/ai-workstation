@@ -21,24 +21,6 @@ import { TunnelSection } from "./sections/tunnel-section";
 import { WorkstationSetupFlow } from "./workstation-setup-flow";
 import { workstationApi } from "@/lib/workstation/api";
 
-export const WORKSTATION_SECTIONS = [
-  { id: "overview", label: "Overview", index: "01", tag: "System" },
-  { id: "terminal", label: "Remote Terminal", index: "02", tag: "CLI" },
-  { id: "app", label: "App Runtime", index: "03", tag: "Runtime" },
-  { id: "preview", label: "Live Preview", index: "04", tag: "Ingress" },
-  { id: "projects", label: "Projects", index: "05", tag: "Workspace" },
-  { id: "git", label: "Git Sync", index: "06", tag: "VCS" },
-  { id: "github", label: "GitHub App", index: "07", tag: "Integration" },
-  { id: "tunnel", label: "Edge Tunnel", index: "08", tag: "Edge" },
-  { id: "harness", label: "Harness + DSH", index: "09", tag: "Agent" },
-  { id: "dsh-keys", label: "DSH Model Keys", index: "10", tag: "Secrets" },
-  { id: "maintenance", label: "Maintenance", index: "11", tag: "Ops" },
-  { id: "state", label: "State Backup", index: "12", tag: "Backup" },
-  { id: "logs", label: "Workstation Logs", index: "13", tag: "Telemetry" },
-] as const;
-
-export type WorkstationSectionId = (typeof WORKSTATION_SECTIONS)[number]["id"];
-
 export const WORKSTATION_GROUPS = [
   {
     category: "Control Plane",
@@ -75,39 +57,50 @@ export const WORKSTATION_GROUPS = [
   },
 ] as const;
 
+export type WorkstationSectionItem =
+  (typeof WORKSTATION_GROUPS)[number]["items"][number];
+
+export type WorkstationSectionId = WorkstationSectionItem["id"];
+
+export const WORKSTATION_SECTIONS: readonly WorkstationSectionItem[] =
+  WORKSTATION_GROUPS.flatMap<WorkstationSectionItem>((group) => group.items);
+
+const WORKSTATION_SECTION_MAP = new Map<string, WorkstationSectionItem>(
+  WORKSTATION_SECTIONS.map((section) => [section.id, section])
+);
+
 export function WorkstationShell() {
   const searchParams = useSearchParams();
-  const initialSection =
-    (searchParams.get("tab") as WorkstationSectionId) || "overview";
+  const initialTab = searchParams.get("tab") || "overview";
 
   const [activeSection, setActiveSection] = useState<WorkstationSectionId>(
-    WORKSTATION_SECTIONS.some((s) => s.id === initialSection)
-      ? initialSection
+    WORKSTATION_SECTION_MAP.has(initialTab)
+      ? (initialTab as WorkstationSectionId)
       : "overview"
   );
   const [showWizard, setShowWizard] = useState<boolean>(false);
-  const [_wizardDismissed, setWizardDismissed] = useState<boolean>(false);
 
-  // Check on mount if setup is needed
+  // Check after initial render if setup is needed without blocking main content load
   useEffect(() => {
     try {
-      const dismissed = localStorage.getItem("aiws.wizard.dismissed");
-      if (dismissed === "true") {
-        setWizardDismissed(true);
+      if (localStorage.getItem("aiws.wizard.dismissed") === "true") {
         return;
       }
     } catch {
       // ignore
     }
 
-    // Auto-detect if essentials are unconfigured
-    const checkNeedsSetup = async () => {
+    let cancelled = false;
+    const timer = setTimeout(async () => {
       try {
         const [gRes, tRes, pRes] = await Promise.allSettled([
           workstationApi.getGithubStatus(),
           workstationApi.getTunnelStatus(),
           workstationApi.getProjects(),
         ]);
+        if (cancelled) {
+          return;
+        }
         const ghUnconfigured =
           gRes.status === "fulfilled" &&
           (gRes.value.output || "").includes("not configured");
@@ -124,9 +117,12 @@ export function WorkstationShell() {
       } catch {
         // ignore
       }
-    };
+    }, 600);
 
-    checkNeedsSetup();
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, []);
 
   const tabQueryParam = searchParams.get("tab");
@@ -135,10 +131,7 @@ export function WorkstationShell() {
       setShowWizard(true);
       return;
     }
-    if (
-      tabQueryParam &&
-      WORKSTATION_SECTIONS.some((s) => s.id === tabQueryParam)
-    ) {
+    if (tabQueryParam && WORKSTATION_SECTION_MAP.has(tabQueryParam)) {
       setActiveSection(tabQueryParam as WorkstationSectionId);
     }
   }, [tabQueryParam]);
@@ -151,19 +144,16 @@ export function WorkstationShell() {
     window.history.replaceState({}, "", url.toString());
   }, []);
 
-  const handleDismissWizard = () => {
+  const handleDismissWizard = useCallback(() => {
     setShowWizard(false);
-    setWizardDismissed(true);
     try {
       localStorage.setItem("aiws.wizard.dismissed", "true");
     } catch {
       // ignore
     }
-  };
+  }, []);
 
-  const currentSectionMeta = WORKSTATION_SECTIONS.find(
-    (s) => s.id === activeSection
-  );
+  const currentSectionMeta = WORKSTATION_SECTION_MAP.get(activeSection);
 
   return (
     <div className="relative w-full">

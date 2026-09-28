@@ -219,12 +219,13 @@
   }
 }
 
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+:root {
+  --scrollbar-thumb: color-mix(in oklch, var(--foreground) 24%, transparent);
+  --scrollbar-thumb-hover: color-mix(
+    in oklch,
+    var(--foreground) 38%,
+    transparent
+  );
 }
 
 /* Global thin scrollbars across the website */
@@ -232,26 +233,34 @@ html,
 body,
 * {
   scrollbar-width: thin;
-  scrollbar-color: color-mix(in oklch, var(--foreground) 24%, transparent)
-    transparent;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
 }
 
-*::-webkit-scrollbar {
+::-webkit-scrollbar {
   width: 4px;
   height: 4px;
 }
 
-*::-webkit-scrollbar-track {
+::-webkit-scrollbar-track {
   background: transparent;
 }
 
-*::-webkit-scrollbar-thumb {
+::-webkit-scrollbar-thumb {
   border-radius: 999px;
-  background: color-mix(in oklch, var(--foreground) 24%, transparent);
+  background: var(--scrollbar-thumb);
 }
 
-*::-webkit-scrollbar-thumb:hover {
-  background: color-mix(in oklch, var(--foreground) 38%, transparent);
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
 @layer components {
@@ -267,29 +276,15 @@ body,
   }
 
   .docs-scroll-area {
-    --studio-scrollbar-width: 3px;
     scrollbar-gutter: stable;
-    scrollbar-width: thin;
-    scrollbar-color: color-mix(in oklch, var(--foreground) 24%, transparent)
-      transparent;
   }
 
   .docs-scroll-area::-webkit-scrollbar {
-    width: var(--studio-scrollbar-width);
+    width: 3px;
   }
 
   .docs-scroll-area::-webkit-scrollbar-track {
     margin-block: 6px;
-    background: transparent;
-  }
-
-  .docs-scroll-area::-webkit-scrollbar-thumb {
-    border-radius: 999px;
-    background: color-mix(in oklch, var(--foreground) 24%, transparent);
-  }
-
-  .docs-scroll-area::-webkit-scrollbar-thumb:hover {
-    background: color-mix(in oklch, var(--foreground) 38%, transparent);
   }
 }
 

@@ -432,8 +432,17 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
 
         {/* Action Feedback Notification */}
         {actionFeedback && (
-          <div className="p-3 text-xs font-mono rounded-md bg-muted/30 border border-border text-foreground">
-            {actionFeedback}
+          <div
+            className={cn(
+              "p-3 text-xs font-mono rounded-md border",
+              actionFeedback.includes("ERROR:") ||
+                actionFeedback.includes("Failed:") ||
+                actionFeedback.includes("failed")
+                ? "bg-red-500/10 border-red-500/30 text-red-600 dark:text-red-400"
+                : "bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400"
+            )}
+          >
+            <pre className="whitespace-pre-wrap font-mono">{actionFeedback}</pre>
           </div>
         )}
 

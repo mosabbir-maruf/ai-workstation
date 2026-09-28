@@ -133,6 +133,22 @@ When connecting the Web Dashboard (`bklit-ui`) to the remote host via Cloudflare
 
 ---
 
+## Web Console Security & Operator Gate
+
+When hosting the Web Dashboard (`bklit-ui`), the frontend enforces an edge security gateway via `proxy.ts` using the Web Crypto API to ensure no unauthenticated visitor can execute terminal commands or control daemon processes:
+
+- **Passphrase Requirement**: Configure `WORKSTATION_PASSWORD` (or `WORKSTATION_API_KEY`) in `.env.local` or hosting provider environment variables.
+- **Cryptographic Session Tokens**: Authenticated sessions issue an encrypted, tamper-resistant HMAC-SHA256 cookie (`aiws_session`) valid for 30 days.
+- **Timing-Attack Immune**: Passphrase and token checks use `timingSafeEqual` for constant-time cryptographic verification.
+- **Brute-Force Rate Limiting**: The `/api/auth/login` endpoint restricts failed attempts to 5 per 60 seconds per IP address, responding with `429 Too Many Requests`.
+- **Protected Surface Area**:
+  - `/workstation/*` redirects unauthorized visitors to `/login`.
+  - `/api/*` returns `401 Unauthorized` without a valid cookie or matching `Authorization: Bearer <key>` header.
+  - Public routes (`/`, `/docs/*`, `/faq`, `/contact`, `/api/search`) remain open without authentication.
+- **Session Termination**: Clicking **[LOCK]** in the workstation console header or calling `/api/auth/logout` immediately revokes the session cookie.
+
+---
+
 ## Security Checklist
 
 ```text
@@ -154,6 +170,7 @@ When connecting the Web Dashboard (`bklit-ui`) to the remote host via Cloudflare
 [ ] Cloudflare Tunnel token is not tracked
 [ ] Cloudflare Access policy protects tunnel hostnames
 [ ] WORKSTATION_API_KEY is configured for Web Console daemon
+[ ] WORKSTATION_PASSWORD is set for Web Console login protection
 [ ] DSH credentials are protected (0600)
 [ ] GitHub authentication uses broker/App flow
 [ ] Development ports are localhost-only (127.0.0.1)
@@ -162,4 +179,5 @@ When connecting the Web Dashboard (`bklit-ui`) to the remote host via Cloudflare
 ```
 
 Run `ai doctor` regularly to audit these invariants automatically.
+
 

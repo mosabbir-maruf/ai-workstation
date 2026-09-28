@@ -1,9 +1,10 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { GridCornerDots } from "@/components/design/line-grid";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { AppSection } from "./sections/app-section";
 import { DshKeysSection } from "./sections/dsh-keys-section";
@@ -70,6 +71,7 @@ const WORKSTATION_SECTION_MAP = new Map<string, WorkstationSectionItem>(
 );
 
 export function WorkstationShell() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const initialTab = searchParams.get("tab") || "overview";
 
@@ -152,6 +154,15 @@ export function WorkstationShell() {
       // ignore
     }
   }, []);
+
+  const handleLogout = useCallback(async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } finally {
+      router.push("/login");
+      router.refresh();
+    }
+  }, [router]);
 
   const currentSectionMeta = WORKSTATION_SECTION_MAP.get(activeSection);
 
@@ -320,6 +331,14 @@ export function WorkstationShell() {
               >
                 Online
               </Badge>
+              <Button
+                className="h-5 rounded-none px-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground hover:text-foreground"
+                onClick={handleLogout}
+                size="xs"
+                variant="outline"
+              >
+                Lock
+              </Button>
             </div>
           </div>
 

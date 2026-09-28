@@ -101,6 +101,17 @@ The `ai` CLI automatically updates project, GitHub broker, and Cloudflare Tunnel
 - Prefer SHA-pinned image references (`IMAGE=ghcr.io/mosabbir-maruf/ai-workstation:<commit-sha>`) for deterministic production deployments.
 - Pin `DSH_VERSION` when deterministic agent behavior is required.
 
+### Web Console Frontend Environment Variables
+
+When deploying or running the web dashboard (`bklit-ui`), configure `.env.local`:
+
+```dotenv
+WORKSTATION_PASSWORD=your-console-password   # Master passphrase for /login security gate
+WORKSTATION_API_KEY=your-daemon-api-key      # Server-side Bearer token matching daemon
+WORKSTATION_BACKEND_URL=http://127.0.0.1:8000 # Internal/loopback daemon address
+NEXT_PUBLIC_SITE_URL=https://workstation.example.com
+```
+
 ---
 
 ## Daily Workflow

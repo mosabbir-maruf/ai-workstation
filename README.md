@@ -35,11 +35,11 @@ This frontend is designed to run as an independent web application that communic
                  │ HTTP (REST) / SSE (EventStream)
                  ▼
 ┌─────────────────────────────────┐
-│   Next.js Frontend (Web GUI)    │ ◀── Standalone Next.js 16 (App Router)
-│   (Vercel / Docker / Node host) │
+│   Next.js Frontend (Web GUI)    │ ◀── Standalone Next.js 16 (App Router + proxy.ts)
+│   (Vercel / Railway / Docker)   │     Protected by Web Crypto HMAC Authentication Gate
 └────────────────┬────────────────┘
                  │
-                 │ Configurable via NEXT_PUBLIC_API_URL
+                 │ Authenticated Backend Proxy (Bearer WORKSTATION_API_KEY)
                  ▼
 ┌─────────────────────────────────┐
 │    AI Workstation Backend/API   │ ◀── Separate CLI/daemon repository
@@ -110,7 +110,11 @@ This frontend is designed to run as an independent web application that communic
    ```bash
    cp .env.example .env.local
    ```
-   Set `NEXT_PUBLIC_API_URL` to point to your `ai-workstation` instance (e.g. `http://localhost:8000` or leave empty for same-origin).
+   Configure your environment variables:
+   - `WORKSTATION_PASSWORD`: Master passphrase to unlock the `/workstation` console.
+   - `WORKSTATION_API_KEY`: Server-side Bearer token matching your `ai-workstation` daemon.
+   - `WORKSTATION_BACKEND_URL`: Internal address (e.g. `http://127.0.0.1:8000`).
+   - `NEXT_PUBLIC_API_URL`: Optional public API endpoint for cross-origin setups.
 
 4. **Start development server**:
    ```bash
@@ -120,43 +124,66 @@ This frontend is designed to run as an independent web application that communic
 
 ---
 
+## Operator Authentication & Security Gate
+
+The Web Console (`/workstation`) and its management routes (`/api/*`) are protected by a built-in cryptographic security gate implemented in [`proxy.ts`](proxy.ts) using the Web Crypto API:
+
+- **Login Gateway (`/login`)**: Visiting `/workstation` without an active session automatically redirects to a CAD-styled login portal.
+- **HMAC-SHA256 Signed Sessions**: Upon entering the `WORKSTATION_PASSWORD` (or `WORKSTATION_API_KEY`), the server issues an encrypted, tamper-proof session cookie (`aiws_session`).
+- **Timing-Attack Immune**: All password comparisons use constant-time byte verification (`timingSafeEqual`) to prevent side-channel timing attacks.
+- **Brute-Force Rate Limiting**: The login endpoint allows a maximum of 5 attempts per 60 seconds per IP, returning `429 Too Many Requests` on abuse.
+- **Strict Cookie Flags**: Cookies are strictly configured with `HttpOnly` (inaccessible to browser JavaScript), `SameSite=Lax`, and `Secure` (in production).
+- **Public Surface Whitelist**: The landing page (`/`), documentation (`/docs/*`), FAQ (`/faq`), and contact page (`/contact`) remain public and open.
+- **Direct Bearer Access**: Automated tools or CLI scripts can bypass the cookie gate by providing an `Authorization: Bearer <WORKSTATION_API_KEY>` header directly to `/api/*`.
+
+---
+
 ## Backend Connection Scenarios
 
-The frontend connects to the backend through the configurable `NEXT_PUBLIC_API_URL` environment variable:
-
-### Scenario 1: Local Frontend → Local Backend
-Both the Next.js app and the `ai-workstation` daemon run on your local machine:
+### Scenario 1: Collocated / Reverse Proxy (Recommended)
+Frontend and backend daemon run on the same machine, or Next.js acts as the server-side proxy using `WORKSTATION_BACKEND_URL`:
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:8000
+WORKSTATION_BACKEND_URL=http://127.0.0.1:8000
+WORKSTATION_API_KEY=your-daemon-api-key
+WORKSTATION_PASSWORD=your-console-password
 ```
 
-### Scenario 2: Local Frontend → Remote VPS Backend
-The frontend runs locally while connecting securely to an `ai-workstation` instance running on a VPS:
+### Scenario 2: Remote VPS Backend via Cloudflare Tunnel
+The frontend runs on a managed host (Vercel, Railway, or Docker) and proxies to an `ai-workstation` daemon exposed via a private Cloudflare Tunnel:
 ```env
-NEXT_PUBLIC_API_URL=https://api.workstation.yourdomain.com
+WORKSTATION_BACKEND_URL=https://api.workstation.yourdomain.com
+WORKSTATION_API_KEY=your-daemon-api-key
+WORKSTATION_PASSWORD=your-console-password
 ```
 
-### Scenario 3: Hosted Frontend → Remote VPS Backend
-The frontend is deployed to Vercel, Cloudflare Pages, or a separate server, and connects cross-origin to the backend:
+### Scenario 3: Local Frontend → Remote VPS
+Running Next.js locally on your workstation connecting to your remote cloud daemon:
 ```env
-NEXT_PUBLIC_API_URL=https://api.workstation.yourdomain.com
+WORKSTATION_BACKEND_URL=https://api.workstation.yourdomain.com
+WORKSTATION_API_KEY=your-daemon-api-key
+WORKSTATION_PASSWORD=your-console-password
 ```
 
-### Scenario 4: Collocated Deployment (Reverse Proxy)
-Frontend and backend are served behind the same reverse proxy (e.g. Nginx, Caddy, or Cloudflare Tunnel) on the same origin:
-```env
-NEXT_PUBLIC_API_URL=
-```
-*(Leave empty to route requests via relative `/api/*` endpoints).*
+---
+
+## Environment Variables Reference
+
+| Variable | Scope | Purpose | Example |
+| :--- | :--- | :--- | :--- |
+| `WORKSTATION_PASSWORD` | Server-only | Master passphrase for `/login` gate | `super-secret-passphrase` |
+| `WORKSTATION_API_KEY` | Server-only | Daemon Bearer token for `/api/*` proxies | `daemon-secret-key` |
+| `WORKSTATION_BACKEND_URL`| Server-only | Internal URL to `ai-workstation` daemon | `http://127.0.0.1:8000` |
+| `NEXT_PUBLIC_API_URL` | Client/Server| Public API fallback URL (optional) | `https://api.workstation.yourdomain.com` |
+| `NEXT_PUBLIC_SITE_URL` | Client/Server| Canonical website URL for SEO | `https://workstation.yourdomain.com` |
 
 ---
 
 ## CORS & Cross-Origin Security
 
 When the frontend and backend are hosted on different origins:
-1. The backend must allow the frontend's origin via the `ALLOWED_HOSTS` configuration or specific CORS headers (`Access-Control-Allow-Origin: https://frontend.yourdomain.com`).
+1. The backend must allow the frontend's origin via `ALLOWED_HOSTS` or CORS headers (`Access-Control-Allow-Origin: https://frontend.yourdomain.com`).
 2. Do **NOT** use `Access-Control-Allow-Origin: *` in production environments handling private workstation operations.
-3. The frontend passes standard headers (`Content-Type: application/json`, `Accept: application/json`) and never exposes private tokens or host SSH keys to browser bundles.
+3. Secret tokens (`WORKSTATION_API_KEY` and `WORKSTATION_PASSWORD`) are strictly server-side and are **never** bundled into browser JavaScript.
 
 ---
 

@@ -172,12 +172,16 @@ export function DshKeysSection() {
 
         const syncProv = (prov: string, keyVal: string, modelVal?: string, baseUrlVal?: string) => {
           if (keyVal?.trim() || modelVal?.trim() || baseUrlVal?.trim()) {
-            parsed.api_providers[prov] = {
-              ...parsed.api_providers[prov],
-              ...(keyVal?.trim() ? { api_key: keyVal.trim() } : {}),
-              ...(modelVal?.trim() ? { model: modelVal.trim() } : {}),
-              ...(baseUrlVal?.trim() ? { base_url: baseUrlVal.trim() } : {}),
-            };
+            const nextEntry: Record<string, string> = {};
+            if (keyVal?.trim()) nextEntry.api_key = keyVal.trim();
+            if (modelVal?.trim()) nextEntry.model = modelVal.trim();
+            if (baseUrlVal?.trim()) nextEntry.base_url = baseUrlVal.trim();
+            parsed.api_providers[prov] = nextEntry;
+          } else {
+            delete parsed.api_providers[prov];
+            if (prov === "gemini") {
+              delete parsed.api_providers.google;
+            }
           }
         };
 
@@ -225,6 +229,63 @@ export function DshKeysSection() {
       await fetchSettings();
     } catch (err) {
       setActionOutput(`Failed to save settings: ${String(err)}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteProvider = async (provId: ProviderId, provName: string) => {
+    switch (provId) {
+      case "deepseek":
+        setDeepseekKey("");
+        break;
+      case "openai":
+        setOpenaiKey("");
+        break;
+      case "anthropic":
+        setAnthropicKey("");
+        break;
+      case "gemini":
+        setGeminiKey("");
+        break;
+      case "openrouter":
+        setOpenrouterKey("");
+        break;
+      case "groq":
+        setGroqKey("");
+        break;
+      case "custom":
+        setCustomApiKey("");
+        setCustomBaseUrl("");
+        setCustomModel("");
+        break;
+    }
+    setProviderModels((prev) => ({ ...prev, [provId]: "" }));
+
+    let nextJson = content;
+    try {
+      const parsed = JSON.parse(content || "{}");
+      if (parsed.api_providers && typeof parsed.api_providers === "object") {
+        delete parsed.api_providers[provId];
+        if (provId === "gemini") {
+          delete parsed.api_providers.google;
+        }
+      }
+      nextJson = JSON.stringify(parsed, null, 2);
+    } catch {
+      // fallback if raw content wasn't valid JSON
+    }
+
+    setContent(nextJson);
+    try {
+      setLoading(true);
+      const res = await workstationApi.saveDshSettings(nextJson);
+      setActionOutput(
+        `[DELETE Provider → ${provName}]\nRemoved ${provName} credentials and routing entry.\n${res.output || "Settings saved successfully."}`
+      );
+      await fetchSettings();
+    } catch (err) {
+      setActionOutput(`Failed to delete provider ${provName}: ${String(err)}`);
     } finally {
       setLoading(false);
     }
@@ -869,7 +930,10 @@ export function DshKeysSection() {
             >
               <div className="divide-y divide-border/60 border border-border/60 bg-muted/5">
                 {providerRows.map((provider) => {
-                  const configured = Boolean(provider.value.trim());
+                  const provId = provider.id as ProviderId;
+                  const configured = Boolean(
+                    provider.value.trim() || providerModels[provId]?.trim()
+                  );
                   return (
                     <div
                       className="flex items-center justify-between gap-3 px-3.5 py-2.5"
@@ -894,20 +958,36 @@ export function DshKeysSection() {
                           Model: {provider.models}
                         </p>
                       </div>
-                      <div className="shrink-0 text-right">
-                        <span
-                          className={cn(
-                            "block font-mono text-xs",
-                            configured
-                              ? "font-semibold text-emerald-500"
-                              : "text-muted-foreground"
-                          )}
-                        >
-                          {maskSecret(provider.value)}
-                        </span>
-                        <span className="font-mono text-[9px] text-muted-foreground uppercase">
-                          {configured ? "VAULT READY" : "MISSING KEY"}
-                        </span>
+                      <div className="flex shrink-0 items-center gap-2.5">
+                        <div className="text-right">
+                          <span
+                            className={cn(
+                              "block font-mono text-xs",
+                              configured
+                                ? "font-semibold text-emerald-500"
+                                : "text-muted-foreground"
+                            )}
+                          >
+                            {maskSecret(provider.value)}
+                          </span>
+                          <span className="font-mono text-[9px] text-muted-foreground uppercase">
+                            {configured ? "VAULT READY" : "MISSING KEY"}
+                          </span>
+                        </div>
+                        {configured ? (
+                          <Button
+                            className="h-6 rounded-none border-destructive/40 px-2 font-mono text-[9px] text-destructive uppercase tracking-wider hover:bg-destructive/10 hover:text-destructive"
+                            disabled={loading}
+                            onClick={() =>
+                              handleDeleteProvider(provId, provider.name)
+                            }
+                            size="sm"
+                            type="button"
+                            variant="outline"
+                          >
+                            Delete
+                          </Button>
+                        ) : null}
                       </div>
                     </div>
                   );

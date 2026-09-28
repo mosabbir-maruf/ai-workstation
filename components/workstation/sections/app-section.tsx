@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { GridCornerDots } from "@/components/design/line-grid";
 import { Button } from "@/components/ui/button";
 import { workstationApi } from "@/lib/workstation/api";
@@ -12,6 +12,7 @@ export function AppSection() {
   const [appStatus, setAppStatus] = useState<string | null>(null);
   const [actionOutput, setActionOutput] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [streamKey, setStreamKey] = useState(0);
 
   const fetchStatus = useCallback(async () => {
     try {
@@ -29,6 +30,22 @@ export function AppSection() {
     fetchStatus();
   }, [fetchStatus]);
 
+  const telemetry = useMemo(() => {
+    const raw = appStatus ?? "";
+    const isRunning = /Status:\s*running/i.test(raw);
+    const portMatch = raw.match(/Port:\s*(:?\d+)/i);
+    const projMatch = raw.match(/Project:\s*([^\r\n]+)/i);
+    const pidMatch = raw.match(/PID:\s*([^\r\n]+)/i);
+    const port = portMatch
+      ? portMatch[1].startsWith(":")
+        ? portMatch[1]
+        : `:${portMatch[1]}`
+      : ":5173";
+    const project = projMatch ? projMatch[1].trim() : "none";
+    const pid = pidMatch ? pidMatch[1].trim() : null;
+    return { isRunning, port, project, pid };
+  }, [appStatus]);
+
   const handleAction = async (
     fn: () => Promise<{ ok: boolean; output: string }>
   ) => {
@@ -37,12 +54,17 @@ export function AppSection() {
       const res = await fn();
       setActionOutput(res.output);
       await fetchStatus();
+      setStreamKey((k) => k + 1);
     } catch (err) {
       setActionOutput(`Action error: ${String(err)}`);
     } finally {
       setLoading(false);
     }
   };
+
+  const dotClass = telemetry.isRunning
+    ? "size-1.5 rounded-full bg-emerald-500"
+    : "size-1.5 rounded-full bg-muted-foreground/40";
 
   return (
     <div className="space-y-10 md:space-y-11">
@@ -54,7 +76,7 @@ export function AppSection() {
               bodyClassName="space-y-5"
               className="md:col-span-6"
               footerLeft="POST /api/app/run · restart · stop"
-              footerRight="Port 3000 · HTTP/1.1 & WS"
+              footerRight={`Port ${telemetry.port.replace(":", "")} · HTTP/1.1 & WS`}
               headerAction={
                 <Button
                   className="h-6 rounded-none px-2 font-mono text-[10px] uppercase tracking-wider"
@@ -77,9 +99,9 @@ export function AppSection() {
                   <div className="flex flex-col justify-between border border-border/80 bg-muted/15 px-3 py-2.5">
                     <div className="flex items-center justify-between gap-1.5">
                       <span className="font-bold font-mono text-foreground text-sm tabular-nums">
-                        :3000
+                        {telemetry.isRunning ? telemetry.port : "IDLE"}
                       </span>
-                      <span className="size-1.5 rounded-full bg-emerald-500" />
+                      <span className={dotClass} />
                     </div>
                     <span className="mt-1 truncate font-medium text-muted-foreground text-xs">
                       Bound Socket
@@ -89,24 +111,30 @@ export function AppSection() {
                   <div className="flex flex-col justify-between border border-border/80 bg-muted/15 px-3 py-2.5">
                     <div className="flex items-center justify-between gap-1.5">
                       <span className="truncate font-bold font-mono text-foreground text-sm">
-                        Next.js
+                        {telemetry.project !== "none"
+                          ? telemetry.project
+                          : "None"}
                       </span>
-                      <span className="size-1.5 rounded-full bg-emerald-500" />
+                      <span className={dotClass} />
                     </div>
                     <span className="mt-1 truncate font-medium text-muted-foreground text-xs">
-                      App Server
+                      Active Project
                     </span>
                   </div>
 
                   <div className="flex flex-col justify-between border border-border/80 bg-muted/15 px-3 py-2.5">
                     <div className="flex items-center justify-between gap-1.5">
                       <span className="truncate font-bold font-mono text-foreground text-sm">
-                        Daemon
+                        {telemetry.isRunning
+                          ? telemetry.pid
+                            ? `PID ${telemetry.pid}`
+                            : "Running"
+                          : "Stopped"}
                       </span>
-                      <span className="size-1.5 rounded-full bg-emerald-500" />
+                      <span className={dotClass} />
                     </div>
                     <span className="mt-1 truncate font-medium text-muted-foreground text-xs">
-                      Supervisor
+                      Process State
                     </span>
                   </div>
                 </div>
@@ -169,7 +197,7 @@ export function AppSection() {
             <CadCell
               className="md:col-span-6"
               footerLeft="GET /api/app/status · Live PID & Socket Telemetry"
-              footerRight="Supervisor: Active"
+              footerRight={`Supervisor: ${telemetry.isRunning ? "Running" : "Stopped"}`}
               headerAction={
                 <Button
                   className="h-6 rounded-none px-2 font-mono text-[10px] uppercase tracking-wider"
@@ -204,6 +232,7 @@ export function AppSection() {
             <SseLogViewer
               className="border-0 shadow-none"
               endpoint="/api/logs/app"
+              key={streamKey}
               title="[A-03] Live Application Process Log Stream"
             />
           </div>

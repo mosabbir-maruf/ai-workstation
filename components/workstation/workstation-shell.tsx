@@ -86,7 +86,7 @@ export function WorkstationShell() {
       : "overview"
   );
   const [showWizard, setShowWizard] = useState<boolean>(false);
-  const [wizardDismissed, setWizardDismissed] = useState<boolean>(false);
+  const [_wizardDismissed, setWizardDismissed] = useState<boolean>(false);
 
   // Check on mount if setup is needed
   useEffect(() => {

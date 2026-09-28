@@ -11,6 +11,15 @@ import { cn } from "@/lib/utils";
 import { CopyButton } from "@/components/copy-button";
 import { ModelDropdownSelector } from "./model-dropdown-selector";
 
+type ProviderId =
+  | "deepseek"
+  | "openai"
+  | "anthropic"
+  | "gemini"
+  | "openrouter"
+  | "groq"
+  | "custom";
+
 interface WorkstationSetupFlowProps {
   onComplete: () => void;
 }
@@ -40,9 +49,7 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
   const [tunnelToken, setTunnelToken] = useState("");
   const [tunnelAppHost, setTunnelAppHost] = useState("");
   const [tunnelDshHost, setTunnelDshHost] = useState("");
-  const [selectedProvider, setSelectedProvider] = useState<
-    "deepseek" | "openai" | "anthropic" | "gemini" | "openrouter" | "groq" | "custom"
-  >("deepseek");
+  const [selectedProvider, setSelectedProvider] = useState<ProviderId>("deepseek");
   const [deepseekKey, setDeepseekKey] = useState("");
   const [openaiKey, setOpenaiKey] = useState("");
   const [anthropicKey, setAnthropicKey] = useState("");
@@ -296,8 +303,9 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
       } else {
         setModelFetchNotice(res.error || "No models returned. Check credentials or host URL.");
       }
-    } catch (err: any) {
-      setModelFetchNotice(`Error fetching models: ${err?.message || String(err)}`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setModelFetchNotice(`Error fetching models: ${msg}`);
     } finally {
       setFetchingModels(false);
     }
@@ -310,11 +318,21 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
       setActionFeedback(null);
 
       // Preserve existing settings
-      let parsedSettings: Record<string, any> = {};
+      interface DshProviderConfig {
+        api_key?: string;
+        base_url?: string;
+        model?: string;
+        [key: string]: unknown;
+      }
+      interface DshSettingsPayload {
+        api_providers?: Record<string, DshProviderConfig>;
+        [key: string]: unknown;
+      }
+      let parsedSettings: DshSettingsPayload = {};
       try {
         const currentRes = await workstationApi.getDshSettings();
         if (currentRes.ok && currentRes.content) {
-          parsedSettings = JSON.parse(currentRes.content);
+          parsedSettings = JSON.parse(currentRes.content) as DshSettingsPayload;
         }
       } catch {
         // default empty
@@ -936,13 +954,13 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
               {/* Provider Selection Tabs */}
               <div className="flex flex-wrap gap-1.5 p-1 bg-muted/20 border border-border/60 rounded-md">
                 {[
-                  { id: "deepseek", name: "DeepSeek", keyVal: deepseekKey || providerModels.deepseek },
-                  { id: "openai", name: "OpenAI", keyVal: openaiKey || providerModels.openai },
-                  { id: "anthropic", name: "Anthropic", keyVal: anthropicKey || providerModels.anthropic },
-                  { id: "gemini", name: "Google Gemini", keyVal: geminiKey || providerModels.gemini },
-                  { id: "openrouter", name: "OpenRouter", keyVal: openrouterKey || providerModels.openrouter },
-                  { id: "groq", name: "Groq", keyVal: groqKey || providerModels.groq },
-                  { id: "custom", name: "Custom / Local", keyVal: customApiKey || customBaseUrl || customModel || providerModels.custom },
+                  { id: "deepseek" as ProviderId, name: "DeepSeek", keyVal: deepseekKey || providerModels.deepseek },
+                  { id: "openai" as ProviderId, name: "OpenAI", keyVal: openaiKey || providerModels.openai },
+                  { id: "anthropic" as ProviderId, name: "Anthropic", keyVal: anthropicKey || providerModels.anthropic },
+                  { id: "gemini" as ProviderId, name: "Google Gemini", keyVal: geminiKey || providerModels.gemini },
+                  { id: "openrouter" as ProviderId, name: "OpenRouter", keyVal: openrouterKey || providerModels.openrouter },
+                  { id: "groq" as ProviderId, name: "Groq", keyVal: groqKey || providerModels.groq },
+                  { id: "custom" as ProviderId, name: "Custom / Local", keyVal: customApiKey || customBaseUrl || customModel || providerModels.custom },
                 ].map((prov) => {
                   const isSelected = selectedProvider === prov.id;
                   const isConfigured = Boolean(prov.keyVal?.trim());
@@ -951,7 +969,7 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
                       key={prov.id}
                       type="button"
                       onClick={() => {
-                        setSelectedProvider(prov.id as any);
+                        setSelectedProvider(prov.id);
                         setModelFetchNotice(null);
                       }}
                       className={cn(

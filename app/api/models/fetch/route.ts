@@ -7,6 +7,13 @@ interface FetchRequestBody {
   baseUrl?: string;
 }
 
+interface ModelItem {
+  id?: string;
+  name?: string;
+  model?: string;
+  supportedGenerationMethods?: string[];
+}
+
 const DEFAULT_MODELS: Record<string, string[]> = {
   deepseek: ["deepseek-chat", "deepseek-reasoner"],
   openai: ["gpt-4o", "gpt-4o-mini", "o3-mini", "o1", "o1-mini", "gpt-4-turbo"],
@@ -74,29 +81,39 @@ export async function POST(request: Request) {
             clearTimeout(timer);
 
             if (res.ok) {
-              const data = await res.json();
+              const data = (await res.json()) as {
+                data?: ModelItem[];
+                models?: ModelItem[];
+              };
               if (data && typeof data === "object") {
                 if (Array.isArray(data.data)) {
                   const extracted = data.data
-                    .map((m: any) => m?.id || m?.name)
-                    .filter(Boolean);
+                    .map((m: ModelItem) => m?.id || m?.name)
+                    .filter((m): m is string => Boolean(m));
                   if (extracted.length > 0) {
                     models = extracted;
                     break;
                   }
                 } else if (Array.isArray(data.models)) {
                   const extracted = data.models
-                    .map((m: any) => m?.name || m?.model)
-                    .filter(Boolean);
+                    .map((m: ModelItem) => m?.name || m?.model)
+                    .filter((m): m is string => Boolean(m));
                   if (extracted.length > 0) {
                     models = extracted;
                     break;
                   }
                 }
               } else if (Array.isArray(data)) {
-                const extracted = data
-                  .map((m: any) => (typeof m === "string" ? m : m?.id || m?.name))
-                  .filter(Boolean);
+                const extracted = (data as unknown[])
+                  .map((m: unknown) => {
+                    if (typeof m === "string") return m;
+                    if (m && typeof m === "object") {
+                      const item = m as ModelItem;
+                      return item.id || item.name || "";
+                    }
+                    return "";
+                  })
+                  .filter((m): m is string => Boolean(m));
                 if (extracted.length > 0) {
                   models = extracted;
                   break;
@@ -115,14 +132,16 @@ export async function POST(request: Request) {
               headers: { Authorization: `Bearer ${apiKey}`, Accept: "application/json" },
             });
             if (res.ok) {
-              const data = await res.json();
+              const data = (await res.json()) as { data?: ModelItem[] };
               if (Array.isArray(data?.data)) {
-                const ids = data.data.map((m: any) => m?.id).filter(Boolean);
+                const ids = data.data
+                  .map((m: ModelItem) => m?.id)
+                  .filter((m): m is string => Boolean(m));
                 if (ids.length > 0) models = ids;
               }
             }
-          } catch (e: any) {
-            fetchError = e?.message;
+          } catch (e: unknown) {
+            fetchError = e instanceof Error ? e.message : String(e);
           }
         }
       } else if (provider === "openai") {
@@ -133,9 +152,11 @@ export async function POST(request: Request) {
               headers: { Authorization: `Bearer ${apiKey}`, Accept: "application/json" },
             });
             if (res.ok) {
-              const data = await res.json();
+              const data = (await res.json()) as { data?: ModelItem[] };
               if (Array.isArray(data?.data)) {
-                const all = data.data.map((m: any) => m?.id).filter(Boolean);
+                const all = data.data
+                  .map((m: ModelItem) => m?.id)
+                  .filter((m): m is string => Boolean(m));
                 const chat = all.filter((id: string) => /^(gpt-4|gpt-3\.5|o1|o3|chatgpt)/.test(id));
                 if (chat.length > 0) {
                   models = chat.sort((a: string, b: string) => {
@@ -146,8 +167,8 @@ export async function POST(request: Request) {
                 }
               }
             }
-          } catch (e: any) {
-            fetchError = e?.message;
+          } catch (e: unknown) {
+            fetchError = e instanceof Error ? e.message : String(e);
           }
         }
       } else if (provider === "anthropic") {
@@ -162,14 +183,16 @@ export async function POST(request: Request) {
               },
             });
             if (res.ok) {
-              const data = await res.json();
+              const data = (await res.json()) as { data?: ModelItem[] };
               if (Array.isArray(data?.data)) {
-                const ids = data.data.map((m: any) => m?.id).filter(Boolean);
+                const ids = data.data
+                  .map((m: ModelItem) => m?.id)
+                  .filter((m): m is string => Boolean(m));
                 if (ids.length > 0) models = ids;
               }
             }
-          } catch (e: any) {
-            fetchError = e?.message;
+          } catch (e: unknown) {
+            fetchError = e instanceof Error ? e.message : String(e);
           }
         }
       } else if (provider === "gemini") {
@@ -181,17 +204,17 @@ export async function POST(request: Request) {
               { headers: { Accept: "application/json" } }
             );
             if (res.ok) {
-              const data = await res.json();
+              const data = (await res.json()) as { models?: ModelItem[] };
               if (Array.isArray(data?.models)) {
                 const ids = data.models
-                  .filter((m: any) => m?.supportedGenerationMethods?.includes("generateContent"))
-                  .map((m: any) => (m?.name || "").replace(/^models\//, ""))
-                  .filter(Boolean);
+                  .filter((m: ModelItem) => m?.supportedGenerationMethods?.includes("generateContent"))
+                  .map((m: ModelItem) => (m?.name || "").replace(/^models\//, ""))
+                  .filter((m): m is string => Boolean(m));
                 if (ids.length > 0) models = ids;
               }
             }
-          } catch (e: any) {
-            fetchError = e?.message;
+          } catch (e: unknown) {
+            fetchError = e instanceof Error ? e.message : String(e);
           }
         }
       } else if (provider === "openrouter") {
@@ -201,14 +224,16 @@ export async function POST(request: Request) {
           if (apiKey) headers["Authorization"] = `Bearer ${apiKey}`;
           const res = await fetch("https://openrouter.ai/api/v1/models", { headers });
           if (res.ok) {
-            const data = await res.json();
+            const data = (await res.json()) as { data?: ModelItem[] };
             if (Array.isArray(data?.data)) {
-              const ids = data.data.map((m: any) => m?.id).filter(Boolean);
+              const ids = data.data
+                .map((m: ModelItem) => m?.id)
+                .filter((m): m is string => Boolean(m));
               if (ids.length > 0) models = ids.slice(0, 50);
             }
           }
-        } catch (e: any) {
-          fetchError = e?.message;
+        } catch (e: unknown) {
+          fetchError = e instanceof Error ? e.message : String(e);
         }
       } else if (provider === "groq") {
         models = DEFAULT_MODELS.groq;
@@ -218,19 +243,21 @@ export async function POST(request: Request) {
               headers: { Authorization: `Bearer ${apiKey}`, Accept: "application/json" },
             });
             if (res.ok) {
-              const data = await res.json();
+              const data = (await res.json()) as { data?: ModelItem[] };
               if (Array.isArray(data?.data)) {
-                const ids = data.data.map((m: any) => m?.id).filter(Boolean);
+                const ids = data.data
+                  .map((m: ModelItem) => m?.id)
+                  .filter((m): m is string => Boolean(m));
                 if (ids.length > 0) models = ids;
               }
             }
-          } catch (e: any) {
-            fetchError = e?.message;
+          } catch (e: unknown) {
+            fetchError = e instanceof Error ? e.message : String(e);
           }
         }
       }
-    } catch (err: any) {
-      fetchError = err?.message || String(err);
+    } catch (err: unknown) {
+      fetchError = err instanceof Error ? err.message : String(err);
     }
 
     if (models.length === 0 && DEFAULT_MODELS[provider]) {

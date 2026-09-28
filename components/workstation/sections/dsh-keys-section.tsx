@@ -22,6 +22,15 @@ function maskSecret(secret: string): string {
   return `${trimmed.slice(0, 4)}••••${trimmed.slice(-4)}`;
 }
 
+type ProviderId =
+  | "deepseek"
+  | "openai"
+  | "anthropic"
+  | "gemini"
+  | "openrouter"
+  | "groq"
+  | "custom";
+
 export function DshKeysSection() {
   const [content, setContent] = useState("");
   const [mtime, setMtime] = useState<string | null>(null);
@@ -30,9 +39,7 @@ export function DshKeysSection() {
   const [revealKeys, setRevealKeys] = useState(false);
 
   // Active provider selection tab
-  const [selectedProvider, setSelectedProvider] = useState<
-    "deepseek" | "openai" | "anthropic" | "gemini" | "openrouter" | "groq" | "custom"
-  >("deepseek");
+  const [selectedProvider, setSelectedProvider] = useState<ProviderId>("deepseek");
 
   // Provider API Keys & Base URLs
   const [deepseekKey, setDeepseekKey] = useState("");
@@ -147,8 +154,9 @@ export function DshKeysSection() {
       } else {
         setModelFetchNotice(res.error || "No models returned. Check credentials or host URL.");
       }
-    } catch (err: any) {
-      setModelFetchNotice(`Error fetching models: ${err?.message || String(err)}`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setModelFetchNotice(`Error fetching models: ${msg}`);
     } finally {
       setFetchingModels(false);
     }
@@ -271,7 +279,7 @@ export function DshKeysSection() {
     }
   }, [content]);
 
-  const providerTabs = useMemo(
+  const providerTabs = useMemo<Array<{ id: ProviderId; name: string; keyVal: string }>>(
     () => [
       { id: "deepseek", name: "DeepSeek", keyVal: deepseekKey || providerModels.deepseek },
       { id: "openai", name: "OpenAI", keyVal: openaiKey || providerModels.openai },
@@ -438,7 +446,7 @@ export function DshKeysSection() {
                         key={prov.id}
                         type="button"
                         onClick={() => {
-                          setSelectedProvider(prov.id as any);
+                          setSelectedProvider(prov.id);
                           setModelFetchNotice(null);
                         }}
                         className={cn(

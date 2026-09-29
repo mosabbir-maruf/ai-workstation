@@ -138,13 +138,35 @@ export function WorkstationShell() {
     }
   }, [tabQueryParam]);
 
-  const handleSelectSection = useCallback((id: WorkstationSectionId) => {
-    setShowWizard(false);
-    setActiveSection(id);
-    const url = new URL(window.location.href);
-    url.searchParams.set("tab", id);
-    window.history.replaceState({}, "", url.toString());
+  const scrollToConsole = useCallback(() => {
+    document
+      .getElementById("workstation-console")
+      ?.scrollIntoView({ behavior: "smooth" });
   }, []);
+
+  // Ensure Remote Terminal is brought smoothly into full viewport view
+  useEffect(() => {
+    if (activeSection === "terminal") {
+      const raf = requestAnimationFrame(scrollToConsole);
+      return () => cancelAnimationFrame(raf);
+    }
+  }, [activeSection, scrollToConsole]);
+
+  const handleSelectSection = useCallback(
+    (id: WorkstationSectionId) => {
+      setShowWizard(false);
+      setActiveSection((prev) => {
+        if (prev === id && id === "terminal") {
+          scrollToConsole();
+        }
+        return id;
+      });
+      const url = new URL(window.location.href);
+      url.searchParams.set("tab", id);
+      window.history.replaceState({}, "", url.toString());
+    },
+    [scrollToConsole]
+  );
 
   const handleDismissWizard = useCallback(() => {
     setShowWizard(false);

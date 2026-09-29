@@ -78,7 +78,7 @@ export function TerminalSection() {
       setSudoPromptPending({ command: cmd, target: chosenTarget });
       setSudoPasswordInput("");
       if (!cmdToRun) setCommandInput("");
-      setTimeout(() => sudoPasswordRef.current?.focus(), 50);
+      setTimeout(() => sudoPasswordRef.current?.focus({ preventScroll: true }), 50);
       return;
     }
 
@@ -100,7 +100,7 @@ export function TerminalSection() {
       if (!res.ok && res.requiresSudo && !sudoPassword) {
         setSudoPromptPending({ command: cmd, target: chosenTarget });
         setSudoPasswordInput("");
-        setTimeout(() => sudoPasswordRef.current?.focus(), 50);
+        setTimeout(() => sudoPasswordRef.current?.focus({ preventScroll: true }), 50);
         return;
       }
 
@@ -299,7 +299,6 @@ export function TerminalSection() {
                       onChange={(e) => setSudoPasswordInput(e.target.value)}
                       placeholder="Type VPS password (never saved)..."
                       className="flex-1 bg-black/70 border border-amber-500/40 rounded px-2.5 py-1 text-zinc-100 placeholder:text-zinc-600 font-mono text-xs outline-none focus:border-amber-400"
-                      autoFocus
                     />
                     <Button
                       type="submit"
@@ -340,7 +339,6 @@ export function TerminalSection() {
                           : "Run container command (e.g. npm test, ls -la, git diff)..."
                       }
                       className="flex-1 bg-transparent border-none outline-none text-zinc-100 placeholder:text-zinc-600 font-mono text-xs focus:ring-0"
-                      autoFocus
                     />
                     <Button
                       type="button"

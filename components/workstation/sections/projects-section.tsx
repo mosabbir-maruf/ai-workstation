@@ -11,11 +11,11 @@ import { VerbatimOutput } from "../verbatim-output";
 
 const QUICK_REPO_PRESETS = [
   {
-    label: "+ ai-workstation/core",
+    label: "+ ai-workstation",
     url: "https://github.com/mosabbir-maruf/ai-workstation.git",
   },
   {
-    label: "+ ai-workstation/frontend",
+    label: "+ ai-workstation-cli",
     url: "https://github.com/mosabbir-maruf/ai-workstation.git",
   },
 ] as const;

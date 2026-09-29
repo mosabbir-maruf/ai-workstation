@@ -65,6 +65,34 @@ export function createBackendErrorResponse(
   );
 }
 
+const activeUpstreamSseControllers = new Map<string, AbortController>();
+
+const SSE_ENDPOINT_PATHS = new Set([
+  "/api/logs/app",
+  "/api/logs/workstation",
+  "/api/tunnel/logs",
+]);
+
+const LIFECYCLE_MUTATION_PATHS = new Set([
+  "/api/workstation/start",
+  "/api/workstation/stop",
+  "/api/workstation/restart",
+  "/api/app/run",
+  "/api/app/stop",
+  "/api/app/restart",
+]);
+
+function abortAllUpstreamSseStreams() {
+  for (const controller of activeUpstreamSseControllers.values()) {
+    try {
+      controller.abort();
+    } catch {
+      // ignore abort errors
+    }
+  }
+  activeUpstreamSseControllers.clear();
+}
+
 export async function proxyOrRespond(
   request: Request,
   endpointPath: string,
@@ -73,6 +101,45 @@ export async function proxyOrRespond(
   const backendBase = getBackendBaseUrl();
 
   if (backendBase) {
+    const isSseEndpoint = SSE_ENDPOINT_PATHS.has(endpointPath);
+    if (LIFECYCLE_MUTATION_PATHS.has(endpointPath)) {
+      abortAllUpstreamSseStreams();
+    } else if (isSseEndpoint) {
+      const prevController = activeUpstreamSseControllers.get(endpointPath);
+      if (prevController) {
+        try {
+          prevController.abort();
+        } catch {
+          // ignore
+        }
+      }
+    }
+
+    const upstreamController = new AbortController();
+    if (isSseEndpoint) {
+      activeUpstreamSseControllers.set(endpointPath, upstreamController);
+    }
+
+    const onClientAbort = () => {
+      try {
+        upstreamController.abort();
+      } catch {
+        // ignore
+      }
+      if (
+        isSseEndpoint &&
+        activeUpstreamSseControllers.get(endpointPath) === upstreamController
+      ) {
+        activeUpstreamSseControllers.delete(endpointPath);
+      }
+    };
+
+    if (request.signal.aborted) {
+      onClientAbort();
+    } else {
+      request.signal.addEventListener("abort", onClientAbort, { once: true });
+    }
+
     try {
       const targetUrl = new URL(endpointPath, backendBase);
       const headers = new Headers(request.headers);
@@ -97,11 +164,15 @@ export async function proxyOrRespond(
       const fetchOptions: RequestInit = {
         method: request.method,
         headers,
+        signal: upstreamController.signal,
       };
 
       if (request.method !== "GET" && request.method !== "HEAD") {
         const body = await request.clone().arrayBuffer();
-        fetchOptions.body = body;
+        headers.set("content-length", String(body.byteLength));
+        if (body.byteLength > 0) {
+          fetchOptions.body = body;
+        }
       }
 
       const res = await fetch(targetUrl.toString(), fetchOptions);
@@ -136,6 +207,12 @@ export async function proxyOrRespond(
         headers: responseHeaders,
       });
     } catch (err) {
+      if (
+        isSseEndpoint &&
+        activeUpstreamSseControllers.get(endpointPath) === upstreamController
+      ) {
+        activeUpstreamSseControllers.delete(endpointPath);
+      }
       if (fallbackFn) {
         return await fallbackFn();
       }

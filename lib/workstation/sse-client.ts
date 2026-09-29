@@ -99,7 +99,7 @@ function openStream(endpoint: string, stream: ActiveStream) {
   }
 }
 
-function closeStream(_endpoint: string, stream: ActiveStream) {
+function closeStream(stream: ActiveStream) {
   if (stream.eventSource) {
     stream.eventSource.close();
     stream.eventSource = null;
@@ -148,7 +148,7 @@ export function subscribeToSse(
     }
     existing.listeners.delete(listener);
     if (existing.listeners.size === 0) {
-      closeStream(endpoint, existing);
+      closeStream(existing);
       activeStreams.delete(endpoint);
     }
   };
@@ -159,10 +159,24 @@ export function restartSseStream(endpoint: string) {
   if (!stream) {
     return;
   }
-  closeStream(endpoint, stream);
+  closeStream(stream);
   stream.logs = [];
   stream.isEnded = false;
   openStream(endpoint, stream);
+}
+
+export function pauseAllSseStreams() {
+  for (const stream of activeStreams.values()) {
+    closeStream(stream);
+  }
+}
+
+export function resumeAllSseStreams() {
+  for (const [endpoint, stream] of activeStreams.entries()) {
+    if (stream.listeners.size > 0 && !stream.eventSource && !stream.isEnded) {
+      openStream(endpoint, stream);
+    }
+  }
 }
 
 export function clearSseLogs(endpoint: string) {
@@ -236,13 +250,12 @@ export function useSseStream(
   const stopStream = useCallback(() => {
     const stream = activeStreams.get(endpoint);
     if (stream) {
-      closeStream(endpoint, stream);
+      closeStream(stream);
     }
   }, [endpoint]);
 
   const clearLogs = useCallback(() => {
     clearSseLogs(endpoint);
-    setState((prev) => ({ ...prev, logs: [] }));
   }, [endpoint]);
 
   return {

@@ -1,3 +1,5 @@
+import { pauseAllSseStreams, resumeAllSseStreams } from "./sse-client";
+
 export interface StandardOutputResponse {
   ok: boolean;
   output: string;
@@ -152,7 +154,7 @@ export function getWorkstationApiKey(): string {
 }
 
 /** Robust, typed request executor that handles HTTP errors, network timeouts, and structured errors */
-async function requestJson<T extends { ok?: boolean; output?: string }>(
+async function executeSingleRequest<T extends { ok?: boolean; output?: string }>(
   endpointPath: string,
   options?: RequestOptions
 ): Promise<T> {
@@ -225,6 +227,40 @@ async function requestJson<T extends { ok?: boolean; output?: string }>(
   } finally {
     clearTimeout(timer);
   }
+}
+
+function isResourceUnavailableError(output?: string): boolean {
+  if (!output) return false;
+  return (
+    output.includes("Errno 11") ||
+    output.includes("Resource temporarily unavailable")
+  );
+}
+
+async function requestJson<T extends { ok?: boolean; output?: string }>(
+  endpointPath: string,
+  options?: RequestOptions
+): Promise<T> {
+  let result = await executeSingleRequest<T>(endpointPath, options);
+  if (!isResourceUnavailableError(result?.output)) {
+    return result;
+  }
+
+  // Lazy EAGAIN ([Errno 11] Resource temporarily unavailable) recovery:
+  // Only pause SSE streams when EAGAIN actually occurs (zero overhead on normal requests).
+  pauseAllSseStreams();
+  try {
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      await new Promise((resolve) => setTimeout(resolve, 300 * attempt));
+      result = await executeSingleRequest<T>(endpointPath, options);
+      if (!isResourceUnavailableError(result?.output)) {
+        break;
+      }
+    }
+  } finally {
+    resumeAllSseStreams();
+  }
+  return result;
 }
 
 export const workstationApi = {

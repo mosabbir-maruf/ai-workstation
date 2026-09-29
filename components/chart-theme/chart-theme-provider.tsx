@@ -82,6 +82,21 @@ export function ChartThemeProvider({
   useEffect(() => {
     if (!hasSyncedCookieRef.current) {
       hasSyncedCookieRef.current = true;
+      if (
+        process.env.NODE_ENV === "production" &&
+        "serviceWorker" in navigator
+      ) {
+        const registerSw = () => {
+          navigator.serviceWorker
+            .register("/sw.js", { scope: "/" })
+            .catch(() => undefined);
+        };
+        if ("requestIdleCallback" in window) {
+          window.requestIdleCallback(registerSw, { timeout: 3000 });
+        } else {
+          setTimeout(registerSw, 1500);
+        }
+      }
       const cookieThemeId = getChartThemeIdFromDocumentCookie();
       if (cookieThemeId && cookieThemeId !== themeId) {
         setThemeIdState(cookieThemeId);
@@ -93,6 +108,13 @@ export function ChartThemeProvider({
         ? resolvedTheme
         : resolveChartThemeModeFromElement(document.documentElement);
     applyChartThemeVars(theme, { rootMode });
+
+    const themeColorMeta = document.querySelector<HTMLMetaElement>(
+      'meta[name="theme-color"]'
+    );
+    if (themeColorMeta) {
+      themeColorMeta.content = rootMode === "dark" ? "#09090b" : "#ffffff";
+    }
   }, [theme, themeId, resolvedTheme]);
 
   const value = useMemo(

@@ -1,16 +1,28 @@
 {
+  "id": "/",
   "name": "Ai Workstation",
-  "short_name": "Ai Workstation",
-  "version": "2.1",
-  "description": "Ai Workstation is a mission-control dashboard for development environments, container runtimes, and local and cloud workstation telemetry.",
+  "short_name": "AIWS",
+  "version": "2.1.0",
+  "description": "Ai Workstation is a mission-control dashboard and container orchestrator for development environments, DeepSeek Harness (DSH), and real-time edge telemetry.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "theme_color": "#09090b",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "categories": ["developer", "productivity", "utilities"],
   "icons": [
     {
       "src": "/favicon.ico",
       "sizes": "16x16 32x32 48x48",
       "type": "image/x-icon"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
     },
     {
       "src": "/favicon-16x16.png",
@@ -29,15 +41,50 @@
       "purpose": "any"
     },
     {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
       "src": "/android-chrome-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
       "src": "/apple-touch-icon.png",
       "sizes": "180x180",
       "type": "image/png"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Workstation Console",
+      "short_name": "Console",
+      "description": "Open the Ai Workstation Runtime & Telemetry Console",
+      "url": "/workstation",
+      "icons": [{ "src": "/android-chrome-192x192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Remote Terminal",
+      "short_name": "Terminal",
+      "description": "Execute host and container CLI commands",
+      "url": "/workstation?tab=terminal",
+      "icons": [{ "src": "/android-chrome-192x192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Documentation",
+      "short_name": "Docs",
+      "description": "Read the Ai Workstation operator documentation",
+      "url": "/docs",
+      "icons": [{ "src": "/android-chrome-192x192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ]
 }

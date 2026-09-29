@@ -132,8 +132,17 @@ export function createMetadata(options: PageMetadataOptions = {}): Metadata {
           template: TITLE_TEMPLATE,
         },
     description,
+    applicationName: SITE_NAME,
     keywords,
     manifest: "/site.webmanifest",
+    appleWebApp: {
+      capable: true,
+      title: "AIWS",
+      statusBarStyle: "default",
+    },
+    formatDetection: {
+      telephone: false,
+    },
     icons: DEFAULT_ICONS,
     alternates: {
       canonical: canonicalUrl,

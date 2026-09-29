@@ -8,13 +8,17 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import {
   applyChartThemeVars,
   resolveChartThemeModeFromElement,
 } from "@/lib/apply-chart-theme-vars";
-import { setChartThemeCookie } from "@/lib/chart-theme-cookie";
+import {
+  getChartThemeIdFromDocumentCookie,
+  setChartThemeCookie,
+} from "@/lib/chart-theme-cookie";
 import {
   chartThemes,
   DEFAULT_CHART_THEME_ID,
@@ -66,29 +70,30 @@ export function ChartThemeProvider({
 }) {
   const { resolvedTheme } = useTheme();
   const [themeId, setThemeIdState] = useState(initialThemeId);
+  const hasSyncedCookieRef = useRef(false);
   const theme = getChartTheme(themeId);
 
-  const resolveMode = useCallback(
-    () =>
-      resolvedTheme === "dark" || resolvedTheme === "light"
-        ? resolvedTheme
-        : resolveChartThemeModeFromElement(document.documentElement),
-    [resolvedTheme]
-  );
-
-  const setThemeId = useCallback(
-    (id: string) => {
-      const nextTheme = getChartTheme(id);
-      setThemeIdState(nextTheme.id);
-      setChartThemeCookie(nextTheme.id);
-      applyChartThemeVars(nextTheme, { rootMode: resolveMode() });
-    },
-    [resolveMode]
-  );
+  const setThemeId = useCallback((id: string) => {
+    const nextTheme = getChartTheme(id);
+    setThemeIdState(nextTheme.id);
+    setChartThemeCookie(nextTheme.id);
+  }, []);
 
   useEffect(() => {
-    applyChartThemeVars(theme, { rootMode: resolveMode() });
-  }, [theme, resolveMode]);
+    if (!hasSyncedCookieRef.current) {
+      hasSyncedCookieRef.current = true;
+      const cookieThemeId = getChartThemeIdFromDocumentCookie();
+      if (cookieThemeId && cookieThemeId !== themeId) {
+        setThemeIdState(cookieThemeId);
+        return;
+      }
+    }
+    const rootMode =
+      resolvedTheme === "dark" || resolvedTheme === "light"
+        ? resolvedTheme
+        : resolveChartThemeModeFromElement(document.documentElement);
+    applyChartThemeVars(theme, { rootMode });
+  }, [theme, themeId, resolvedTheme]);
 
   const value = useMemo(
     () => ({

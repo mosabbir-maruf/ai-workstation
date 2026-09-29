@@ -8,7 +8,6 @@ import type { ReactNode } from "react";
 import { ChartThemeScript } from "@/components/chart-theme/chart-theme-script";
 import { SiteLeftDotGrid } from "@/components/design/site-left-dot-grid";
 import { DocsSearchDialog } from "@/components/docs/docs-search-dialog";
-import { getChartThemeIdFromCookie } from "@/lib/chart-theme-cookie.server";
 import { cn } from "@/lib/utils";
 
 import { JsonLd } from "@/components/seo/json-ld";
@@ -21,14 +20,11 @@ import {
 
 export const metadata: Metadata = createMetadata();
 
-
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: {
   children: ReactNode;
 }) {
-  const chartThemeId = await getChartThemeIdFromCookie();
-
   return (
     <html
       className={cn(
@@ -47,7 +43,7 @@ export default async function RootLayout({
             getWebSiteSchema(),
           ]}
         />
-        <ChartThemeScript themeId={chartThemeId} />
+        <ChartThemeScript />
         <SiteLeftDotGrid />
         <RootProvider
           search={{
@@ -59,7 +55,7 @@ export default async function RootLayout({
             storageKey: "aiws-theme",
           }}
         >
-          <ChartThemeProvider initialThemeId={chartThemeId}>
+          <ChartThemeProvider>
             {children}
           </ChartThemeProvider>
         </RootProvider>

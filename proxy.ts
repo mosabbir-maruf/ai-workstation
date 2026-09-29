@@ -8,32 +8,36 @@ import {
 import { SITE_URL } from "@/lib/site-url";
 
 const canonicalUrl = new URL(SITE_URL);
-const CANONICAL_HOST = canonicalUrl.host;
+const CANONICAL_HOST = canonicalUrl.host.toLowerCase();
 
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const requestHost = (
     request.headers.get("host") ?? request.nextUrl.host
   ).toLowerCase();
-  const canonicalHost = CANONICAL_HOST.toLowerCase();
 
   // 1. Canonical domain enforcement for Vercel preview URLs
   if (
     process.env.VERCEL_ENV === "production" &&
-    requestHost !== canonicalHost &&
+    requestHost !== CANONICAL_HOST &&
     requestHost.endsWith(".vercel.app")
   ) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.protocol = canonicalUrl.protocol;
-    redirectUrl.host = CANONICAL_HOST;
+    redirectUrl.host = canonicalUrl.host;
     redirectUrl.port = "";
     return NextResponse.redirect(redirectUrl, 308);
+  }
+
+  // Whitelist public API endpoints before running Web Crypto HMAC verification
+  if (pathname.startsWith("/api/auth/") || pathname === "/api/search") {
+    return NextResponse.next();
   }
 
   const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME)?.value;
   const authSecret = getAuthSecret();
 
-  // Helper to verify cookie session using Web Crypto
+  // Verify cookie session using Web Crypto only for protected routes
   const isSessionValid = authSecret
     ? await verifySession(sessionCookie, authSecret)
     : false;
@@ -50,12 +54,6 @@ export async function proxy(request: NextRequest) {
 
   // 3. Protected API Routes
   if (pathname.startsWith("/api/")) {
-    // Whitelist public API endpoints (documentation search & authentication routes)
-    if (pathname.startsWith("/api/auth/") || pathname === "/api/search") {
-      return NextResponse.next();
-    }
-
-    // Verify session cookie or Direct Bearer Token (for CLI tools / scripts)
     const authHeader = request.headers.get("authorization");
     let hasValidBearer = false;
     if (authHeader?.startsWith("Bearer ") && authSecret) {
@@ -77,34 +75,18 @@ export async function proxy(request: NextRequest) {
   }
 
   // 4. Protected Workstation Console
-  if (pathname.startsWith("/workstation")) {
-    if (!isSessionValid) {
-      const loginUrl = new URL("/login", request.url);
-      const destination = pathname + search;
-      if (destination !== "/workstation") {
-        loginUrl.searchParams.set("from", destination);
-      }
-      return NextResponse.redirect(loginUrl);
+  if (pathname.startsWith("/workstation") && !isSessionValid) {
+    const loginUrl = new URL("/login", request.url);
+    const destination = pathname + search;
+    if (destination !== "/workstation") {
+      loginUrl.searchParams.set("from", destination);
     }
+    return NextResponse.redirect(loginUrl);
   }
 
-  // 5. Standard Page Responses: Attach canonical Link header
-  const response = NextResponse.next();
-  const canonicalPageUrl = new URL(pathname, SITE_URL);
-  response.headers.set("Link", `<${canonicalPageUrl.href}>; rel="canonical"`);
-
-  return response;
+  return NextResponse.next();
 }
 
 export const config = {
-  matcher: [
-    /*
-     * Match all requests except static assets:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico, sitemap.xml, robots.txt
-     * - Public asset extensions (.svg, .png, .jpg, .ico, .css, .js)
-     */
-    "/((?!_next/static|_next/image|favicon\\.ico|robots\\.txt|sitemap\\.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js)$).*)",
-  ],
+  matcher: ["/workstation/:path*", "/login", "/api/:path*"],
 };

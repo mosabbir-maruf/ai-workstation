@@ -1325,7 +1325,13 @@ const QUICK_NOTE_TEMPLATES = [
   },
 ] as const;
 
-function LogsAndNotesGrid({ onOpenFullLogs }: { onOpenFullLogs?: () => void }) {
+function LogsAndNotesGrid({
+  appRunning,
+  onOpenFullLogs,
+}: {
+  appRunning: boolean;
+  onOpenFullLogs?: () => void;
+}) {
   const [notes, setNotes] = useState<string>("");
   const [notesSavedAt, setNotesSavedAt] = useState<string | null>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -1409,6 +1415,7 @@ function LogsAndNotesGrid({ onOpenFullLogs }: { onOpenFullLogs?: () => void }) {
                   Full Logs →
                 </Button>
               }
+              autoConnect={appRunning}
               className="h-full border-0 shadow-none"
               compact
               endpoint="/api/logs/app"
@@ -1751,7 +1758,10 @@ export function OverviewSection({ onSelectTab }: OverviewSectionProps) {
       />
 
       {/* 4. LIVE LOG STREAM + OPERATOR SCRATCHPAD */}
-      <LogsAndNotesGrid onOpenFullLogs={() => onSelectTab?.("app")} />
+      <LogsAndNotesGrid
+        appRunning={appRunning}
+        onOpenFullLogs={() => onSelectTab?.("app")}
+      />
     </div>
   );
 }

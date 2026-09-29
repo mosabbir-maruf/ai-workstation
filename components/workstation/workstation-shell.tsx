@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { GridCornerDots } from "@/components/design/line-grid";
@@ -7,21 +8,48 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@aiws/icons";
 import { cn } from "@/lib/utils";
-import { AppSection } from "./sections/app-section";
-import { DshKeysSection } from "./sections/dsh-keys-section";
-import { GitSection } from "./sections/git-section";
-import { GitHubSection } from "./sections/github-section";
-import { HarnessSection } from "./sections/harness-section";
-import { LogsSection } from "./sections/logs-section";
-import { MaintenanceSection } from "./sections/maintenance-section";
 import { OverviewSection } from "./sections/overview-section";
-import { PreviewSection } from "./sections/preview-section";
-import { ProjectsSection } from "./sections/projects-section";
-import { StateSection } from "./sections/state-section";
-import { TerminalSection } from "./sections/terminal-section";
-import { TunnelSection } from "./sections/tunnel-section";
-import { WorkstationSetupFlow } from "./workstation-setup-flow";
 import { workstationApi } from "@/lib/workstation/api";
+
+const AppSection = dynamic(() =>
+  import("./sections/app-section").then((m) => m.AppSection)
+);
+const DshKeysSection = dynamic(() =>
+  import("./sections/dsh-keys-section").then((m) => m.DshKeysSection)
+);
+const GitSection = dynamic(() =>
+  import("./sections/git-section").then((m) => m.GitSection)
+);
+const GitHubSection = dynamic(() =>
+  import("./sections/github-section").then((m) => m.GitHubSection)
+);
+const HarnessSection = dynamic(() =>
+  import("./sections/harness-section").then((m) => m.HarnessSection)
+);
+const LogsSection = dynamic(() =>
+  import("./sections/logs-section").then((m) => m.LogsSection)
+);
+const MaintenanceSection = dynamic(() =>
+  import("./sections/maintenance-section").then((m) => m.MaintenanceSection)
+);
+const PreviewSection = dynamic(() =>
+  import("./sections/preview-section").then((m) => m.PreviewSection)
+);
+const ProjectsSection = dynamic(() =>
+  import("./sections/projects-section").then((m) => m.ProjectsSection)
+);
+const StateSection = dynamic(() =>
+  import("./sections/state-section").then((m) => m.StateSection)
+);
+const TerminalSection = dynamic(() =>
+  import("./sections/terminal-section").then((m) => m.TerminalSection)
+);
+const TunnelSection = dynamic(() =>
+  import("./sections/tunnel-section").then((m) => m.TunnelSection)
+);
+const WorkstationSetupFlow = dynamic(() =>
+  import("./workstation-setup-flow").then((m) => m.WorkstationSetupFlow)
+);
 
 export const WORKSTATION_GROUPS = [
   {

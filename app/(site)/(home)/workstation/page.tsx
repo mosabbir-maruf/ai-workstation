@@ -14,18 +14,18 @@ export const metadata: Metadata = createMetadata({
 
 export default function WorkstationPage() {
   return (
-    <main className="flex flex-1 flex-col space-y-10 md:space-y-12">
-      <section className="relative w-full">
-        <div className="container mx-auto w-full overflow-visible">
+    <main className="flex flex-1 flex-col space-y-10 md:space-y-12 overflow-x-clip min-w-0 w-full">
+      <section className="relative w-full min-w-0">
+        <div className="container mx-auto w-full min-w-0 overflow-visible">
           <WorkstationHero />
         </div>
       </section>
 
       <section
-        className="relative w-full pb-16 md:pb-24 scroll-mt-20"
+        className="relative w-full min-w-0 pb-16 md:pb-24 scroll-mt-20"
         id="workstation-console"
       >
-        <div className="container mx-auto w-full overflow-visible">
+        <div className="container mx-auto w-full min-w-0 overflow-visible">
           <Suspense
             fallback={
               <div className="flex min-h-[400px] items-center justify-center font-mono text-muted-foreground text-xs">

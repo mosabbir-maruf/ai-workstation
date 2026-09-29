@@ -8,6 +8,7 @@ export function WorkstationHero() {
     <GridPageHero
       action={
         <Button
+          className="h-9 px-4 text-xs sm:h-11 sm:px-8 sm:text-sm"
           onClick={() => {
             document
               .getElementById("workstation-console")

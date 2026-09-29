@@ -127,39 +127,39 @@ export function TunnelSection() {
                 <div className="mb-2.5 font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
                   Edge Connector Specification
                 </div>
-                <div className="grid grid-cols-3 gap-2.5">
-                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 px-3 py-2.5">
+                <div className="grid grid-cols-3 gap-1.5 sm:gap-2.5">
+                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 p-2 sm:px-3 sm:py-2.5">
                     <div className="flex items-center justify-between gap-1.5">
-                      <span className="truncate font-bold font-mono text-foreground text-sm">
+                      <span className="truncate font-bold font-mono text-foreground text-xs sm:text-sm">
                         QUIC / H2
                       </span>
                       <span className="size-1.5 shrink-0 rounded-full bg-emerald-500" />
                     </div>
-                    <span className="mt-1 truncate font-medium text-muted-foreground text-xs">
+                    <span className="mt-1 truncate font-medium text-muted-foreground text-[10px] sm:text-xs">
                       Edge Transport
                     </span>
                   </div>
 
-                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 px-3 py-2.5">
+                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 p-2 sm:px-3 sm:py-2.5">
                     <div className="flex items-center justify-between gap-1.5">
-                      <span className="truncate font-bold font-mono text-foreground text-sm tabular-nums">
+                      <span className="truncate font-bold font-mono text-foreground text-xs sm:text-sm tabular-nums">
                         4 Colos
                       </span>
                       <span className="size-1.5 shrink-0 rounded-full bg-emerald-500" />
                     </div>
-                    <span className="mt-1 truncate font-medium text-muted-foreground text-xs">
+                    <span className="mt-1 truncate font-medium text-muted-foreground text-[10px] sm:text-xs">
                       Active PoPs
                     </span>
                   </div>
 
-                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 px-3 py-2.5">
+                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 p-2 sm:px-3 sm:py-2.5">
                     <div className="flex items-center justify-between gap-1.5">
-                      <span className="font-bold font-mono text-foreground text-sm tabular-nums">
+                      <span className="truncate font-bold font-mono text-foreground text-xs sm:text-sm tabular-nums">
                         :4040
                       </span>
                       <span className="size-1.5 shrink-0 rounded-full bg-emerald-500" />
                     </div>
-                    <span className="mt-1 truncate font-medium text-muted-foreground text-xs">
+                    <span className="mt-1 truncate font-medium text-muted-foreground text-[10px] sm:text-xs">
                       Metrics Socket
                     </span>
                   </div>
@@ -192,11 +192,11 @@ export function TunnelSection() {
                 </div>
 
                 <form
-                  className="flex items-center gap-2 pt-1"
+                  className="flex flex-col sm:flex-row sm:items-center gap-2 pt-1"
                   onSubmit={handleSync}
                 >
                   <Input
-                    className="h-9 flex-1 rounded-none border-border/80 bg-muted/15 font-mono text-xs"
+                    className="h-9 flex-1 rounded-none border-border/80 bg-muted/15 font-mono text-base sm:text-xs"
                     disabled={loading}
                     onChange={(e) => setSyncPort(e.target.value)}
                     placeholder="Override Local App Port (e.g. 3000)"
@@ -204,7 +204,7 @@ export function TunnelSection() {
                     value={syncPort}
                   />
                   <Button
-                    className="h-9 shrink-0 rounded-none px-3.5 font-mono text-xs uppercase tracking-wider"
+                    className="h-9 shrink-0 rounded-none px-3.5 font-mono text-xs uppercase tracking-wider w-full sm:w-auto"
                     disabled={loading}
                     type="submit"
                     variant="outline"
@@ -228,39 +228,39 @@ export function TunnelSection() {
                 <div className="mb-2.5 font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
                   Ingress Routing Policy
                 </div>
-                <div className="grid grid-cols-3 gap-2.5">
-                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 px-3 py-2.5">
+                <div className="grid grid-cols-3 gap-1.5 sm:gap-2.5">
+                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 p-2 sm:px-3 sm:py-2.5">
                     <div className="flex items-center justify-between gap-1.5">
-                      <span className="truncate font-bold font-mono text-foreground text-sm">
+                      <span className="truncate font-bold font-mono text-foreground text-xs sm:text-sm">
                         Zero Trust
                       </span>
                       <span className="size-1.5 shrink-0 rounded-full bg-emerald-500" />
                     </div>
-                    <span className="mt-1 truncate font-medium text-muted-foreground text-xs">
+                    <span className="mt-1 truncate font-medium text-muted-foreground text-[10px] sm:text-xs">
                       Access Policy
                     </span>
                   </div>
 
-                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 px-3 py-2.5">
+                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 p-2 sm:px-3 sm:py-2.5">
                     <div className="flex items-center justify-between gap-1.5">
-                      <span className="truncate font-bold font-mono text-foreground text-sm">
+                      <span className="truncate font-bold font-mono text-foreground text-xs sm:text-sm">
                         CNAME
                       </span>
                       <span className="size-1.5 shrink-0 rounded-full bg-emerald-500" />
                     </div>
-                    <span className="mt-1 truncate font-medium text-muted-foreground text-xs">
+                    <span className="mt-1 truncate font-medium text-muted-foreground text-[10px] sm:text-xs">
                       DNS Routing
                     </span>
                   </div>
 
-                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 px-3 py-2.5">
+                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 p-2 sm:px-3 sm:py-2.5">
                     <div className="flex items-center justify-between gap-1.5">
-                      <span className="truncate font-bold font-mono text-foreground text-sm">
+                      <span className="truncate font-bold font-mono text-foreground text-xs sm:text-sm">
                         TLS 1.3
                       </span>
                       <span className="size-1.5 shrink-0 rounded-full bg-emerald-500" />
                     </div>
-                    <span className="mt-1 truncate font-medium text-muted-foreground text-xs">
+                    <span className="mt-1 truncate font-medium text-muted-foreground text-[10px] sm:text-xs">
                       Edge Cipher
                     </span>
                   </div>
@@ -279,7 +279,7 @@ export function TunnelSection() {
                     Cloudflare Tunnel Token (Secret)
                   </label>
                   <Input
-                    className="h-9 rounded-none border-border/80 bg-muted/15 font-mono text-xs"
+                    className="h-9 rounded-none border-border/80 bg-muted/15 font-mono text-base sm:text-xs"
                     disabled={loading}
                     id="tunnel-token"
                     onChange={(e) => setToken(e.target.value)}
@@ -298,7 +298,7 @@ export function TunnelSection() {
                       App Hostname
                     </label>
                     <Input
-                      className="h-9 rounded-none border-border/80 bg-muted/15 font-mono text-xs"
+                      className="h-9 rounded-none border-border/80 bg-muted/15 font-mono text-base sm:text-xs"
                       disabled={loading}
                       id="app-host"
                       onChange={(e) => setAppHost(e.target.value)}
@@ -315,7 +315,7 @@ export function TunnelSection() {
                       DSH Hostname
                     </label>
                     <Input
-                      className="h-9 rounded-none border-border/80 bg-muted/15 font-mono text-xs"
+                      className="h-9 rounded-none border-border/80 bg-muted/15 font-mono text-base sm:text-xs"
                       disabled={loading}
                       id="dsh-host"
                       onChange={(e) => setDshHost(e.target.value)}
@@ -332,7 +332,7 @@ export function TunnelSection() {
                       Origin Port
                     </label>
                     <Input
-                      className="h-9 rounded-none border-border/80 bg-muted/15 font-mono text-xs"
+                      className="h-9 rounded-none border-border/80 bg-muted/15 font-mono text-base sm:text-xs"
                       disabled={loading}
                       id="app-port"
                       onChange={(e) => setAppPort(e.target.value)}
@@ -348,7 +348,8 @@ export function TunnelSection() {
                   disabled={loading}
                   type="submit"
                 >
-                  Save & Apply Tunnel Configuration →
+                  <span className="sm:hidden">Apply Tunnel Config →</span>
+                  <span className="hidden sm:inline">Save & Apply Tunnel Configuration →</span>
                 </Button>
               </form>
             </CadCell>

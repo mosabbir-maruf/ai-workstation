@@ -79,12 +79,12 @@ export function SseLogViewer({
   return (
     <div
       className={cn(
-        "relative flex h-full flex-col border border-border bg-white text-card-foreground dark:bg-black",
+        "relative flex h-full w-full min-w-0 max-w-full flex-col border border-border bg-white text-card-foreground dark:bg-black",
         className
       )}
     >
       {/* CAD Header bar */}
-      <div className="flex min-h-11 items-center justify-between gap-3 border-border/60 border-b bg-card/30 px-4 py-2">
+      <div className="flex min-h-11 w-full min-w-0 flex-wrap items-center justify-between gap-x-3 gap-y-2 border-border/60 border-b bg-card/30 px-3.5 py-2 sm:flex-nowrap sm:px-4">
         <div className="flex min-w-0 items-center gap-2">
           {code ? (
             <span className="shrink-0 font-mono text-[10px] text-muted-foreground/50 tabular-nums">
@@ -102,10 +102,10 @@ export function SseLogViewer({
           </h4>
         </div>
 
-        <div className="ml-auto flex shrink-0 items-center gap-1.5">
+        <div className="flex flex-nowrap items-center gap-1 overflow-x-auto no-scrollbar sm:ml-auto sm:shrink-0 sm:gap-1.5">
           {!compact && (
             <Button
-              className="h-6 rounded-none px-2 font-mono text-[10px] uppercase tracking-wider"
+              className="h-6 shrink-0 rounded-none px-2 font-mono text-[10px] uppercase tracking-tight sm:tracking-wider"
               onClick={() => setAutoScroll((v) => !v)}
               size="xs"
               variant="ghost"
@@ -116,7 +116,7 @@ export function SseLogViewer({
 
           {connected ? (
             <Button
-              className="h-6 rounded-none px-2 font-mono text-[10px] uppercase tracking-wider"
+              className="h-6 shrink-0 rounded-none px-2 font-mono text-[10px] uppercase tracking-tight sm:tracking-wider"
               onClick={stopStream}
               size="xs"
               variant="outline"
@@ -125,7 +125,7 @@ export function SseLogViewer({
             </Button>
           ) : (
             <Button
-              className="h-6 rounded-none px-2 font-mono text-[10px] uppercase tracking-wider"
+              className="h-6 shrink-0 rounded-none px-2 font-mono text-[10px] uppercase tracking-tight sm:tracking-wider"
               onClick={startStream}
               size="xs"
               variant="outline"
@@ -135,7 +135,7 @@ export function SseLogViewer({
           )}
 
           <Button
-            className="h-6 rounded-none px-2 font-mono text-[10px] uppercase tracking-wider"
+            className="h-6 shrink-0 rounded-none px-2 font-mono text-[10px] uppercase tracking-tight sm:tracking-wider"
             onClick={clearLogs}
             size="xs"
             variant="ghost"
@@ -145,7 +145,7 @@ export function SseLogViewer({
 
           <CopyButton
             aria-label="Copy logs"
-            className="h-6 w-6 rounded-none border border-border/60"
+            className="h-6 w-6 shrink-0 rounded-none border border-border/60"
             text={rawLogText}
           />
 
@@ -156,14 +156,14 @@ export function SseLogViewer({
       {/* Terminal log content */}
       <div
         className={cn(
-          "flex-1 overflow-y-auto overscroll-contain p-4 font-mono text-xs leading-relaxed",
+          "flex-1 w-full min-w-0 overflow-y-auto overscroll-contain p-4 font-mono text-xs leading-relaxed",
           compact
             ? "max-h-[260px] min-h-[210px]"
             : "max-h-[380px] min-h-[220px]"
         )}
         ref={containerRef}
       >
-        <div className="flex h-full min-h-[176px] flex-col justify-between border border-border/70 bg-muted/15 p-3">
+        <div className="flex h-full min-h-[176px] w-full min-w-0 flex-col justify-between border border-border/70 bg-muted/15 p-3">
           {logs.length === 0 ? (
             <div className="flex flex-1 flex-col items-center justify-center gap-1.5 py-6 text-center">
               <div className="flex items-center gap-2 font-mono text-[11px] text-muted-foreground">
@@ -204,11 +204,11 @@ export function SseLogViewer({
       </div>
 
       {/* CAD Terminal status bar */}
-      <div className="flex h-9 items-center justify-between border-border/60 border-t bg-muted/10 px-4 font-mono text-[10px] text-muted-foreground/60">
-        <span>
+      <div className="flex min-h-9 flex-wrap items-center justify-between gap-x-2 gap-y-1 border-border/60 border-t bg-muted/10 px-3.5 py-1.5 font-mono text-[9px] text-muted-foreground/60 sm:h-9 sm:flex-nowrap sm:px-4 sm:py-0 sm:text-[10px]">
+        <span className="min-w-0 flex-1 truncate">
           SSE Stream · {endpoint} ({getStatusBadge(isEnded, connected)})
         </span>
-        <span>
+        <span className="shrink-0">
           {logs.length} / {maxLines} lines
         </span>
       </div>

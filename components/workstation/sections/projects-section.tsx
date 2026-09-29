@@ -118,39 +118,39 @@ export function ProjectsSection() {
                 <div className="mb-2.5 font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
                   Mount Target Specification
                 </div>
-                <div className="grid grid-cols-3 gap-2.5">
-                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 px-3 py-2.5">
+                <div className="grid grid-cols-3 gap-1.5 sm:gap-2.5">
+                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 p-2 sm:px-3 sm:py-2.5">
                     <div className="flex items-center justify-between gap-1.5">
-                      <span className="truncate font-bold font-mono text-foreground text-sm">
+                      <span className="truncate font-bold font-mono text-foreground text-xs sm:text-sm">
                         /workspace
                       </span>
                       <span className="size-1.5 shrink-0 rounded-full bg-emerald-500" />
                     </div>
-                    <span className="mt-1 truncate font-medium text-muted-foreground text-xs">
+                    <span className="mt-1 truncate font-medium text-muted-foreground text-[10px] sm:text-xs">
                       Mount Root
                     </span>
                   </div>
 
-                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 px-3 py-2.5">
+                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 p-2 sm:px-3 sm:py-2.5">
                     <div className="flex items-center justify-between gap-1.5">
-                      <span className="truncate font-bold font-mono text-foreground text-sm">
+                      <span className="truncate font-bold font-mono text-foreground text-xs sm:text-sm">
                         SSH / TLS
                       </span>
                       <span className="size-1.5 shrink-0 rounded-full bg-emerald-500" />
                     </div>
-                    <span className="mt-1 truncate font-medium text-muted-foreground text-xs">
+                    <span className="mt-1 truncate font-medium text-muted-foreground text-[10px] sm:text-xs">
                       Git Transport
                     </span>
                   </div>
 
-                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 px-3 py-2.5">
+                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 p-2 sm:px-3 sm:py-2.5">
                     <div className="flex items-center justify-between gap-1.5">
-                      <span className="truncate font-bold font-mono text-foreground text-sm tabular-nums">
+                      <span className="truncate font-bold font-mono text-foreground text-xs sm:text-sm tabular-nums">
                         {projects.length} Mounted
                       </span>
                       <span className="size-1.5 shrink-0 rounded-full bg-emerald-500" />
                     </div>
-                    <span className="mt-1 truncate font-medium text-muted-foreground text-xs">
+                    <span className="mt-1 truncate font-medium text-muted-foreground text-[10px] sm:text-xs">
                       Registry Count
                     </span>
                   </div>
@@ -182,9 +182,9 @@ export function ProjectsSection() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                   <Input
-                    className="h-9 flex-1 rounded-none border-border/80 bg-muted/15 font-mono text-xs"
+                    className="h-9 flex-1 rounded-none border-border/80 bg-muted/15 font-mono text-base sm:text-xs"
                     disabled={loading}
                     id="repo-url-input"
                     onChange={(e) => setNewRepoUrl(e.target.value)}
@@ -192,7 +192,7 @@ export function ProjectsSection() {
                     value={newRepoUrl}
                   />
                   <Button
-                    className="h-9 shrink-0 rounded-none px-4 font-mono text-xs uppercase tracking-wider"
+                    className="h-9 shrink-0 rounded-none px-4 font-mono text-xs uppercase tracking-wider w-full sm:w-auto"
                     disabled={loading || !newRepoUrl.trim()}
                     type="submit"
                   >
@@ -238,7 +238,7 @@ export function ProjectsSection() {
                 ) : (
                   projects.map((proj) => (
                     <div
-                      className="flex items-center justify-between gap-3 border border-border/70 bg-muted/15 px-3.5 py-2.5 transition-colors hover:bg-muted/25"
+                      className="flex items-center justify-between gap-2.5 border border-border/70 bg-muted/15 px-3 py-2 transition-colors hover:bg-muted/25"
                       key={proj.name}
                     >
                     <div className="min-w-0 flex-1">
@@ -250,26 +250,32 @@ export function ProjectsSection() {
                               : "size-1.5 shrink-0 rounded-full bg-muted-foreground/40"
                           }
                         />
-                        <span className="truncate font-bold text-foreground text-sm tracking-tight">
+                        <span
+                          className="truncate font-bold text-foreground text-xs sm:text-sm tracking-tight"
+                          title={proj.name}
+                        >
                           {proj.name}
                         </span>
                         {proj.active ? (
                           <Badge
-                            className="rounded-none border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0 font-mono text-[10px] text-emerald-600 uppercase tracking-wider dark:text-emerald-400"
+                            className="rounded-none border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0 font-mono text-[9px] sm:text-[10px] text-emerald-600 uppercase tracking-wider dark:text-emerald-400 shrink-0"
                             variant="outline"
                           >
                             Active
                           </Badge>
                         ) : (
                           <Badge
-                            className="rounded-none px-1.5 py-0 font-mono text-[10px] text-muted-foreground uppercase"
+                            className="rounded-none px-1.5 py-0 font-mono text-[9px] sm:text-[10px] text-muted-foreground uppercase shrink-0"
                             variant="outline"
                           >
                             Standby
                           </Badge>
                         )}
                       </div>
-                      <div className="mt-0.5 truncate font-mono text-[11px] text-muted-foreground">
+                      <div
+                        className="mt-0.5 truncate font-mono text-[10px] sm:text-[11px] text-muted-foreground"
+                        title={`/workspace/projects/${proj.name}`}
+                      >
                         /workspace/projects/{proj.name}
                       </div>
                     </div>
@@ -277,7 +283,7 @@ export function ProjectsSection() {
                     <div className="flex shrink-0 items-center gap-1.5">
                       {!proj.active && (
                         <Button
-                          className="h-7 rounded-none px-2.5 font-mono text-[10px] uppercase tracking-wider"
+                          className="h-7 rounded-none px-2 sm:px-2.5 font-mono text-[10px] uppercase tracking-wider"
                           disabled={loading}
                           onClick={() => handleUse(proj.name)}
                           size="xs"
@@ -287,7 +293,7 @@ export function ProjectsSection() {
                         </Button>
                       )}
                       <Button
-                        className="h-7 rounded-none px-2.5 font-mono text-[10px] uppercase tracking-wider"
+                        className="h-7 rounded-none px-2 sm:px-2.5 font-mono text-[10px] uppercase tracking-wider"
                         disabled={loading}
                         onClick={() => handleRemove(proj.name)}
                         size="xs"

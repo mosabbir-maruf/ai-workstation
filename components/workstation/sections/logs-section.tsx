@@ -115,9 +115,9 @@ export function LogsSection() {
                     {primaryChannel.subsystem}
                   </span>
                 </div>
-                <div className="grid grid-cols-3 gap-2.5">
-                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 px-3 py-2.5">
-                    <span className="font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
+                <div className="grid grid-cols-3 gap-1.5 sm:gap-2.5">
+                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 p-2 sm:px-3 sm:py-2.5">
+                    <span className="truncate font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
                       Primary Feed
                     </span>
                     <div className="mt-1 flex items-center gap-1.5">
@@ -127,16 +127,16 @@ export function LogsSection() {
                       </span>
                     </div>
                   </div>
-                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 px-3 py-2.5">
-                    <span className="font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
+                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 p-2 sm:px-3 sm:py-2.5">
+                    <span className="truncate font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
                       Transport
                     </span>
                     <span className="mt-1 truncate font-bold font-mono text-foreground text-xs">
                       SSE / HTTP
                     </span>
                   </div>
-                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 px-3 py-2.5">
-                    <span className="font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
+                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 p-2 sm:px-3 sm:py-2.5">
+                    <span className="truncate font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
                       Endpoint
                     </span>
                     <span className="mt-1 truncate font-bold font-mono text-emerald-500 text-xs">
@@ -157,13 +157,13 @@ export function LogsSection() {
                     return (
                       <div
                         className={cn(
-                          "flex items-center justify-between gap-3 px-3 py-2 transition-colors",
+                          "flex items-center justify-between gap-2.5 px-3 py-1.5 sm:py-2 transition-colors",
                           isPrimary ? "bg-muted/20" : "hover:bg-muted/10"
                         )}
                         key={ch.id}
                       >
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5 sm:gap-2">
                             <span
                               className={cn(
                                 "size-1.5 shrink-0 rounded-full",
@@ -172,10 +172,10 @@ export function LogsSection() {
                                   : "bg-muted-foreground/40"
                               )}
                             />
-                            <span className="font-bold font-mono text-foreground text-xs">
+                            <span className="font-bold font-mono text-foreground text-xs shrink-0">
                               {ch.label}
                             </span>
-                            <span className="border border-border/60 bg-muted/15 px-1.5 py-0.5 font-mono text-[9px] text-muted-foreground">
+                            <span className="border border-border/60 bg-muted/15 px-1.5 py-0.5 font-mono text-[9px] text-muted-foreground truncate hidden xs:inline-block max-w-[140px] sm:max-w-none">
                               {ch.endpoint}
                             </span>
                           </div>
@@ -206,7 +206,7 @@ export function LogsSection() {
               footerLeft="Client ring-buffer & viewport layout"
               footerRight="FIFO STREAM GC"
               headerAction={
-                <>
+                <div className="flex flex-wrap items-center gap-1">
                   <Button
                     className="h-6 rounded-none px-2 font-mono text-[10px] uppercase tracking-wider"
                     onClick={() => {
@@ -229,7 +229,7 @@ export function LogsSection() {
                   >
                     {dualStream ? "Dual Split: ON" : "Dual Split: OFF"}
                   </Button>
-                </>
+                </div>
               }
               index="LG-02"
               title="Ring Buffer & Viewport Policy"
@@ -244,25 +244,25 @@ export function LogsSection() {
                     client-ring-buffer
                   </span>
                 </div>
-                <div className="grid grid-cols-3 gap-2.5">
-                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 px-3 py-2.5">
-                    <span className="font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
+                <div className="grid grid-cols-3 gap-1.5 sm:gap-2.5">
+                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 p-2 sm:px-3 sm:py-2.5">
+                    <span className="truncate font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
                       Ring Capacity
                     </span>
                     <span className="mt-1 truncate font-bold font-mono text-foreground text-xs">
                       {maxLines.toLocaleString()} LINES
                     </span>
                   </div>
-                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 px-3 py-2.5">
-                    <span className="font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
+                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 p-2 sm:px-3 sm:py-2.5">
+                    <span className="truncate font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
                       Viewport Grid
                     </span>
                     <span className="mt-1 truncate font-bold font-mono text-emerald-500 text-xs">
                       {dualStream ? "6/6 SPLIT" : "12-COL FULL"}
                     </span>
                   </div>
-                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 px-3 py-2.5">
-                    <span className="font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
+                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 p-2 sm:px-3 sm:py-2.5">
+                    <span className="truncate font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
                       Eviction Mode
                     </span>
                     <span className="mt-1 truncate font-bold font-mono text-foreground text-xs">
@@ -278,7 +278,7 @@ export function LogsSection() {
                   <span className="block font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
                     Ring Buffer Line Retention Limit
                   </span>
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {BUFFER_PRESETS.map((limit) => (
                       <Button
                         className="h-8 rounded-none font-mono text-xs uppercase tracking-wider"
@@ -295,7 +295,7 @@ export function LogsSection() {
                 </div>
 
                 <div className="space-y-1.5 pt-1">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-center justify-between gap-1.5">
                     <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
                       Secondary Split-View Channel ([LG-04])
                     </span>
@@ -322,35 +322,36 @@ export function LogsSection() {
                   </div>
 
                   <div className="divide-y divide-border/50 border border-border/60 bg-muted/5 font-mono text-[11px]">
-                    <div className="flex items-center justify-between px-3 py-1.5">
-                      <span className="text-muted-foreground">
+                    <div className="flex items-center justify-between gap-2 px-3 py-1.5">
+                      <span className="truncate text-muted-foreground text-[10px] sm:text-[11px]">
                         Primary Console ([LG-03])
                       </span>
-                      <span className="text-foreground">
+                      <span className="shrink-0 font-mono text-[10px] sm:text-[11px] text-foreground">
                         {primaryChannel.endpoint}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between px-3 py-1.5">
-                      <span className="text-muted-foreground">
+                    <div className="flex items-center justify-between gap-2 px-3 py-1.5">
+                      <span className="truncate text-muted-foreground text-[10px] sm:text-[11px]">
                         Secondary Console ([LG-04])
                       </span>
                       <span
-                        className={
+                        className={cn(
+                          "shrink-0 font-mono text-[10px] sm:text-[11px]",
                           dualStream
                             ? "text-emerald-500"
                             : "text-muted-foreground"
-                        }
+                        )}
                       >
                         {dualStream
                           ? secondaryChannel.endpoint
-                          : "STANDBY (ENABLE DUAL SPLIT)"}
+                          : "STANDBY"}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between px-3 py-1.5">
-                      <span className="text-muted-foreground">
+                    <div className="flex items-center justify-between gap-2 px-3 py-1.5">
+                      <span className="truncate text-muted-foreground text-[10px] sm:text-[11px]">
                         Line Framing & Auto-Follow
                       </span>
-                      <span className="text-emerald-500">
+                      <span className="shrink-0 font-mono text-[10px] sm:text-[11px] text-emerald-500">
                         UTF-8 / TAIL-LOCK
                       </span>
                     </div>
@@ -377,7 +378,7 @@ export function LogsSection() {
               <div className="grid w-full grid-cols-1 md:grid-cols-12">
                 <div className="md:col-span-6">
                   <SseLogViewer
-                    className="h-[500px] border-r border-b"
+                    className="h-[380px] sm:h-[500px] border-r border-b"
                     endpoint={primaryChannel.endpoint}
                     key={`primary-${primaryChannel.id}-${maxLines}`}
                     maxLines={maxLines}
@@ -386,7 +387,7 @@ export function LogsSection() {
                 </div>
                 <div className="md:col-span-6">
                   <SseLogViewer
-                    className="h-[500px] border-r border-b"
+                    className="h-[380px] sm:h-[500px] border-r border-b"
                     endpoint={secondaryChannel.endpoint}
                     key={`secondary-${secondaryChannel.id}-${maxLines}`}
                     maxLines={maxLines}
@@ -405,7 +406,7 @@ export function LogsSection() {
           ) : (
             <>
               <SseLogViewer
-                className="h-[500px] border-r border-b"
+                className="h-[380px] sm:h-[500px] border-r border-b"
                 endpoint={primaryChannel.endpoint}
                 key={`single-${primaryChannel.id}-${maxLines}`}
                 maxLines={maxLines}

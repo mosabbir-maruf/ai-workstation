@@ -470,7 +470,7 @@ export function DshKeysSection() {
             >
               <div className="space-y-4">
                 {/* Provider Selection Tabs */}
-                <div className="flex flex-wrap gap-1 p-1 bg-muted/20 border border-border/60 rounded">
+                <div className="flex items-center gap-1 p-1 bg-muted/20 border border-border/60 rounded overflow-x-auto no-scrollbar">
                   {providerRows.map((prov) => {
                     const isSelected = selectedProvider === prov.id;
                     return (
@@ -482,7 +482,7 @@ export function DshKeysSection() {
                           setModelFetchNotice(null);
                         }}
                         className={cn(
-                          "flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-mono transition-all",
+                          "flex items-center gap-1.5 px-2.5 py-1.5 rounded text-xs font-mono transition-all shrink-0 whitespace-nowrap",
                           isSelected
                             ? "bg-background text-foreground shadow-sm border border-border/80 font-medium"
                             : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
@@ -514,7 +514,7 @@ export function DshKeysSection() {
                         value={deepseekKey}
                         onChange={(e) => setDeepseekKey(e.target.value)}
                         placeholder="sk-... or dsk_live_..."
-                        className="h-8 rounded-none font-mono text-xs"
+                        className="h-9 sm:h-8 rounded-none font-mono text-base sm:text-xs"
                       />
                     </div>
                   )}
@@ -529,7 +529,7 @@ export function DshKeysSection() {
                         value={openaiKey}
                         onChange={(e) => setOpenaiKey(e.target.value)}
                         placeholder="sk-proj-..."
-                        className="h-8 rounded-none font-mono text-xs"
+                        className="h-9 sm:h-8 rounded-none font-mono text-base sm:text-xs"
                       />
                     </div>
                   )}
@@ -544,7 +544,7 @@ export function DshKeysSection() {
                         value={anthropicKey}
                         onChange={(e) => setAnthropicKey(e.target.value)}
                         placeholder="sk-ant-..."
-                        className="h-8 rounded-none font-mono text-xs"
+                        className="h-9 sm:h-8 rounded-none font-mono text-base sm:text-xs"
                       />
                     </div>
                   )}
@@ -559,7 +559,7 @@ export function DshKeysSection() {
                         value={geminiKey}
                         onChange={(e) => setGeminiKey(e.target.value)}
                         placeholder="AIzaSy..."
-                        className="h-8 rounded-none font-mono text-xs"
+                        className="h-9 sm:h-8 rounded-none font-mono text-base sm:text-xs"
                       />
                     </div>
                   )}
@@ -574,7 +574,7 @@ export function DshKeysSection() {
                         value={openrouterKey}
                         onChange={(e) => setOpenrouterKey(e.target.value)}
                         placeholder="sk-or-v1-..."
-                        className="h-8 rounded-none font-mono text-xs"
+                        className="h-9 sm:h-8 rounded-none font-mono text-base sm:text-xs"
                       />
                     </div>
                   )}
@@ -589,7 +589,7 @@ export function DshKeysSection() {
                         value={groqKey}
                         onChange={(e) => setGroqKey(e.target.value)}
                         placeholder="gsk_..."
-                        className="h-8 rounded-none font-mono text-xs"
+                        className="h-9 sm:h-8 rounded-none font-mono text-base sm:text-xs"
                       />
                     </div>
                   )}
@@ -605,7 +605,7 @@ export function DshKeysSection() {
                           value={customBaseUrl}
                           onChange={(e) => setCustomBaseUrl(e.target.value)}
                           placeholder="http://localhost:11434/v1 or http://localhost:11434"
-                          className="h-8 rounded-none font-mono text-xs"
+                          className="h-9 sm:h-8 rounded-none font-mono text-base sm:text-xs"
                         />
                       </div>
                       <div className="space-y-1">
@@ -617,7 +617,7 @@ export function DshKeysSection() {
                           value={customApiKey}
                           onChange={(e) => setCustomApiKey(e.target.value)}
                           placeholder="sk-..."
-                          className="h-8 rounded-none font-mono text-xs"
+                          className="h-9 sm:h-8 rounded-none font-mono text-base sm:text-xs"
                         />
                       </div>
                     </div>
@@ -683,7 +683,7 @@ export function DshKeysSection() {
                           ? "llama-3.3-70b-versatile"
                           : "deepseek-r1 or qwen2.5-coder"
                       }
-                      className="h-8 rounded-none font-mono text-xs"
+                      className="h-9 sm:h-8 rounded-none font-mono text-base sm:text-xs"
                     />
 
                     {/* Custom Themed ModelDropdownSelector */}
@@ -792,9 +792,9 @@ export function DshKeysSection() {
                     application/json
                   </span>
                 </div>
-                <div className="grid grid-cols-3 gap-2.5">
-                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 px-3 py-2.5">
-                    <span className="font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
+                <div className="grid grid-cols-3 gap-1.5 sm:gap-2.5">
+                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 p-2 sm:px-3 sm:py-2.5">
+                    <span className="truncate font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
                       JSON Syntax
                     </span>
                     <span
@@ -808,16 +808,16 @@ export function DshKeysSection() {
                       {jsonTelemetry.valid ? "VALID JSON" : "SYNTAX ERR"}
                     </span>
                   </div>
-                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 px-3 py-2.5">
-                    <span className="font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
+                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 p-2 sm:px-3 sm:py-2.5">
+                    <span className="truncate font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
                       Configured
                     </span>
                     <span className="mt-1 truncate font-bold font-mono text-foreground text-xs">
                       {jsonTelemetry.configuredCount} / 7 PROVIDERS
                     </span>
                   </div>
-                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 px-3 py-2.5">
-                    <span className="font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
+                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 p-2 sm:px-3 sm:py-2.5">
+                    <span className="truncate font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
                       Payload Size
                     </span>
                     <span className="mt-1 truncate font-bold font-mono text-foreground text-xs">
@@ -838,7 +838,7 @@ export function DshKeysSection() {
                   </span>
                 </div>
                 <Textarea
-                  className="h-[200px] resize-none rounded-none font-mono text-xs leading-relaxed"
+                  className="h-[200px] resize-none rounded-none font-mono text-base sm:text-xs leading-relaxed"
                   disabled={loading}
                   onChange={(e) => setContent(e.target.value)}
                   placeholder='{"api_providers": {"deepseek": {"api_key": "..."}}}'
@@ -888,21 +888,21 @@ export function DshKeysSection() {
                   const { id: provId, configured } = provider;
                   return (
                     <div
-                      className="flex items-center justify-between gap-3 px-3.5 py-2.5"
+                      className="flex items-center justify-between gap-2 px-3 py-2"
                       key={provider.id}
                     >
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 sm:gap-2">
                           <span
                             className={cn(
                               "size-1.5 shrink-0 rounded-full",
                               configured ? "bg-emerald-500" : "bg-amber-500"
                             )}
                           />
-                          <span className="font-bold font-mono text-foreground text-xs">
+                          <span className="font-bold font-mono text-foreground text-xs shrink-0">
                             {provider.name}
                           </span>
-                          <span className="border border-border/60 bg-muted/20 px-1.5 py-0.5 font-mono text-[9px] text-muted-foreground">
+                          <span className="border border-border/60 bg-muted/20 px-1.5 py-0.5 font-mono text-[9px] text-muted-foreground truncate hidden xs:inline-block max-w-[120px] sm:max-w-none">
                             {provider.envVar}
                           </span>
                         </div>
@@ -910,8 +910,8 @@ export function DshKeysSection() {
                           Model: {provider.models}
                         </p>
                       </div>
-                      <div className="flex shrink-0 items-center gap-2.5">
-                        <div className="text-right">
+                      <div className="flex shrink-0 items-center justify-end gap-2 text-right">
+                        <div>
                           <span
                             className={cn(
                               "block font-mono text-xs",

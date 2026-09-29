@@ -143,9 +143,9 @@ export function HarnessSection() {
                     dsh-harnessd
                   </span>
                 </div>
-                <div className="grid grid-cols-3 gap-2.5">
-                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 px-3 py-2.5">
-                    <span className="font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
+                <div className="grid grid-cols-3 gap-1.5 sm:gap-2.5">
+                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 p-2 sm:px-3 sm:py-2.5">
+                    <span className="truncate font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
                       Bridge State
                     </span>
                     <div className="mt-1 flex items-center gap-1.5">
@@ -162,16 +162,16 @@ export function HarnessSection() {
                       </span>
                     </div>
                   </div>
-                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 px-3 py-2.5">
-                    <span className="font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
+                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 p-2 sm:px-3 sm:py-2.5">
+                    <span className="truncate font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
                       RPC Endpoint
                     </span>
                     <span className="mt-1 truncate font-bold font-mono text-foreground text-xs">
                       Internal :8080
                     </span>
                   </div>
-                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 px-3 py-2.5">
-                    <span className="font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
+                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 p-2 sm:px-3 sm:py-2.5">
+                    <span className="truncate font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
                       Sandbox Mode
                     </span>
                     <span className="mt-1 truncate font-bold font-mono text-emerald-500 text-xs">
@@ -269,7 +269,7 @@ export function HarnessSection() {
               footerLeft="DSH binary package & release manager"
               footerRight="POST /api/dsh/update"
               headerAction={
-                <>
+                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                   <Button
                     className="h-6 rounded-none px-2 font-mono text-[10px] uppercase tracking-wider"
                     disabled={loading || !targetVersion}
@@ -288,9 +288,10 @@ export function HarnessSection() {
                     type="button"
                     variant="default"
                   >
-                    Upgrade Binary ↑
+                    <span className="sm:hidden">Upgrade ↑</span>
+                    <span className="hidden sm:inline">Upgrade Binary ↑</span>
                   </Button>
-                </>
+                </div>
               }
               index="H-02"
               title="DSH Binary Version & Upgrade"
@@ -305,25 +306,25 @@ export function HarnessSection() {
                     /usr/local/bin/dsh
                   </span>
                 </div>
-                <div className="grid grid-cols-3 gap-2.5">
-                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 px-3 py-2.5">
-                    <span className="font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
+                <div className="grid grid-cols-3 gap-1.5 sm:gap-2.5">
+                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 p-2 sm:px-3 sm:py-2.5">
+                    <span className="truncate font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
                       Installed Build
                     </span>
                     <span className="mt-1 truncate font-bold font-mono text-emerald-500 text-xs">
                       {detectedVersion}
                     </span>
                   </div>
-                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 px-3 py-2.5">
-                    <span className="font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
+                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 p-2 sm:px-3 sm:py-2.5">
+                    <span className="truncate font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
                       Target Channel
                     </span>
                     <span className="mt-1 truncate font-bold font-mono text-foreground text-xs">
                       {targetVersion.trim() || "LATEST"}
                     </span>
                   </div>
-                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 px-3 py-2.5">
-                    <span className="font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
+                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 p-2 sm:px-3 sm:py-2.5">
+                    <span className="truncate font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
                       Target Arch
                     </span>
                     <span className="mt-1 truncate font-bold font-mono text-foreground text-xs">
@@ -339,14 +340,14 @@ export function HarnessSection() {
                 onSubmit={handleUpdate}
               >
                 <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-center justify-between gap-1.5">
                     <label
                       className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest"
                       htmlFor="dsh-target-version"
                     >
                       Target Release Tag / Channel
                     </label>
-                    <div className="flex items-center gap-1">
+                    <div className="flex flex-wrap items-center gap-1">
                       {RELEASE_CHANNEL_PRESETS.map((preset) => {
                         const active = targetVersion === preset.value;
                         return (
@@ -367,17 +368,17 @@ export function HarnessSection() {
                       })}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                     <Input
-                      className="h-8 rounded-none font-mono text-xs"
+                      className="h-9 sm:h-8 rounded-none font-mono text-base sm:text-xs"
                       disabled={loading}
                       id="dsh-target-version"
                       onChange={(e) => setTargetVersion(e.target.value)}
-                      placeholder="Leave blank for latest stable or specify tag (e.g. v1.5.0)"
+                      placeholder="Leave blank for latest stable or specify tag"
                       value={targetVersion}
                     />
                     <Button
-                      className="h-8 shrink-0 rounded-none px-3 font-mono text-xs uppercase tracking-wider"
+                      className="h-9 sm:h-8 shrink-0 rounded-none px-3 font-mono text-xs uppercase tracking-wider w-full sm:w-auto"
                       disabled={loading}
                       size="sm"
                       type="submit"

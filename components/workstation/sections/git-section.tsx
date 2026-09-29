@@ -94,39 +94,39 @@ export function GitSection() {
                 <div className="mb-2.5 font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
                   Upstream Sync Specification
                 </div>
-                <div className="grid grid-cols-3 gap-2.5">
-                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 px-3 py-2.5">
+                <div className="grid grid-cols-3 gap-1.5 sm:gap-2.5">
+                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 p-2 sm:px-3 sm:py-2.5">
                     <div className="flex items-center justify-between gap-1.5">
-                      <span className="truncate font-bold font-mono text-foreground text-sm">
+                      <span className="truncate font-bold font-mono text-foreground text-xs sm:text-sm">
                         origin
                       </span>
                       <span className="size-1.5 shrink-0 rounded-full bg-emerald-500" />
                     </div>
-                    <span className="mt-1 truncate font-medium text-muted-foreground text-xs">
+                    <span className="mt-1 truncate font-medium text-muted-foreground text-[10px] sm:text-xs">
                       Upstream Remote
                     </span>
                   </div>
 
-                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 px-3 py-2.5">
+                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 p-2 sm:px-3 sm:py-2.5">
                     <div className="flex items-center justify-between gap-1.5">
-                      <span className="truncate font-bold font-mono text-foreground text-sm">
+                      <span className="truncate font-bold font-mono text-foreground text-xs sm:text-sm">
                         ⎇ main
                       </span>
                       <span className="size-1.5 shrink-0 rounded-full bg-emerald-500" />
                     </div>
-                    <span className="mt-1 truncate font-medium text-muted-foreground text-xs">
+                    <span className="mt-1 truncate font-medium text-muted-foreground text-[10px] sm:text-xs">
                       Tracked Branch
                     </span>
                   </div>
 
-                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 px-3 py-2.5">
+                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 p-2 sm:px-3 sm:py-2.5">
                     <div className="flex items-center justify-between gap-1.5">
-                      <span className="truncate font-bold font-mono text-foreground text-sm">
+                      <span className="truncate font-bold font-mono text-foreground text-xs sm:text-sm">
                         FF-Only
                       </span>
                       <span className="size-1.5 shrink-0 rounded-full bg-emerald-500" />
                     </div>
-                    <span className="mt-1 truncate font-medium text-muted-foreground text-xs">
+                    <span className="mt-1 truncate font-medium text-muted-foreground text-[10px] sm:text-xs">
                       Merge Strategy
                     </span>
                   </div>
@@ -134,12 +134,12 @@ export function GitSection() {
               </div>
 
               <div className="space-y-3 border-border/50 border-t pt-4">
-                <div className="flex items-center justify-between font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
+                <div className="flex flex-wrap items-center justify-between gap-1 font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
                   <span>Execution Command Pipeline</span>
                   <span>Clean Index Verified</span>
                 </div>
 
-                <div className="border border-border/70 bg-muted/15 px-3.5 py-2 font-mono text-foreground text-xs">
+                <div className="border border-border/70 bg-muted/15 px-3.5 py-2 font-mono text-foreground text-xs break-all overflow-x-auto">
                   git fetch --prune origin && git pull --ff-only origin main
                 </div>
 
@@ -169,39 +169,39 @@ export function GitSection() {
                 <div className="mb-2.5 font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
                   Staging & Commit Pipeline
                 </div>
-                <div className="grid grid-cols-3 gap-2.5">
-                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 px-3 py-2.5">
+                <div className="grid grid-cols-3 gap-1.5 sm:gap-2.5">
+                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 p-2 sm:px-3 sm:py-2.5">
                     <div className="flex items-center justify-between gap-1.5">
-                      <span className="truncate font-bold font-mono text-foreground text-sm">
+                      <span className="truncate font-bold font-mono text-foreground text-xs sm:text-sm">
                         git add -A
                       </span>
                       <span className="size-1.5 shrink-0 rounded-full bg-emerald-500" />
                     </div>
-                    <span className="mt-1 truncate font-medium text-muted-foreground text-xs">
+                    <span className="mt-1 truncate font-medium text-muted-foreground text-[10px] sm:text-xs">
                       Stage Policy
                     </span>
                   </div>
 
-                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 px-3 py-2.5">
+                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 p-2 sm:px-3 sm:py-2.5">
                     <div className="flex items-center justify-between gap-1.5">
-                      <span className="truncate font-bold font-mono text-foreground text-sm">
+                      <span className="truncate font-bold font-mono text-foreground text-xs sm:text-sm">
                         SSH / GPG
                       </span>
                       <span className="size-1.5 shrink-0 rounded-full bg-emerald-500" />
                     </div>
-                    <span className="mt-1 truncate font-medium text-muted-foreground text-xs">
+                    <span className="mt-1 truncate font-medium text-muted-foreground text-[10px] sm:text-xs">
                       Commit Auth
                     </span>
                   </div>
 
-                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 px-3 py-2.5">
+                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 p-2 sm:px-3 sm:py-2.5">
                     <div className="flex items-center justify-between gap-1.5">
-                      <span className="truncate font-bold font-mono text-foreground text-sm">
+                      <span className="truncate font-bold font-mono text-foreground text-xs sm:text-sm">
                         Biome Check
                       </span>
                       <span className="size-1.5 shrink-0 rounded-full bg-emerald-500" />
                     </div>
-                    <span className="mt-1 truncate font-medium text-muted-foreground text-xs">
+                    <span className="mt-1 truncate font-medium text-muted-foreground text-[10px] sm:text-xs">
                       Pre-Commit Hook
                     </span>
                   </div>
@@ -234,7 +234,7 @@ export function GitSection() {
                 </div>
 
                 <Input
-                  className="h-9 rounded-none border-border/80 bg-muted/15 font-mono text-xs"
+                  className="h-9 rounded-none border-border/80 bg-muted/15 font-mono text-base sm:text-xs"
                   disabled={loading}
                   id="git-commit-msg"
                   onChange={(e) => setCommitMessage(e.target.value)}
@@ -267,7 +267,12 @@ export function GitSection() {
         <div className="relative w-full overflow-visible">
           <CadCell
             footerLeft="Subprocess · git stdout & stderr stream"
-            footerRight="Working Directory · /workspace/projects/ai-workstation"
+            footerRight={
+              <span className="truncate max-w-[180px] sm:max-w-none">
+                <span className="sm:hidden">Dir: ai-workstation</span>
+                <span className="hidden sm:inline">Working Directory · /workspace/projects/ai-workstation</span>
+              </span>
+            }
             headerAction={
               output ? (
                 <Button

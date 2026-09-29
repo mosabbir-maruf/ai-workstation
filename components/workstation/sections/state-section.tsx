@@ -132,17 +132,17 @@ export function StateSection() {
                     application/gzip
                   </span>
                 </div>
-                <div className="grid grid-cols-3 gap-2.5">
-                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 px-3 py-2.5">
-                    <span className="font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
+                <div className="grid grid-cols-3 gap-1.5 sm:gap-2.5">
+                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 p-2 sm:px-3 sm:py-2.5">
+                    <span className="truncate font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
                       Archive Format
                     </span>
                     <span className="mt-1 truncate font-bold font-mono text-foreground text-xs">
                       TAR.GZ / GZIP
                     </span>
                   </div>
-                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 px-3 py-2.5">
-                    <span className="font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
+                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 p-2 sm:px-3 sm:py-2.5">
+                    <span className="truncate font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
                       Artifact State
                     </span>
                     <div className="mt-1 flex items-center gap-1.5">
@@ -159,8 +159,8 @@ export function StateSection() {
                       </span>
                     </div>
                   </div>
-                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 px-3 py-2.5">
-                    <span className="font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
+                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 p-2 sm:px-3 sm:py-2.5">
+                    <span className="truncate font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
                       Vault Scope
                     </span>
                     <span className="mt-1 truncate font-bold font-mono text-emerald-500 text-xs">
@@ -290,9 +290,9 @@ export function StateSection() {
                     multipart/form-data
                   </span>
                 </div>
-                <div className="grid grid-cols-3 gap-2.5">
-                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 px-3 py-2.5">
-                    <span className="font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
+                <div className="grid grid-cols-3 gap-1.5 sm:gap-2.5">
+                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 p-2 sm:px-3 sm:py-2.5">
+                    <span className="truncate font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
                       Staged Archive
                     </span>
                     <div className="mt-1 flex items-center gap-1.5">
@@ -309,8 +309,8 @@ export function StateSection() {
                       </span>
                     </div>
                   </div>
-                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 px-3 py-2.5">
-                    <span className="font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
+                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 p-2 sm:px-3 sm:py-2.5">
+                    <span className="truncate font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
                       Archive Size
                     </span>
                     <span className="mt-1 truncate font-bold font-mono text-foreground text-xs">
@@ -319,8 +319,8 @@ export function StateSection() {
                         : "0.0 KB"}
                     </span>
                   </div>
-                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 px-3 py-2.5">
-                    <span className="font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
+                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 p-2 sm:px-3 sm:py-2.5">
+                    <span className="truncate font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
                       Write Policy
                     </span>
                     <span className="mt-1 truncate font-bold font-mono text-amber-500 text-xs">
@@ -342,7 +342,7 @@ export function StateSection() {
                   >
                     Select Snapshot Archive (.tar.gz / .tgz)
                   </label>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                     <input
                       accept=".tar.gz,.tgz,.gz"
                       className="block h-9 w-full cursor-pointer border border-border/60 bg-muted/10 px-2 py-1 font-mono text-muted-foreground text-xs file:mr-2.5 file:rounded-none file:border file:border-border file:bg-muted/30 file:px-2.5 file:py-0.5 file:font-mono file:text-[10px] file:text-foreground file:uppercase hover:file:bg-muted"
@@ -356,7 +356,7 @@ export function StateSection() {
                       type="file"
                     />
                     <Button
-                      className="h-9 shrink-0 rounded-none px-3 font-mono text-xs uppercase tracking-wider"
+                      className="h-9 shrink-0 rounded-none px-3 font-mono text-xs uppercase tracking-wider w-full sm:w-auto"
                       disabled={loading || !selectedFile}
                       size="sm"
                       type="submit"
@@ -421,10 +421,10 @@ export function StateSection() {
               <div className="divide-y divide-border/60 border border-border/60 bg-muted/5">
                 {SNAPSHOT_PATHS.map((item) => (
                   <div
-                    className="flex items-center justify-between gap-3 px-3.5 py-2.5"
+                    className="flex items-center justify-between gap-2.5 px-3 py-1.5 sm:py-2"
                     key={item.id}
                   >
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <span className="block truncate font-bold font-mono text-foreground text-xs">
                         {item.label}
                       </span>

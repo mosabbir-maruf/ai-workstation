@@ -484,7 +484,7 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap sm:flex-nowrap">
           <Button
             variant="outline"
             size="sm"
@@ -532,7 +532,7 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
                 type="button"
                 onClick={() => setCurrentStepIndex(idx)}
                 className={cn(
-                  "flex flex-col text-left p-3 rounded-lg border transition-all text-xs",
+                  "flex flex-col text-left p-3 rounded-lg border transition-all text-xs last:col-span-2 md:last:col-span-1",
                   isSelected
                     ? "border-foreground bg-muted/30 shadow-xs"
                     : st.done
@@ -571,7 +571,7 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
       </div>
 
       {/* Main Interactive Step Card */}
-      <div className="rounded-xl border border-border bg-card p-6 md:p-8 shadow-sm space-y-6">
+      <div className="rounded-xl border border-border bg-card p-4 sm:p-6 md:p-8 shadow-sm space-y-6">
         {/* Step Title & Status */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/60 pb-5">
           <div className="space-y-1">
@@ -649,11 +649,11 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   The Python 3 asynchronous workstation daemon manages process supervisors, Docker container isolation, and logs.
                 </p>
-                <div className="p-3 bg-black rounded font-mono text-xs text-emerald-400 flex items-center justify-between">
-                  <span>
+                <div className="p-3 bg-black rounded font-mono text-xs text-emerald-400 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <span className="break-all sm:break-normal">
                     Status: {daemonActive ? '200 OK — {"ok": true, "output": "Host workstation daemon active."}' : '401 Unauthorized / Daemon Unreachable'}
                   </span>
-                  <CopyButton text="curl -i -H 'Authorization: Bearer <token>' http://localhost:8000/api/health" className="h-6 w-6 text-zinc-400" />
+                  <CopyButton text="curl -i -H 'Authorization: Bearer <token>' http://localhost:8000/api/health" className="h-6 w-6 text-zinc-400 shrink-0 self-end sm:self-center" />
                 </div>
               </div>
 
@@ -725,18 +725,18 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
                 <span className="text-xs font-semibold text-foreground">
                   Or Clone a New Git Repository:
                 </span>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <Input
                     type="text"
                     value={cloneUrl}
                     onChange={(e) => setCloneUrl(e.target.value)}
                     placeholder="https://github.com/username/repository.git"
-                    className="text-xs font-mono"
+                    className="text-base sm:text-xs font-mono"
                   />
                   <Button
                     type="submit"
                     disabled={actionLoading || !cloneUrl.trim()}
-                    className="h-9 font-mono text-xs px-4"
+                    className="h-9 shrink-0 font-mono text-xs px-4"
                   >
                     {actionLoading ? "Cloning..." : "Clone & Mount"}
                   </Button>
@@ -764,7 +764,8 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
                       value={appId}
                       onChange={(e) => setAppId(e.target.value)}
                       placeholder="e.g. 1023456"
-                      className="text-xs font-mono"
+                      inputMode="numeric"
+                      className="text-base sm:text-xs font-mono"
                     />
                   </div>
                   <div className="space-y-1">
@@ -776,7 +777,8 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
                       value={installationId}
                       onChange={(e) => setInstallationId(e.target.value)}
                       placeholder="e.g. 56789012"
-                      className="text-xs font-mono"
+                      inputMode="numeric"
+                      className="text-base sm:text-xs font-mono"
                     />
                   </div>
                 </div>
@@ -858,7 +860,7 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
                         setPemFileName(null);
                       }}
                       placeholder="-----BEGIN RSA PRIVATE KEY-----&#10;...&#10;-----END RSA PRIVATE KEY-----"
-                      className="text-xs font-mono resize-none text-muted-foreground focus:text-foreground"
+                      className="text-base sm:text-xs font-mono resize-none text-muted-foreground focus:text-foreground"
                     />
                   </div>
                 </div>
@@ -866,7 +868,7 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
                 <Button
                   type="submit"
                   disabled={actionLoading || !(appId.trim() && installationId.trim() && pemText.trim())}
-                  className="font-mono text-xs px-5"
+                  className="w-full sm:w-auto font-mono text-xs px-5"
                 >
                   {actionLoading ? "Saving & Testing..." : "Save & Authenticate GitHub Broker"}
                 </Button>
@@ -891,7 +893,7 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
                     value={tunnelToken}
                     onChange={(e) => setTunnelToken(e.target.value)}
                     placeholder="eyJhIjoi..."
-                    className="text-xs font-mono"
+                    className="text-base sm:text-xs font-mono"
                   />
                 </div>
 
@@ -905,7 +907,7 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
                       value={tunnelAppHost}
                       onChange={(e) => setTunnelAppHost(e.target.value)}
                       placeholder="app.yourdomain.com"
-                      className="text-xs font-mono"
+                      className="text-base sm:text-xs font-mono"
                     />
                   </div>
                   <div className="space-y-1">
@@ -917,7 +919,7 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
                       value={tunnelDshHost}
                       onChange={(e) => setTunnelDshHost(e.target.value)}
                       placeholder="dsh.yourdomain.com"
-                      className="text-xs font-mono"
+                      className="text-base sm:text-xs font-mono"
                     />
                   </div>
                 </div>
@@ -925,7 +927,7 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
                 <Button
                   type="submit"
                   disabled={actionLoading || !tunnelToken.trim()}
-                  className="font-mono text-xs px-5"
+                  className="w-full sm:w-auto font-mono text-xs px-5"
                 >
                   {actionLoading ? "Installing..." : "Configure & Install Tunnel"}
                 </Button>
@@ -952,7 +954,7 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
               </div>
 
               {/* Provider Selection Tabs */}
-              <div className="flex flex-wrap gap-1.5 p-1 bg-muted/20 border border-border/60 rounded-md">
+              <div className="flex flex-wrap gap-1.5 p-1 bg-muted/20 border border-border/60 rounded-md overflow-x-auto no-scrollbar">
                 {[
                   { id: "deepseek" as ProviderId, name: "DeepSeek", keyVal: deepseekKey || providerModels.deepseek },
                   { id: "openai" as ProviderId, name: "OpenAI", keyVal: openaiKey || providerModels.openai },
@@ -1002,7 +1004,7 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
                       value={deepseekKey}
                       onChange={(e) => setDeepseekKey(e.target.value)}
                       placeholder="sk-..."
-                      className="text-xs font-mono"
+                      className="text-base sm:text-xs font-mono"
                     />
                   </div>
                 )}
@@ -1017,7 +1019,7 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
                       value={openaiKey}
                       onChange={(e) => setOpenaiKey(e.target.value)}
                       placeholder="sk-proj-..."
-                      className="text-xs font-mono"
+                      className="text-base sm:text-xs font-mono"
                     />
                   </div>
                 )}
@@ -1032,7 +1034,7 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
                       value={anthropicKey}
                       onChange={(e) => setAnthropicKey(e.target.value)}
                       placeholder="sk-ant-..."
-                      className="text-xs font-mono"
+                      className="text-base sm:text-xs font-mono"
                     />
                   </div>
                 )}
@@ -1047,7 +1049,7 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
                       value={geminiKey}
                       onChange={(e) => setGeminiKey(e.target.value)}
                       placeholder="AIzaSy..."
-                      className="text-xs font-mono"
+                      className="text-base sm:text-xs font-mono"
                     />
                   </div>
                 )}
@@ -1062,7 +1064,7 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
                       value={openrouterKey}
                       onChange={(e) => setOpenrouterKey(e.target.value)}
                       placeholder="sk-or-v1-..."
-                      className="text-xs font-mono"
+                      className="text-base sm:text-xs font-mono"
                     />
                   </div>
                 )}
@@ -1077,7 +1079,7 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
                       value={groqKey}
                       onChange={(e) => setGroqKey(e.target.value)}
                       placeholder="gsk_..."
-                      className="text-xs font-mono"
+                      className="text-base sm:text-xs font-mono"
                     />
                   </div>
                 )}
@@ -1093,7 +1095,7 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
                         value={customBaseUrl}
                         onChange={(e) => setCustomBaseUrl(e.target.value)}
                         placeholder="http://localhost:11434/v1 or https://..."
-                        className="text-xs font-mono"
+                        className="text-base sm:text-xs font-mono"
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -1105,7 +1107,7 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
                         value={customApiKey}
                         onChange={(e) => setCustomApiKey(e.target.value)}
                         placeholder="sk-..."
-                        className="text-xs font-mono"
+                        className="text-base sm:text-xs font-mono"
                       />
                     </div>
                   </div>
@@ -1171,7 +1173,7 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
                         ? "llama-3.3-70b-versatile"
                         : "deepseek-r1 or qwen2.5-coder"
                     }
-                    className="text-xs font-mono"
+                    className="text-base sm:text-xs font-mono"
                   />
 
                   {availableModels[selectedProvider] && availableModels[selectedProvider].length > 0 && (
@@ -1260,7 +1262,7 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
                         ...Object.values(providerModels),
                       ].some((k) => Boolean(k?.trim()))
                     }
-                    className="font-mono text-xs px-5"
+                    className="w-full sm:w-auto font-mono text-xs px-5"
                   >
                     {actionLoading ? "Saving Provider Keys..." : "Save Model Provider Keys"}
                   </Button>
@@ -1271,13 +1273,13 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
         </div>
 
         {/* Footer Navigation Buttons */}
-        <div className="flex items-center justify-between pt-6 border-t border-border/60">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-6 border-t border-border/60">
           <Button
             variant="outline"
             size="sm"
             onClick={() => setCurrentStepIndex((prev) => Math.max(0, prev - 1))}
             disabled={currentStepIndex === 0}
-            className="font-mono text-xs"
+            className="w-full sm:w-auto font-mono text-xs"
           >
             ← Previous Step
           </Button>
@@ -1289,7 +1291,7 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
                 refreshStatus();
                 setCurrentStepIndex((prev) => prev + 1);
               }}
-              className="font-mono text-xs"
+              className="w-full sm:w-auto font-mono text-xs"
             >
               Continue to Step {steps[currentStepIndex + 1].num} →
             </Button>
@@ -1297,7 +1299,7 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
             <Button
               size="sm"
               onClick={onComplete}
-              className="font-mono text-xs bg-emerald-600 hover:bg-emerald-500 text-white px-5"
+              className="w-full sm:w-auto font-mono text-xs bg-emerald-600 hover:bg-emerald-500 text-white px-5"
             >
               Complete Setup & Open Console
             </Button>

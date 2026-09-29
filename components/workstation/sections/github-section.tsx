@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { GridCornerDots } from "@/components/design/line-grid";
 import { Button } from "@/components/ui/button";
+import { CopyButton } from "@/components/copy-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { workstationApi } from "@/lib/workstation/api";
@@ -108,39 +109,39 @@ export function GitHubSection() {
                 <div className="mb-2.5 font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
                   Installation Token Specification
                 </div>
-                <div className="grid grid-cols-3 gap-2.5">
-                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 px-3 py-2.5">
+                <div className="grid grid-cols-3 gap-1.5 sm:gap-2.5">
+                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 p-2 sm:px-3 sm:py-2.5">
                     <div className="flex items-center justify-between gap-1.5">
-                      <span className="truncate font-bold font-mono text-foreground text-sm">
+                      <span className="truncate font-bold font-mono text-foreground text-xs sm:text-sm">
                         RS256 JWT
                       </span>
                       <span className="size-1.5 shrink-0 rounded-full bg-emerald-500" />
                     </div>
-                    <span className="mt-1 truncate font-medium text-muted-foreground text-xs">
+                    <span className="mt-1 truncate font-medium text-muted-foreground text-[10px] sm:text-xs">
                       Signing Algo
                     </span>
                   </div>
 
-                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 px-3 py-2.5">
+                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 p-2 sm:px-3 sm:py-2.5">
                     <div className="flex items-center justify-between gap-1.5">
-                      <span className="truncate font-bold font-mono text-foreground text-sm tabular-nums">
+                      <span className="truncate font-bold font-mono text-foreground text-xs sm:text-sm tabular-nums">
                         60m TTL
                       </span>
                       <span className="size-1.5 shrink-0 rounded-full bg-emerald-500" />
                     </div>
-                    <span className="mt-1 truncate font-medium text-muted-foreground text-xs">
+                    <span className="mt-1 truncate font-medium text-muted-foreground text-[10px] sm:text-xs">
                       Token Lease
                     </span>
                   </div>
 
-                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 px-3 py-2.5">
+                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 p-2 sm:px-3 sm:py-2.5">
                     <div className="flex items-center justify-between gap-1.5">
-                      <span className="truncate font-bold font-mono text-foreground text-sm">
+                      <span className="truncate font-bold font-mono text-foreground text-xs sm:text-sm">
                         Read/Write
                       </span>
                       <span className="size-1.5 shrink-0 rounded-full bg-emerald-500" />
                     </div>
-                    <span className="mt-1 truncate font-medium text-muted-foreground text-xs">
+                    <span className="mt-1 truncate font-medium text-muted-foreground text-[10px] sm:text-xs">
                       Repo Scopes
                     </span>
                   </div>
@@ -169,19 +170,26 @@ export function GitHubSection() {
                   },
                 ].map((item) => (
                   <div
-                    className="flex flex-col justify-between border border-border/70 bg-muted/15 px-3.5 py-2.5"
+                    className="flex flex-col justify-between border border-border/70 bg-muted/15 px-3.5 py-2.5 gap-1"
                     key={item.scope}
                   >
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-1">
                       <span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-wider">
                         {item.scope}
                       </span>
-                      <span className="font-mono text-[10px] text-emerald-600 uppercase dark:text-emerald-400">
+                      <span className="font-mono text-[10px] text-emerald-600 uppercase dark:text-emerald-400 shrink-0">
                         ● Granted
                       </span>
                     </div>
-                    <div className="mt-0.5 truncate font-mono text-foreground text-xs">
-                      {item.detail}
+                    <div className="mt-0.5 font-mono text-foreground text-xs break-all flex items-center justify-between gap-2">
+                      <span className="truncate flex-1">{item.detail}</span>
+                      {item.detail.startsWith("POST") && (
+                        <CopyButton
+                          aria-label="Copy endpoint URL"
+                          className="h-5 w-5 shrink-0 p-0.5 text-zinc-400 hover:text-zinc-100"
+                          text={item.detail.replace("POST ", "")}
+                        />
+                      )}
                     </div>
                   </div>
                 ))}
@@ -201,39 +209,39 @@ export function GitHubSection() {
                 <div className="mb-2.5 font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
                   Credential Vault Specification
                 </div>
-                <div className="grid grid-cols-3 gap-2.5">
-                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 px-3 py-2.5">
+                <div className="grid grid-cols-3 gap-1.5 sm:gap-2.5">
+                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 p-2 sm:px-3 sm:py-2.5">
                     <div className="flex items-center justify-between gap-1.5">
-                      <span className="truncate font-bold font-mono text-foreground text-sm">
+                      <span className="truncate font-bold font-mono text-foreground text-xs sm:text-sm">
                         PKCS#1/8
                       </span>
                       <span className="size-1.5 shrink-0 rounded-full bg-emerald-500" />
                     </div>
-                    <span className="mt-1 truncate font-medium text-muted-foreground text-xs">
+                    <span className="mt-1 truncate font-medium text-muted-foreground text-[10px] sm:text-xs">
                       PEM Format
                     </span>
                   </div>
 
-                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 px-3 py-2.5">
+                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 p-2 sm:px-3 sm:py-2.5">
                     <div className="flex items-center justify-between gap-1.5">
-                      <span className="truncate font-bold font-mono text-foreground text-sm">
+                      <span className="truncate font-bold font-mono text-foreground text-xs sm:text-sm">
                         0600 Mode
                       </span>
                       <span className="size-1.5 shrink-0 rounded-full bg-emerald-500" />
                     </div>
-                    <span className="mt-1 truncate font-medium text-muted-foreground text-xs">
+                    <span className="mt-1 truncate font-medium text-muted-foreground text-[10px] sm:text-xs">
                       Key Isolation
                     </span>
                   </div>
 
-                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 px-3 py-2.5">
+                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 p-2 sm:px-3 sm:py-2.5">
                     <div className="flex items-center justify-between gap-1.5">
-                      <span className="truncate font-bold font-mono text-foreground text-sm">
+                      <span className="truncate font-bold font-mono text-foreground text-xs sm:text-sm">
                         Auto-Mint
                       </span>
                       <span className="size-1.5 shrink-0 rounded-full bg-emerald-500" />
                     </div>
-                    <span className="mt-1 truncate font-medium text-muted-foreground text-xs">
+                    <span className="mt-1 truncate font-medium text-muted-foreground text-[10px] sm:text-xs">
                       Cred Helper
                     </span>
                   </div>
@@ -253,9 +261,10 @@ export function GitHubSection() {
                       GitHub App ID
                     </label>
                     <Input
-                      className="h-9 rounded-none border-border/80 bg-muted/15 font-mono text-xs"
+                      className="h-9 rounded-none border-border/80 bg-muted/15 font-mono text-base sm:text-xs"
                       disabled={loading}
                       id="github-app-id"
+                      inputMode="numeric"
                       onChange={(e) => setAppId(e.target.value)}
                       placeholder="e.g. 894102"
                       value={appId}
@@ -270,9 +279,10 @@ export function GitHubSection() {
                       Installation ID
                     </label>
                     <Input
-                      className="h-9 rounded-none border-border/80 bg-muted/15 font-mono text-xs"
+                      className="h-9 rounded-none border-border/80 bg-muted/15 font-mono text-base sm:text-xs"
                       disabled={loading}
                       id="github-installation-id"
+                      inputMode="numeric"
                       onChange={(e) => setInstallationId(e.target.value)}
                       placeholder="e.g. 52910481"
                       value={installationId}
@@ -288,7 +298,7 @@ export function GitHubSection() {
                     RSA Private Key (.pem)
                   </label>
                   <Textarea
-                    className="min-h-[96px] resize-none rounded-none border-border/80 bg-muted/15 font-mono text-xs"
+                    className="min-h-[96px] rounded-none border-border/80 bg-muted/15 font-mono text-base sm:text-xs"
                     disabled={loading}
                     id="github-pem"
                     onChange={(e) => setPemText(e.target.value)}
@@ -309,7 +319,8 @@ export function GitHubSection() {
                   }
                   type="submit"
                 >
-                  Save & Authenticate GitHub App →
+                  <span className="sm:hidden">Save & Authenticate →</span>
+                  <span className="hidden sm:inline">Save & Authenticate GitHub App →</span>
                 </Button>
               </form>
             </CadCell>

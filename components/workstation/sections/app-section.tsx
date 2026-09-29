@@ -95,36 +95,36 @@ export function AppSection() {
                 <div className="mb-2.5 font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
                   Runtime Target Specification
                 </div>
-                <div className="grid grid-cols-3 gap-2.5">
-                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 px-3 py-2.5">
-                    <div className="flex items-center justify-between gap-1.5">
-                      <span className="font-bold font-mono text-foreground text-sm tabular-nums">
+                <div className="grid grid-cols-3 gap-1.5 sm:gap-2.5">
+                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 p-2 sm:px-3 sm:py-2.5">
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="font-bold font-mono text-foreground text-xs sm:text-sm tabular-nums truncate">
                         {telemetry.isRunning ? telemetry.port : "IDLE"}
                       </span>
                       <span className={dotClass} />
                     </div>
-                    <span className="mt-1 truncate font-medium text-muted-foreground text-xs">
+                    <span className="mt-1 truncate font-medium text-muted-foreground text-[10px] sm:text-xs">
                       Bound Socket
                     </span>
                   </div>
 
-                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 px-3 py-2.5">
-                    <div className="flex items-center justify-between gap-1.5">
-                      <span className="truncate font-bold font-mono text-foreground text-sm">
+                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 p-2 sm:px-3 sm:py-2.5">
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="truncate font-bold font-mono text-foreground text-xs sm:text-sm">
                         {telemetry.project !== "none"
                           ? telemetry.project
                           : "None"}
                       </span>
                       <span className={dotClass} />
                     </div>
-                    <span className="mt-1 truncate font-medium text-muted-foreground text-xs">
+                    <span className="mt-1 truncate font-medium text-muted-foreground text-[10px] sm:text-xs">
                       Active Project
                     </span>
                   </div>
 
-                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 px-3 py-2.5">
-                    <div className="flex items-center justify-between gap-1.5">
-                      <span className="truncate font-bold font-mono text-foreground text-sm">
+                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 p-2 sm:px-3 sm:py-2.5">
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="truncate font-bold font-mono text-foreground text-xs sm:text-sm">
                         {telemetry.isRunning
                           ? telemetry.pid
                             ? `PID ${telemetry.pid}`
@@ -133,7 +133,7 @@ export function AppSection() {
                       </span>
                       <span className={dotClass} />
                     </div>
-                    <span className="mt-1 truncate font-medium text-muted-foreground text-xs">
+                    <span className="mt-1 truncate font-medium text-muted-foreground text-[10px] sm:text-xs">
                       Process State
                     </span>
                   </div>

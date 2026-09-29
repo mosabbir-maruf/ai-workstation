@@ -146,9 +146,9 @@ export function MaintenanceSection() {
                     host-supervisor
                   </span>
                 </div>
-                <div className="grid grid-cols-3 gap-2.5">
-                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 px-3 py-2.5">
-                    <span className="font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
+                <div className="grid grid-cols-3 gap-1.5 sm:gap-2.5">
+                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 p-2 sm:px-3 sm:py-2.5">
+                    <span className="truncate font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
                       Health Probe
                     </span>
                     <div className="mt-1 flex items-center gap-1.5">
@@ -158,16 +158,16 @@ export function MaintenanceSection() {
                       </span>
                     </div>
                   </div>
-                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 px-3 py-2.5">
-                    <span className="font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
+                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 p-2 sm:px-3 sm:py-2.5">
+                    <span className="truncate font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
                       Docker Engine
                     </span>
                     <span className="mt-1 truncate font-bold font-mono text-emerald-500 text-xs">
                       DOCKER.SOCK
                     </span>
                   </div>
-                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 px-3 py-2.5">
-                    <span className="font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
+                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 p-2 sm:px-3 sm:py-2.5">
+                    <span className="truncate font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
                       Package Index
                     </span>
                     <span className="mt-1 truncate font-bold font-mono text-foreground text-xs">
@@ -183,9 +183,9 @@ export function MaintenanceSection() {
                   <span className="block font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
                     System & Container Runners
                   </span>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                     <Button
-                      className="h-8 rounded-none font-mono text-xs uppercase tracking-wider"
+                      className="h-8 rounded-none px-1.5 sm:px-3 font-mono text-[10px] sm:text-xs uppercase tracking-wider"
                       disabled={loading}
                       onClick={() =>
                         handleAction(
@@ -200,7 +200,7 @@ export function MaintenanceSection() {
                       Doctor Audit
                     </Button>
                     <Button
-                      className="h-8 rounded-none font-mono text-xs uppercase tracking-wider"
+                      className="h-8 rounded-none px-1.5 sm:px-3 font-mono text-[10px] sm:text-xs uppercase tracking-wider"
                       disabled={loading}
                       onClick={() =>
                         handleAction(
@@ -215,7 +215,7 @@ export function MaintenanceSection() {
                       Sync Index
                     </Button>
                     <Button
-                      className="h-8 rounded-none font-mono text-xs uppercase tracking-wider"
+                      className="h-8 rounded-none px-1.5 sm:px-3 font-mono text-[10px] sm:text-xs uppercase tracking-wider"
                       disabled={loading}
                       onClick={() =>
                         handleAction(
@@ -230,9 +230,9 @@ export function MaintenanceSection() {
                       Upgrade All
                     </Button>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 pt-0.5">
+                  <div className="grid grid-cols-2 gap-1.5 sm:gap-2 pt-0.5">
                     <Button
-                      className="h-8 rounded-none font-mono text-xs uppercase tracking-wider"
+                      className="h-8 rounded-none px-2 font-mono text-[10px] sm:text-xs uppercase tracking-wider truncate"
                       disabled={loading}
                       onClick={() =>
                         handleClearCache({
@@ -246,10 +246,10 @@ export function MaintenanceSection() {
                       type="button"
                       variant="outline"
                     >
-                      Prune Docker Only
+                      Prune Docker
                     </Button>
                     <Button
-                      className="h-8 rounded-none font-mono text-xs uppercase tracking-wider"
+                      className="h-8 rounded-none px-2 font-mono text-[10px] sm:text-xs uppercase tracking-wider truncate"
                       disabled={loading}
                       onClick={() =>
                         handleClearCache({
@@ -263,7 +263,7 @@ export function MaintenanceSection() {
                       type="button"
                       variant="outline"
                     >
-                      Rotate & Truncate Logs
+                      Truncate Logs
                     </Button>
                   </div>
                 </div>
@@ -274,25 +274,27 @@ export function MaintenanceSection() {
                     Automated Verification Checkpoints
                   </span>
                   <div className="divide-y divide-border/50 border border-border/60 bg-muted/5 font-mono text-[11px]">
-                    <div className="flex items-center justify-between px-3 py-1.5">
-                      <span className="text-muted-foreground">
-                        Docker Daemon & Buildx Socket
+                    <div className="flex items-center justify-between px-3 py-1.5 gap-2">
+                      <span className="truncate text-muted-foreground text-[10px] sm:text-[11px]">
+                        Docker Daemon & Socket
                       </span>
-                      <span className="text-emerald-500">
+                      <span className="shrink-0 text-emerald-500 font-mono text-[10px] sm:text-[11px]">
                         /var/run/docker.sock
                       </span>
                     </div>
-                    <div className="flex items-center justify-between px-3 py-1.5">
-                      <span className="text-muted-foreground">
+                    <div className="flex items-center justify-between px-3 py-1.5 gap-2">
+                      <span className="truncate text-muted-foreground text-[10px] sm:text-[11px]">
                         Toolchain & Node Runtime
                       </span>
-                      <span className="text-foreground">v22+ / pnpm / git</span>
+                      <span className="shrink-0 text-foreground font-mono text-[10px] sm:text-[11px]">
+                        v22+ / pnpm / git
+                      </span>
                     </div>
-                    <div className="flex items-center justify-between px-3 py-1.5">
-                      <span className="text-muted-foreground">
+                    <div className="flex items-center justify-between px-3 py-1.5 gap-2">
+                      <span className="truncate text-muted-foreground text-[10px] sm:text-[11px]">
                         Port & Socket Bindings
                       </span>
-                      <span className="text-foreground">
+                      <span className="shrink-0 text-foreground font-mono text-[10px] sm:text-[11px]">
                         3000 / 8080 / 8787
                       </span>
                     </div>
@@ -360,17 +362,17 @@ export function MaintenanceSection() {
                     docker / logs / turbo / store
                   </span>
                 </div>
-                <div className="grid grid-cols-3 gap-2.5">
-                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 px-3 py-2.5">
-                    <span className="font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
+                <div className="grid grid-cols-3 gap-1.5 sm:gap-2.5">
+                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 p-2 sm:px-3 sm:py-2.5">
+                    <span className="truncate font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
                       Footprint
                     </span>
                     <span className="mt-1 truncate font-bold font-mono text-foreground text-xs">
                       {detectedFootprint}
                     </span>
                   </div>
-                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 px-3 py-2.5">
-                    <span className="font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
+                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 p-2 sm:px-3 sm:py-2.5">
+                    <span className="truncate font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
                       Purge Scope
                     </span>
                     <span
@@ -384,8 +386,8 @@ export function MaintenanceSection() {
                       {selectedTargetsCount} / 5 TARGETS
                     </span>
                   </div>
-                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 px-3 py-2.5">
-                    <span className="font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
+                  <div className="flex flex-col justify-between border border-border/60 bg-muted/10 p-2 sm:px-3 sm:py-2.5">
+                    <span className="truncate font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
                       Engine Scope
                     </span>
                     <span className="mt-1 truncate font-bold font-mono text-foreground text-xs">
@@ -401,17 +403,17 @@ export function MaintenanceSection() {
                   <span className="block font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
                     Granular Subsystem Purge Matrix
                   </span>
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                    <div className="flex items-center justify-between gap-2 border border-border/60 bg-muted/10 px-3 py-2">
+                  <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
+                    <div className="flex items-center justify-between gap-1.5 sm:gap-2 border border-border/60 bg-muted/10 p-2 sm:px-3 sm:py-2">
                       <div className="min-w-0">
                         <label
-                          className="block cursor-pointer truncate font-bold font-mono text-[11px] text-foreground"
+                          className="block cursor-pointer truncate font-bold font-mono text-[10px] sm:text-[11px] text-foreground"
                           htmlFor="purge-docker-toggle"
                         >
                           Docker Prune
                         </label>
-                        <span className="block truncate font-mono text-[9px] text-muted-foreground">
-                          Images, buildx & volumes
+                        <span className="block truncate font-mono text-[8px] sm:text-[9px] text-muted-foreground">
+                          Images & volumes
                         </span>
                       </div>
                       <Switch
@@ -421,16 +423,16 @@ export function MaintenanceSection() {
                       />
                     </div>
 
-                    <div className="flex items-center justify-between gap-2 border border-border/60 bg-muted/10 px-3 py-2">
+                    <div className="flex items-center justify-between gap-1.5 sm:gap-2 border border-border/60 bg-muted/10 p-2 sm:px-3 sm:py-2">
                       <div className="min-w-0">
                         <label
-                          className="block cursor-pointer truncate font-bold font-mono text-[11px] text-foreground"
+                          className="block cursor-pointer truncate font-bold font-mono text-[10px] sm:text-[11px] text-foreground"
                           htmlFor="purge-logs-toggle"
                         >
-                          Daemon & JSON Logs
+                          Daemon Logs
                         </label>
-                        <span className="block truncate font-mono text-[9px] text-muted-foreground">
-                          /var/log & container rings
+                        <span className="block truncate font-mono text-[8px] sm:text-[9px] text-muted-foreground">
+                          Log ring buffers
                         </span>
                       </div>
                       <Switch
@@ -440,16 +442,16 @@ export function MaintenanceSection() {
                       />
                     </div>
 
-                    <div className="flex items-center justify-between gap-2 border border-border/60 bg-muted/10 px-3 py-2">
+                    <div className="flex items-center justify-between gap-1.5 sm:gap-2 border border-border/60 bg-muted/10 p-2 sm:px-3 sm:py-2">
                       <div className="min-w-0">
                         <label
-                          className="block cursor-pointer truncate font-bold font-mono text-[11px] text-foreground"
+                          className="block cursor-pointer truncate font-bold font-mono text-[10px] sm:text-[11px] text-foreground"
                           htmlFor="purge-deps-toggle"
                         >
                           Dependency Store
                         </label>
-                        <span className="block truncate font-mono text-[9px] text-muted-foreground">
-                          pnpm store & node_modules
+                        <span className="block truncate font-mono text-[8px] sm:text-[9px] text-muted-foreground">
+                          pnpm & modules
                         </span>
                       </div>
                       <Switch
@@ -459,16 +461,16 @@ export function MaintenanceSection() {
                       />
                     </div>
 
-                    <div className="flex items-center justify-between gap-2 border border-border/60 bg-muted/10 px-3 py-2">
+                    <div className="flex items-center justify-between gap-1.5 sm:gap-2 border border-border/60 bg-muted/10 p-2 sm:px-3 sm:py-2">
                       <div className="min-w-0">
                         <label
-                          className="block cursor-pointer truncate font-bold font-mono text-[11px] text-foreground"
+                          className="block cursor-pointer truncate font-bold font-mono text-[10px] sm:text-[11px] text-foreground"
                           htmlFor="purge-temp-toggle"
                         >
-                          Temp & IPC Sockets
+                          Temp & IPC
                         </label>
-                        <span className="block truncate font-mono text-[9px] text-muted-foreground">
-                          /tmp/workstation & locks
+                        <span className="block truncate font-mono text-[8px] sm:text-[9px] text-muted-foreground">
+                          Sockets & locks
                         </span>
                       </div>
                       <Switch
@@ -485,22 +487,25 @@ export function MaintenanceSection() {
                     Active Purge Execution Plan
                   </span>
                   <div className="divide-y divide-border/50 border border-border/60 bg-muted/5 font-mono text-[11px]">
-                    <div className="flex items-center justify-between px-3 py-1.5">
-                      <span className="text-muted-foreground">
+                    <div className="flex items-center justify-between px-3 py-1.5 gap-2">
+                      <span className="truncate text-muted-foreground text-[10px] sm:text-[11px]">
                         Build Cache (.next / .turbo)
                       </span>
-                      <span className="text-emerald-500">ALWAYS PURGED</span>
+                      <span className="shrink-0 text-emerald-500 font-mono text-[10px] sm:text-[11px]">
+                        ALWAYS PURGED
+                      </span>
                     </div>
-                    <div className="flex items-center justify-between px-3 py-1.5">
-                      <span className="text-muted-foreground">
+                    <div className="flex items-center justify-between px-3 py-1.5 gap-2">
+                      <span className="truncate text-muted-foreground text-[10px] sm:text-[11px]">
                         Docker & Container Log Rings
                       </span>
                       <span
-                        className={
+                        className={cn(
+                          "shrink-0 font-mono text-[10px] sm:text-[11px]",
                           clearDocker || clearLogs
                             ? "text-amber-500"
                             : "text-muted-foreground"
-                        }
+                        )}
                       >
                         {[
                           clearDocker ? "DOCKER PRUNE" : null,
@@ -510,16 +515,17 @@ export function MaintenanceSection() {
                           .join(" + ") || "SKIPPED"}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between px-3 py-1.5">
-                      <span className="text-muted-foreground">
+                    <div className="flex items-center justify-between px-3 py-1.5 gap-2">
+                      <span className="truncate text-muted-foreground text-[10px] sm:text-[11px]">
                         Store & Temp Buffers
                       </span>
                       <span
-                        className={
+                        className={cn(
+                          "shrink-0 font-mono text-[10px] sm:text-[11px]",
                           clearDeps || clearTemp
                             ? "text-foreground"
                             : "text-muted-foreground"
-                        }
+                        )}
                       >
                         {[
                           clearDeps ? "PNPM STORE" : null,

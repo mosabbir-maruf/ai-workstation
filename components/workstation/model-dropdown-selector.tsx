@@ -23,29 +23,30 @@ export function ModelDropdownSelector({
   const containerRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // Close on outside click
+  // Close on outside click (touch and pointer safe)
   useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
+    function handleClickOutside(e: Event) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setIsOpen(false);
       }
     }
     if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("pointerdown", handleClickOutside);
     }
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("pointerdown", handleClickOutside);
     };
   }, [isOpen]);
 
-  // Focus search input when opened
+  // Focus search input when opened only on fine pointer (desktop) to avoid summoning mobile keyboard
   useEffect(() => {
     if (isOpen) {
-      // Small timeout to allow render
-      const t = setTimeout(() => {
-        searchInputRef.current?.focus();
-      }, 50);
-      return () => clearTimeout(t);
+      if (typeof window !== "undefined" && window.matchMedia("(pointer: fine)").matches) {
+        const t = setTimeout(() => {
+          searchInputRef.current?.focus({ preventScroll: true });
+        }, 50);
+        return () => clearTimeout(t);
+      }
     } else {
       setSearch("");
     }
@@ -113,7 +114,7 @@ export function ModelDropdownSelector({
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder={`Search ${models.length} models...`}
-                  className="h-7 w-full rounded bg-muted/40 pl-7 pr-7 text-xs font-mono text-foreground placeholder:text-muted-foreground/60 outline-none focus:bg-muted/60 focus:ring-1 focus:ring-ring"
+                  className="h-8 sm:h-7 w-full rounded bg-muted/40 pl-7 pr-7 text-base sm:text-xs font-mono text-foreground placeholder:text-muted-foreground/60 outline-none focus:bg-muted/60 focus:ring-1 focus:ring-ring"
                 />
                 {search && (
                   <button

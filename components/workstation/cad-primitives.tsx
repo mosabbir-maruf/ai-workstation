@@ -17,7 +17,7 @@ export function CadGridFrame({
   return (
     <div
       className={cn(
-        "relative flex w-full flex-col overflow-visible border-border border-t border-l",
+        "relative flex w-full min-w-0 max-w-full flex-col overflow-visible border-border border-t border-l",
         className
       )}
     >
@@ -37,7 +37,7 @@ export function CadGridFrame({
       {showRulers && (
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 -z-10"
+          className="pointer-events-none absolute inset-0 -z-10 hidden md:block"
           data-grid-rulers
         >
           <div className="absolute -top-8 left-0 block h-10 w-px bg-muted-foreground/40" />
@@ -84,12 +84,12 @@ export function CadCell({
   return (
     <div
       className={cn(
-        "flex min-w-0 flex-col justify-between border-border border-r border-b bg-white dark:bg-black",
+        "flex w-full min-w-0 max-w-full flex-col justify-between border-border border-r border-b bg-white dark:bg-black",
         className
       )}
     >
       {/* Single-Line CAD Header Bar (min-h-11) */}
-      <div className="flex min-h-11 flex-wrap items-center justify-between gap-x-3 gap-y-2 border-border/60 border-b bg-card/30 px-3.5 py-2.5 sm:flex-nowrap sm:px-4 sm:py-2">
+      <div className="flex min-h-11 w-full min-w-0 flex-wrap items-center justify-between gap-x-3 gap-y-2 border-border/60 border-b bg-card/30 px-3.5 py-2.5 sm:flex-nowrap sm:px-4 sm:py-2">
         <div className="flex min-w-0 items-center gap-2">
           <span className="shrink-0 font-mono text-[10px] text-muted-foreground/50 tabular-nums">
             [{index}]
@@ -108,8 +108,10 @@ export function CadCell({
       {/* Cell Body (flex-1 so side-by-side cells stretch evenly) */}
       <div
         className={cn(
-          "flex flex-1 flex-col p-4 sm:p-5",
-          bodyClassName === "p-0" ? "p-4 sm:p-5" : bodyClassName
+          "flex flex-1 flex-col min-w-0 w-full",
+          bodyClassName?.includes("p-0")
+            ? bodyClassName
+            : cn("p-3.5 sm:p-5", bodyClassName)
         )}
       >
         {children}
@@ -117,7 +119,7 @@ export function CadCell({
 
       {/* Full-Bleed CAD Footer Bar (h-9) */}
       {(resolvedFooterLeft || footerRight) && (
-        <div className="flex min-h-9 flex-wrap items-center justify-between gap-x-2 gap-y-1 border-border/60 border-t bg-muted/10 px-3.5 py-1.5 font-mono text-[9px] text-muted-foreground/60 sm:h-9 sm:flex-nowrap sm:px-4 sm:py-0 sm:text-[10px]">
+        <div className="flex min-h-9 w-full min-w-0 flex-wrap items-center justify-between gap-x-2 gap-y-1 border-border/60 border-t bg-muted/10 px-3.5 py-1.5 font-mono text-[9px] text-muted-foreground/60 sm:h-9 sm:flex-nowrap sm:px-4 sm:py-0 sm:text-[10px]">
           <span className="min-w-0 flex-1 truncate">{resolvedFooterLeft}</span>
           <span className="shrink-0">{footerRight}</span>
         </div>

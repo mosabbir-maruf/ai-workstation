@@ -104,7 +104,7 @@ function CadGridFrame({
   return (
     <div
       className={cn(
-        "relative flex w-full flex-col overflow-visible border-border border-t border-l",
+        "relative flex w-full min-w-0 max-w-full flex-col overflow-visible border-border border-t border-l",
         className
       )}
     >
@@ -257,7 +257,7 @@ function CommandAndServicesMatrix({
     <CadGridFrame showRulers>
       {/* Top Row: CAD Command & Quick Actions Header Bar */}
       <div className="relative border-border border-r border-b bg-white dark:bg-black">
-        <div className="flex min-h-11 items-center justify-between gap-3 bg-card/30 px-4 py-2">
+        <div className="flex min-h-11 flex-wrap items-center justify-between gap-x-3 gap-y-2 bg-card/30 px-3.5 py-2 sm:flex-nowrap sm:px-4">
           <div className="flex min-w-0 items-center gap-2">
             <span className="shrink-0 font-mono text-[10px] text-muted-foreground/50 tabular-nums">
               [S-00]
@@ -267,10 +267,10 @@ function CommandAndServicesMatrix({
             </h4>
           </div>
 
-          <div className="ml-auto flex shrink-0 items-center gap-1.5">
+          <div className="flex w-full min-w-0 flex-nowrap items-center gap-1 overflow-x-auto no-scrollbar sm:ml-auto sm:w-auto sm:shrink-0 sm:gap-1.5">
             {workstationRunning ? (
               <Button
-                className="h-6 rounded-none px-2.5 font-mono text-[10px] uppercase tracking-wider text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 border-rose-500/30"
+                className="h-6 shrink-0 rounded-none px-2 font-mono text-[10px] uppercase tracking-tight text-rose-500 hover:bg-rose-500/10 hover:text-rose-600 border-rose-500/30 sm:px-2.5 sm:tracking-wider"
                 disabled={loading || actionInProgress !== null}
                 onClick={onStop}
                 size="xs"
@@ -282,7 +282,7 @@ function CommandAndServicesMatrix({
               </Button>
             ) : (
               <Button
-                className="h-6 rounded-none px-2.5 font-mono text-[10px] uppercase tracking-wider"
+                className="h-6 shrink-0 rounded-none px-2 font-mono text-[10px] uppercase tracking-tight sm:px-2.5 sm:tracking-wider"
                 disabled={loading || actionInProgress !== null}
                 onClick={onStart}
                 size="xs"
@@ -296,7 +296,7 @@ function CommandAndServicesMatrix({
 
             {appRunning ? (
               <Button
-                className="h-6 rounded-none px-2.5 font-mono text-[10px] uppercase tracking-wider text-amber-500 hover:text-amber-600 hover:bg-amber-500/10 border-amber-500/30"
+                className="h-6 shrink-0 rounded-none px-2 font-mono text-[10px] uppercase tracking-tight text-amber-500 hover:bg-amber-500/10 hover:text-amber-600 border-amber-500/30 sm:px-2.5 sm:tracking-wider"
                 disabled={loading || actionInProgress !== null}
                 onClick={onStopApp}
                 size="xs"
@@ -306,7 +306,7 @@ function CommandAndServicesMatrix({
               </Button>
             ) : (
               <Button
-                className="h-6 rounded-none px-2.5 font-mono text-[10px] uppercase tracking-wider"
+                className="h-6 shrink-0 rounded-none px-2 font-mono text-[10px] uppercase tracking-tight sm:px-2.5 sm:tracking-wider"
                 disabled={loading || actionInProgress !== null || !workstationRunning}
                 onClick={onRun}
                 size="xs"
@@ -317,7 +317,7 @@ function CommandAndServicesMatrix({
             )}
 
             <Button
-              className="h-6 rounded-none px-2.5 font-mono text-[10px] uppercase tracking-wider"
+              className="h-6 shrink-0 rounded-none px-2 font-mono text-[10px] uppercase tracking-tight sm:px-2.5 sm:tracking-wider"
               disabled={loading}
               onClick={onPreview}
               size="xs"
@@ -327,7 +327,7 @@ function CommandAndServicesMatrix({
             </Button>
 
             <Button
-              className="h-6 rounded-none px-2.5 font-mono text-[10px] uppercase tracking-wider"
+              className="h-6 shrink-0 rounded-none px-2 font-mono text-[10px] uppercase tracking-tight sm:px-2.5 sm:tracking-wider"
               disabled={loading || actionInProgress !== null}
               onClick={onRestart}
               size="xs"
@@ -337,7 +337,7 @@ function CommandAndServicesMatrix({
             </Button>
 
             <Button
-              className="h-6 rounded-none px-2.5 font-mono text-[10px] uppercase tracking-wider"
+              className="h-6 shrink-0 rounded-none px-2 font-mono text-[10px] uppercase tracking-tight sm:px-2.5 sm:tracking-wider"
               disabled={loading}
               onClick={onRefresh}
               size="xs"
@@ -351,22 +351,22 @@ function CommandAndServicesMatrix({
         {actionFeedback && (
           <div className="border-border/60 border-t bg-black p-3.5 font-mono text-xs">
             <div className="space-y-2">
-              <div className="flex items-center justify-between text-[11px] text-zinc-500">
-                <div className="flex items-center gap-2 min-w-0">
+              <div className="flex flex-wrap items-center justify-between gap-1 text-[11px] text-zinc-500">
+                <div className="flex flex-wrap items-center gap-2 min-w-0">
                   <span
                     className={cn(
-                      "font-bold",
+                      "font-bold shrink-0",
                       actionFeedback.ok ? "text-emerald-500" : "text-rose-500"
                     )}
                   >
                     mosabbir@cloud:~$
                   </span>
-                  <span className="font-semibold text-zinc-100">
+                  <span className="font-semibold text-zinc-100 break-all">
                     {actionFeedback.command}
                   </span>
                   <span
                     className={cn(
-                      "border px-1.5 py-0.2 font-mono text-[9px] font-bold uppercase tracking-wider",
+                      "border px-1.5 py-0.2 font-mono text-[9px] font-bold uppercase tracking-wider shrink-0",
                       actionFeedback.ok
                         ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
                         : "border-rose-500/30 bg-rose-500/10 text-rose-400"
@@ -375,7 +375,7 @@ function CommandAndServicesMatrix({
                     {actionFeedback.ok ? "0 (SUCCESS)" : "1 (FAILED)"}
                   </span>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-2 shrink-0 ml-auto">
                   <span className="text-[10px] text-zinc-500">
                     {actionFeedback.timestamp}
                   </span>
@@ -411,11 +411,11 @@ function CommandAndServicesMatrix({
       </div>
 
       {/* Second Row: 5-Column CAD Service Cells ([S-01] – [S-05]) */}
-      <div className="relative w-full overflow-visible">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="relative w-full min-w-0 max-w-full overflow-visible">
+        <div className="grid w-full min-w-0 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
           {services.map((svc) => (
             <div
-              className="group flex flex-col justify-between border-border border-r border-b bg-white transition-colors hover:bg-muted/10 dark:bg-black"
+              className="group flex w-full min-w-0 flex-col justify-between border-border border-r border-b bg-white transition-colors hover:bg-muted/10 dark:bg-black"
               key={svc.index}
             >
               {/* Cell Header Strip */}
@@ -543,8 +543,8 @@ function LiveWaveAreaChart({
 
   return (
     <AreaChart
-      aspectRatio="5 / 2"
-      className={cn("w-full", compact ? "min-h-[110px]" : "min-h-[150px]")}
+      aspectRatio={compact ? "2 / 1" : "5 / 2"}
+      className={cn("w-full min-w-0", compact ? "h-[140px]" : "min-h-[150px]")}
       data={data}
       margin={homeAreaChartMargin(compact)}
     >
@@ -614,12 +614,12 @@ function LiveMemoryPieChart({
   const data = metrics.memory.pie;
 
   return (
-    <div className="flex w-full flex-col items-center justify-between gap-4 sm:flex-row">
-      <div className="shrink-0">
+    <div className="flex w-full min-w-0 flex-col items-center justify-between gap-3 sm:gap-4 sm:flex-row">
+      <div className="shrink-0 flex items-center justify-center">
         <PieChart
           data={data}
-          innerRadius={compact ? 38 : 44}
-          size={compact ? 140 : 160}
+          innerRadius={compact ? 34 : 44}
+          size={compact ? 130 : 160}
         >
           <PatternLines
             height={6}
@@ -727,9 +727,9 @@ function LiveDaemonsRingChart({
   }));
 
   return (
-    <div className="flex w-full flex-col items-center justify-between gap-4 sm:flex-row">
-      <div className="shrink-0">
-        <RingChart data={normalizedData} size={compact ? 140 : 165}>
+    <div className="flex w-full min-w-0 flex-col items-center justify-between gap-3 sm:gap-4 sm:flex-row">
+      <div className="shrink-0 flex items-center justify-center">
+        <RingChart data={normalizedData} size={compact ? 130 : 165}>
           {normalizedData.map((item, index) => (
             <Ring index={index} key={item.label} />
           ))}
@@ -789,9 +789,9 @@ function LiveThroughputBarChart({
 
   return (
     <BarChart
-      aspectRatio="5 / 2"
+      aspectRatio={compact ? "2 / 1" : "5 / 2"}
       barGap={0.2}
-      className={cn("w-full", compact ? "min-h-[110px]" : "min-h-[150px]")}
+      className={cn("w-full min-w-0", compact ? "h-[140px]" : "min-h-[150px]")}
       data={data}
       margin={homeBarChartMargin(compact)}
       xDataKey="month"
@@ -830,6 +830,7 @@ function CadTelemetryCell({
   footerMeta,
   metricBadge,
   span,
+  mounted,
   children,
 }: {
   index: string;
@@ -838,23 +839,18 @@ function CadTelemetryCell({
   footerMeta: string;
   metricBadge: string;
   span: 5 | 7;
+  mounted: boolean;
   children: ReactNode;
 }) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   return (
     <div
       className={cn(
-        "col-span-full flex min-w-0 flex-col justify-between border-border border-r border-b bg-white dark:bg-black",
+        "col-span-full flex w-full min-w-0 max-w-full flex-col justify-between border-border border-r border-b bg-white dark:bg-black",
         span === 7 ? "md:col-span-7" : "md:col-span-5"
       )}
     >
       {/* CAD Cell Single-Line Technical Header */}
-      <div className="flex min-h-11 items-center justify-between gap-3 border-border/60 border-b bg-card/30 px-4 py-2">
+      <div className="flex min-h-11 w-full min-w-0 flex-wrap items-center justify-between gap-x-2 gap-y-1.5 border-border/60 border-b bg-card/30 px-3.5 py-2 sm:flex-nowrap sm:px-4">
         <div className="flex min-w-0 items-center gap-2">
           <span className="shrink-0 font-mono text-[10px] text-muted-foreground/50 tabular-nums">
             [{index}]
@@ -863,24 +859,24 @@ function CadTelemetryCell({
             {title}
           </h4>
         </div>
-        <span className="ml-auto inline-flex shrink-0 items-center border border-border/70 bg-muted/20 px-2 py-0.5 font-mono text-[10px] text-foreground tabular-nums">
+        <span className="inline-flex shrink-0 items-center border border-border/70 bg-muted/20 px-2 py-0.5 font-mono text-[10px] text-foreground tabular-nums max-w-full truncate sm:ml-auto">
           {metricBadge}
         </span>
       </div>
 
       {/* Chart Canvas */}
-      <div className="flex min-h-[195px] flex-1 items-center justify-center p-4">
-        <div className="flex w-full items-center justify-center">
+      <div className="flex min-h-[170px] sm:min-h-[195px] w-full min-w-0 flex-1 items-center justify-center p-3 sm:p-4 overflow-hidden">
+        <div className="flex w-full min-w-0 items-center justify-center">
           {mounted ? (
             children
           ) : (
-            <div className="h-[150px] w-full animate-pulse bg-muted/15" />
+            <div className="h-[140px] sm:h-[150px] w-full animate-pulse bg-muted/15" />
           )}
         </div>
       </div>
 
       {/* CAD Cell Footer Strip */}
-      <div className="flex h-9 items-center justify-between gap-2 border-border/60 border-t bg-muted/10 px-4 font-mono text-[10px] text-muted-foreground/60">
+      <div className="flex h-9 w-full min-w-0 items-center justify-between gap-2 border-border/60 border-t bg-muted/10 px-3.5 sm:px-4 font-mono text-[10px] text-muted-foreground/60">
         <span className="truncate">{subtitle}</span>
         <span className="shrink-0">{footerMeta}</span>
       </div>
@@ -895,8 +891,13 @@ export function TelemetryShowcaseGrid({
   metrics: WorkstationTelemetryMetrics | null;
   loading?: boolean;
 }) {
+  const [mounted, setMounted] = useState(false);
   const compact = useHomeChartCompact();
   const isInitialSync = loading && metrics === null;
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const cpuBadge = metrics
     ? `${metrics.cpu.usagePercent}% CPU · ${metrics.cpu.cores} Cores`
@@ -917,12 +918,13 @@ export function TelemetryShowcaseGrid({
   return (
     <CadGridFrame showRulers>
       {/* Row 1: 7-span Wave Area + 5-span Memory Pie */}
-      <div className="relative w-full overflow-visible">
-        <div className="grid w-full grid-cols-1 overflow-visible md:grid-cols-12">
+      <div className="relative w-full min-w-0 max-w-full overflow-visible">
+        <div className="grid w-full min-w-0 max-w-full grid-cols-1 overflow-visible md:grid-cols-12">
           <CadTelemetryCell
             footerMeta="node:os · 60s Window"
             index="T-01"
             metricBadge={cpuBadge}
+            mounted={mounted}
             span={7}
             subtitle="CPU utilization vs Memory pressure"
             title="Compute & Memory Dynamics"
@@ -934,6 +936,7 @@ export function TelemetryShowcaseGrid({
             footerMeta="Physical RAM · 5 Segments"
             index="T-02"
             metricBadge={ramBadge}
+            mounted={mounted}
             span={5}
             subtitle="Host physical RAM distribution"
             title="Memory Allocation"
@@ -950,12 +953,13 @@ export function TelemetryShowcaseGrid({
       </div>
 
       {/* Row 2: 5-span Daemon Ring + 7-span Throughput Bar */}
-      <div className="relative w-full overflow-visible">
-        <div className="grid w-full grid-cols-1 overflow-visible md:grid-cols-12">
+      <div className="relative w-full min-w-0 max-w-full overflow-visible">
+        <div className="grid w-full min-w-0 max-w-full grid-cols-1 overflow-visible md:grid-cols-12">
           <CadTelemetryCell
             footerMeta="Composite SLA Target ≥ 95%"
             index="T-03"
             metricBadge={daemonBadge}
+            mounted={mounted}
             span={5}
             subtitle="Subsystem readiness & SLA bounds"
             title="Service Health Quotas"
@@ -967,6 +971,7 @@ export function TelemetryShowcaseGrid({
             footerMeta="Ingress vs Egress Stream"
             index="T-04"
             metricBadge={isInitialSync ? "Syncing Ingress..." : "RPC & Ingress Ops/s"}
+            mounted={mounted}
             span={7}
             subtitle="Primary ingress vs egress stream"
             title="Container & RPC Throughput"
@@ -1023,10 +1028,10 @@ function WorkspaceAndIngressGrid({
 
   return (
     <CadGridFrame>
-      <div className="relative w-full overflow-visible">
-        <div className="grid w-full grid-cols-1 md:grid-cols-12">
+      <div className="relative w-full min-w-0 max-w-full overflow-visible">
+        <div className="grid w-full min-w-0 max-w-full grid-cols-1 md:grid-cols-12">
           {/* Left 6 cols: [W-01] Active Workspace Repository */}
-          <div className="col-span-full flex flex-col justify-between border-border border-r border-b bg-white md:col-span-6 dark:bg-black">
+          <div className="col-span-full flex w-full min-w-0 max-w-full flex-col justify-between border-border border-r border-b bg-white md:col-span-6 dark:bg-black">
             <div>
               {/* CAD Header bar (min-h-11 matches [W-02] exactly) */}
               <div className="flex min-h-11 items-center justify-between gap-3 border-border/60 border-b bg-card/30 px-4 py-2">
@@ -1059,16 +1064,16 @@ function WorkspaceAndIngressGrid({
                 </div>
               </div>
 
-              {/* Body (p-5 space-y-5 matches [W-02] exactly) */}
-              <div className="space-y-5 p-5">
+              {/* Body (p-3.5 sm:p-5 space-y-4 sm:space-y-5 matches [W-02] exactly) */}
+              <div className="space-y-4 sm:space-y-5 p-3.5 sm:p-5">
                 <div>
-                  <div className="mb-2.5 font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
+                  <div className="mb-2 font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
                     Repository & Worktree Allocation
                   </div>
-                  <div className="grid grid-cols-3 gap-2.5">
-                    <div className="flex flex-col justify-between border border-border/80 bg-muted/15 px-3 py-2.5 transition-colors hover:bg-muted/30">
-                      <div className="flex items-center justify-between gap-1.5">
-                        <span className="truncate font-bold font-mono text-foreground text-sm">
+                  <div className="grid grid-cols-3 gap-1.5 sm:gap-2.5">
+                    <div className="flex flex-col justify-between border border-border/80 bg-muted/15 p-2 sm:px-3 sm:py-2.5 transition-colors hover:bg-muted/30">
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="truncate font-bold font-mono text-foreground text-xs sm:text-sm">
                           {activeProject?.name || "None"}
                         </span>
                         <span
@@ -1078,14 +1083,14 @@ function WorkspaceAndIngressGrid({
                           )}
                         />
                       </div>
-                      <span className="mt-1 truncate font-medium text-muted-foreground text-xs">
+                      <span className="mt-1 truncate font-medium text-muted-foreground text-[10px] sm:text-xs">
                         Target Repo
                       </span>
                     </div>
 
-                    <div className="flex flex-col justify-between border border-border/80 bg-muted/15 px-3 py-2.5 transition-colors hover:bg-muted/30">
-                      <div className="flex items-center justify-between gap-1.5">
-                        <span className="truncate font-bold font-mono text-foreground text-sm">
+                    <div className="flex flex-col justify-between border border-border/80 bg-muted/15 p-2 sm:px-3 sm:py-2.5 transition-colors hover:bg-muted/30">
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="truncate font-bold font-mono text-foreground text-xs sm:text-sm">
                           {activeProject?.branch ? `⎇ ${activeProject.branch}` : "—"}
                         </span>
                         <span
@@ -1095,14 +1100,14 @@ function WorkspaceAndIngressGrid({
                           )}
                         />
                       </div>
-                      <span className="mt-1 truncate font-medium text-muted-foreground text-xs">
+                      <span className="mt-1 truncate font-medium text-muted-foreground text-[10px] sm:text-xs">
                         Checked-Out Ref
                       </span>
                     </div>
 
-                    <div className="flex flex-col justify-between border border-border/80 bg-muted/15 px-3 py-2.5 transition-colors hover:bg-muted/30">
-                      <div className="flex items-center justify-between gap-1.5">
-                        <span className="truncate font-bold font-mono text-foreground text-sm tabular-nums">
+                    <div className="flex flex-col justify-between border border-border/80 bg-muted/15 p-2 sm:px-3 sm:py-2.5 transition-colors hover:bg-muted/30">
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="truncate font-bold font-mono text-foreground text-xs sm:text-sm tabular-nums">
                           {activeProject
                             ? activeProject.dirtyFilesCount > 0
                               ? `${activeProject.dirtyFilesCount} Mod`
@@ -1120,67 +1125,72 @@ function WorkspaceAndIngressGrid({
                           )}
                         />
                       </div>
-                      <span className="mt-1 truncate font-medium text-muted-foreground text-xs">
+                      <span className="mt-1 truncate font-medium text-muted-foreground text-[10px] sm:text-xs">
                         Working Tree
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <div className="space-y-2 border-border/50 border-t pt-4">
-                  <div className="mb-2 font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
+                <div className="space-y-1.5 border-border/50 border-t pt-3 sm:pt-4">
+                  <div className="mb-1.5 font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
                     Revision State & Mounted Endpoints
                   </div>
-                  {[
-                    {
-                      label: activeProject?.lastCommitTime
-                        ? `Latest Commit (${activeProject.lastCommitTime})`
-                        : "Latest Commit",
-                      value:
-                        activeProject?.lastCommitMessage ||
-                        "No commit data available (connect to active project)",
-                    },
-                    {
-                      label: "Mounted Worktree Path",
-                      value: worktreePath,
-                    },
-                    {
-                      label: "Remote Origin Upstream",
-                      value: remoteOriginUrl,
-                    },
-                  ].map((item) => (
-                    <div
-                      className="flex items-center justify-between gap-3 border border-border/70 bg-muted/15 px-3.5 py-2"
-                      key={item.label}
-                    >
-                      <div className="min-w-0 flex-1">
-                        <div className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-wider">
-                          {item.label}
+                  <div className="divide-y divide-border/60 border border-border/70 bg-muted/15">
+                    {[
+                      {
+                        label: activeProject?.lastCommitTime
+                          ? `Latest Commit (${activeProject.lastCommitTime})`
+                          : "Latest Commit",
+                        value:
+                          activeProject?.lastCommitMessage ||
+                          "No commit data available (connect to active project)",
+                      },
+                      {
+                        label: "Mounted Worktree Path",
+                        value: worktreePath,
+                      },
+                      {
+                        label: "Remote Origin Upstream",
+                        value: remoteOriginUrl,
+                      },
+                    ].map((item) => (
+                      <div
+                        className="flex items-center justify-between gap-2.5 px-3 py-1.5 sm:py-2"
+                        key={item.label}
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate font-mono text-[9px] text-muted-foreground/70 uppercase tracking-wider">
+                            {item.label}
+                          </div>
+                          <div
+                            className="mt-0.5 truncate font-mono text-foreground text-xs"
+                            title={item.value}
+                          >
+                            {item.value}
+                          </div>
                         </div>
-                        <div className="mt-0.5 truncate font-mono text-foreground text-xs">
-                          {item.value}
-                        </div>
+                        <CopyButton
+                          aria-label={`Copy ${item.label}`}
+                          className="h-6 w-6 shrink-0 rounded-none border border-border/60"
+                          text={item.value}
+                        />
                       </div>
-                      <CopyButton
-                        aria-label={`Copy ${item.label}`}
-                        className="h-7 w-7 shrink-0 rounded-none border border-border/60"
-                        text={item.value}
-                      />
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* CAD Footer bar (h-9 matches [W-02] exactly) */}
-            <div className="flex h-9 items-center justify-between border-border/60 border-t bg-muted/10 px-4 font-mono text-[10px] text-muted-foreground/60">
-              <span>VCS · Git Worktree Mount Status</span>
-              <span>HEAD → {activeProject?.branch || "None"}</span>
+            <div className="flex min-h-9 flex-wrap items-center justify-between gap-x-2 gap-y-1 border-border/60 border-t bg-muted/10 px-3.5 py-1.5 font-mono text-[9px] text-muted-foreground/60 sm:h-9 sm:flex-nowrap sm:px-4 sm:py-0 sm:text-[10px]">
+              <span className="min-w-0 flex-1 truncate">VCS · Git Worktree Mount Status</span>
+              <span className="shrink-0 truncate max-w-[160px] sm:max-w-none">HEAD → {activeProject?.branch || "None"}</span>
             </div>
           </div>
 
           {/* Right 6 cols: [W-02] Port & Edge Ingress Map */}
-          <div className="col-span-full flex flex-col justify-between border-border border-r border-b bg-white md:col-span-6 dark:bg-black">
+          <div className="col-span-full flex w-full min-w-0 max-w-full flex-col justify-between border-border border-r border-b bg-white md:col-span-6 dark:bg-black">
             <div>
               {/* CAD Header bar (min-h-11 matches [W-01] exactly) */}
               <div className="flex min-h-11 items-center justify-between gap-3 border-border/60 border-b bg-card/30 px-4 py-2">
@@ -1205,12 +1215,12 @@ function WorkspaceAndIngressGrid({
                 </div>
               </div>
 
-              <div className="space-y-5 p-5">
+              <div className="space-y-4 sm:space-y-5 p-3.5 sm:p-5">
                 <div>
-                  <div className="mb-2.5 font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
+                  <div className="mb-2 font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
                     Host-Bound Port Allocations
                   </div>
-                  <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-5">
+                  <div className="grid w-full min-w-0 grid-cols-3 sm:grid-cols-5 gap-1.5 sm:gap-2">
                     {[
                       { port: "3000", service: "App (Next.js)" },
                       { port: "8080", service: "DSH RPC" },
@@ -1219,16 +1229,16 @@ function WorkspaceAndIngressGrid({
                       { port: "22", service: "SSH" },
                     ].map((item) => (
                       <div
-                        className="flex flex-col justify-between border border-border/80 bg-muted/15 px-3 py-2.5 transition-colors hover:bg-muted/30"
+                        className="flex min-w-0 flex-col justify-between border border-border/80 bg-muted/15 p-2 sm:px-2.5 sm:py-2 transition-colors hover:bg-muted/30"
                         key={item.port}
                       >
-                        <div className="flex items-center justify-between gap-1.5">
-                          <span className="font-bold font-mono text-foreground text-sm tabular-nums">
+                        <div className="flex items-center justify-between gap-1 min-w-0">
+                          <span className="truncate font-bold font-mono text-foreground text-xs sm:text-sm tabular-nums">
                             :{item.port}
                           </span>
-                          <span className="size-1.5 rounded-full bg-emerald-500" />
+                          <span className="size-1.5 shrink-0 rounded-full bg-emerald-500" />
                         </div>
-                        <span className="mt-1 truncate font-medium text-muted-foreground text-xs">
+                        <span className="mt-0.5 truncate font-medium text-muted-foreground text-[10px] sm:text-xs">
                           {item.service}
                         </span>
                       </div>
@@ -1236,48 +1246,51 @@ function WorkspaceAndIngressGrid({
                   </div>
                 </div>
 
-                <div className="space-y-2 border-border/50 border-t pt-4">
-                  <div className="mb-2 font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
+                <div className="space-y-1.5 border-border/50 border-t pt-3 sm:pt-4">
+                  <div className="mb-1.5 font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
                     Routed Ingress Endpoints
                   </div>
-                  {[
-                    {
-                      label: "Current Origin",
-                      url: currentOrigin,
-                    },
-                    { label: "Anywhere App Edge", url: anywhereAppUrl },
-                    { label: "Anywhere DSH Harness", url: anywhereDshUrl },
-                  ].map((endpoint) => (
-                    <div
-                      className="flex items-center justify-between gap-3 border border-border/70 bg-muted/15 px-3.5 py-2"
-                      key={endpoint.label}
-                    >
-                      <div className="min-w-0 flex-1">
-                        <div className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-wider">
-                          {endpoint.label}
+                  <div className="w-full min-w-0 divide-y divide-border/60 border border-border/70 bg-muted/15">
+                    {[
+                      {
+                        label: "Current Origin",
+                        url: currentOrigin,
+                      },
+                      { label: "Anywhere App Edge", url: anywhereAppUrl },
+                      { label: "Anywhere DSH Harness", url: anywhereDshUrl },
+                    ].map((endpoint) => (
+                      <div
+                        className="flex items-center justify-between gap-2.5 px-3 py-1.5 sm:py-2"
+                        key={endpoint.label}
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate font-mono text-[9px] text-muted-foreground/70 uppercase tracking-wider">
+                            {endpoint.label}
+                          </div>
+                          <div
+                            className="mt-0.5 truncate font-mono text-foreground text-xs"
+                            suppressHydrationWarning
+                            title={endpoint.url}
+                          >
+                            {endpoint.url}
+                          </div>
                         </div>
-                        <div
-                          className="mt-0.5 truncate font-mono text-foreground text-xs"
-                          suppressHydrationWarning
-                        >
-                          {endpoint.url}
-                        </div>
+                        <CopyButton
+                          aria-label={`Copy ${endpoint.label}`}
+                          className="h-6 w-6 shrink-0 rounded-none border border-border/60"
+                          text={endpoint.url}
+                        />
                       </div>
-                      <CopyButton
-                        aria-label={`Copy ${endpoint.label}`}
-                        className="h-7 w-7 shrink-0 rounded-none border border-border/60"
-                        text={endpoint.url}
-                      />
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* CAD Footer bar (h-9 matches [W-01] exactly) */}
-            <div className="flex h-9 items-center justify-between border-border/60 border-t bg-muted/10 px-4 font-mono text-[10px] text-muted-foreground/60">
-              <span>Ingress · Cloudflare Zero Trust</span>
-              <span>TLS 1.3 Active</span>
+            <div className="flex min-h-9 flex-wrap items-center justify-between gap-x-2 gap-y-1 border-border/60 border-t bg-muted/10 px-3.5 py-1.5 font-mono text-[9px] text-muted-foreground/60 sm:h-9 sm:flex-nowrap sm:px-4 sm:py-0 sm:text-[10px]">
+              <span className="min-w-0 flex-1 truncate">Ingress · Cloudflare Zero Trust</span>
+              <span className="shrink-0">TLS 1.3 Active</span>
             </div>
           </div>
         </div>
@@ -1328,9 +1341,7 @@ function LogsAndNotesGrid({ onOpenFullLogs }: { onOpenFullLogs?: () => void }) {
     } catch {
       // ignore storage errors
     }
-  }, []);
 
-  useEffect(() => {
     return () => {
       if (saveTimerRef.current) {
         clearTimeout(saveTimerRef.current);
@@ -1383,10 +1394,10 @@ function LogsAndNotesGrid({ onOpenFullLogs }: { onOpenFullLogs?: () => void }) {
 
   return (
     <CadGridFrame>
-      <div className="relative w-full overflow-visible">
-        <div className="grid w-full grid-cols-1 md:grid-cols-12">
+      <div className="relative w-full min-w-0 max-w-full overflow-visible">
+        <div className="grid w-full min-w-0 max-w-full grid-cols-1 md:grid-cols-12">
           {/* Left 6 cols: Mini Log Tail */}
-          <div className="col-span-full flex flex-col justify-between border-border border-r border-b bg-white md:col-span-6 dark:bg-black">
+          <div className="col-span-full flex w-full min-w-0 max-w-full flex-col justify-between border-border border-r border-b bg-white md:col-span-6 dark:bg-black">
             <SseLogViewer
               action={
                 <Button
@@ -1407,9 +1418,9 @@ function LogsAndNotesGrid({ onOpenFullLogs }: { onOpenFullLogs?: () => void }) {
           </div>
 
           {/* Right 6 cols: Operator Notes Scratchpad */}
-          <div className="col-span-full flex flex-col justify-between border-border border-r border-b bg-white md:col-span-6 dark:bg-black">
+          <div className="col-span-full flex w-full min-w-0 max-w-full flex-col justify-between border-border border-r border-b bg-white md:col-span-6 dark:bg-black">
             {/* CAD Header bar (min-h-11 matches [L-01] exactly) */}
-            <div className="flex min-h-11 items-center justify-between gap-3 border-border/60 border-b bg-card/30 px-4 py-2">
+            <div className="flex min-h-11 flex-wrap items-center justify-between gap-x-3 gap-y-2 border-border/60 border-b bg-card/30 px-3.5 py-2 sm:flex-nowrap sm:px-4">
               <div className="flex min-w-0 items-center gap-2">
                 <span className="shrink-0 font-mono text-[10px] text-muted-foreground/50 tabular-nums">
                   [L-02]
@@ -1419,7 +1430,7 @@ function LogsAndNotesGrid({ onOpenFullLogs }: { onOpenFullLogs?: () => void }) {
                 </h4>
               </div>
 
-              <div className="ml-auto flex shrink-0 items-center gap-1.5">
+              <div className="flex flex-wrap items-center gap-1.5 sm:ml-auto sm:shrink-0">
                 <Button
                   className="h-6 rounded-none px-2 font-mono text-[10px] uppercase tracking-wider"
                   disabled={notes.length === 0}
@@ -1440,13 +1451,13 @@ function LogsAndNotesGrid({ onOpenFullLogs }: { onOpenFullLogs?: () => void }) {
             {/* Scratchpad Body */}
             <div className="flex flex-1 flex-col justify-between gap-2.5 p-4">
               {/* Quick-insert runbook templates */}
-              <div className="flex flex-wrap items-center gap-1.5">
-                <span className="mr-1 font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
+              <div className="flex w-full min-w-0 items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+                <span className="mr-1 shrink-0 font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
                   Quick Insert:
                 </span>
                 {QUICK_NOTE_TEMPLATES.map((item) => (
                   <button
-                    className="border border-border/70 bg-muted/15 px-2 py-0.5 font-mono text-[10px] text-muted-foreground transition-colors hover:border-foreground/40 hover:bg-muted/30 hover:text-foreground"
+                    className="shrink-0 whitespace-nowrap border border-border/70 bg-muted/15 px-2 py-0.5 font-mono text-[10px] text-muted-foreground transition-colors hover:border-foreground/40 hover:bg-muted/30 hover:text-foreground"
                     key={item.label}
                     onClick={() => handleAppendSnippet(item.snippet)}
                     type="button"
@@ -1457,7 +1468,7 @@ function LogsAndNotesGrid({ onOpenFullLogs }: { onOpenFullLogs?: () => void }) {
               </div>
 
               <textarea
-                className="min-h-[144px] w-full flex-1 resize-none rounded-none border border-border/70 bg-muted/15 p-3 font-mono text-foreground text-xs leading-relaxed placeholder:text-muted-foreground/40 focus:border-foreground/50 focus:outline-none"
+                className="min-h-[144px] w-full flex-1 resize-none rounded-none border border-border/70 bg-muted/15 p-3 font-mono text-foreground text-base sm:text-xs leading-relaxed placeholder:text-muted-foreground/40 focus:border-foreground/50 focus:outline-none"
                 onChange={(e) => handleNotesChange(e.target.value)}
                 placeholder={
                   "// Operational scratchpad (persisted in browser localStorage).\n// Click a Quick Insert tag above or type runbook notes..."
@@ -1468,9 +1479,9 @@ function LogsAndNotesGrid({ onOpenFullLogs }: { onOpenFullLogs?: () => void }) {
             </div>
 
             {/* CAD Footer bar (h-9 matches [L-01] exactly) */}
-            <div className="flex h-9 items-center justify-between border-border/60 border-t bg-muted/10 px-4 font-mono text-[10px] text-muted-foreground/60">
-              <span>Storage · localStorage (Browser Local)</span>
-              <span>
+            <div className="flex min-h-9 flex-wrap items-center justify-between gap-x-2 gap-y-1 border-border/60 border-t bg-muted/10 px-3.5 py-1.5 font-mono text-[9px] text-muted-foreground/60 sm:h-9 sm:flex-nowrap sm:px-4 sm:py-0 sm:text-[10px]">
+              <span className="min-w-0 flex-1 truncate">Storage · localStorage (Browser Local)</span>
+              <span className="shrink-0">
                 {notes.length} chars · {notesSavedAt || "Synced"}
               </span>
             </div>
@@ -1554,13 +1565,14 @@ export function OverviewSection({ onSelectTab }: OverviewSectionProps) {
         if (ov.activeProject) {
           setActiveProject(ov.activeProject);
         }
+        const nextPreviewData: PreviewResponse = {
+          ok: true,
+          text: "",
+          anywhereApp: ov.preview?.anywhereApp || "",
+          anywhereDsh: ov.preview?.anywhereDsh || "",
+        };
         if (ov.preview) {
-          setPreviewData({
-            ok: true,
-            text: "",
-            anywhereApp: ov.preview.anywhereApp || "",
-            anywhereDsh: ov.preview.anywhereDsh || "",
-          });
+          setPreviewData(nextPreviewData);
         }
         if (ov.metrics) {
           setTelemetryMetrics(ov.metrics);
@@ -1575,12 +1587,7 @@ export function OverviewSection({ onSelectTab }: OverviewSectionProps) {
           brokerOnline: ov.broker?.online ?? false,
           tunnelOnline: ov.tunnel?.online ?? false,
           activeProject: ov.activeProject ?? null,
-          previewData: {
-            ok: true,
-            text: "",
-            anywhereApp: ov.preview?.anywhereApp || "",
-            anywhereDsh: ov.preview?.anywhereDsh || "",
-          },
+          previewData: nextPreviewData,
           telemetryMetrics: ov.metrics ?? null,
         };
       }
@@ -1603,6 +1610,13 @@ export function OverviewSection({ onSelectTab }: OverviewSectionProps) {
     command: string,
     actionFn: () => Promise<{ ok: boolean; output: string }>
   ) => {
+    const getTimestamp = () =>
+      new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+
     try {
       setActionInProgress(name);
       setActionFeedback(null);
@@ -1627,12 +1641,6 @@ export function OverviewSection({ onSelectTab }: OverviewSectionProps) {
           : "Action failed.";
       }
 
-      const timestamp = new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-      });
-
       if (res.ok) {
         if (name === "Start Workstation") setWorkstationRunning(true);
         if (name === "Stop Workstation") setWorkstationRunning(false);
@@ -1647,16 +1655,11 @@ export function OverviewSection({ onSelectTab }: OverviewSectionProps) {
         title: res.ok ? "SUCCESS" : "ERROR",
         headline,
         fullOutput: trimmedOutput,
-        timestamp,
+        timestamp: getTimestamp(),
       });
       await refreshAllTelemetry(true);
     } catch (err) {
       const errMsg = err instanceof Error ? err.message : String(err);
-      const timestamp = new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-      });
       setActionFeedback({
         ok: false,
         command,
@@ -1664,7 +1667,7 @@ export function OverviewSection({ onSelectTab }: OverviewSectionProps) {
         title: "ERROR",
         headline: errMsg,
         fullOutput: errMsg,
-        timestamp,
+        timestamp: getTimestamp(),
       });
     } finally {
       setActionInProgress(null);

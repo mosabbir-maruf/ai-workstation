@@ -92,39 +92,39 @@ export function PreviewSection() {
                 <div className="mb-2.5 font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
                   Ingress Tunnel Specification
                 </div>
-                <div className="grid grid-cols-3 gap-2.5">
-                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 px-3 py-2.5">
-                    <div className="flex items-center justify-between gap-1.5">
-                      <span className="font-bold font-mono text-foreground text-sm tabular-nums">
+                <div className="grid grid-cols-3 gap-1.5 sm:gap-2.5">
+                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 p-2 sm:px-3 sm:py-2.5">
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="font-bold font-mono text-foreground text-xs sm:text-sm tabular-nums">
                         :3000
                       </span>
                       <span className="size-1.5 rounded-full bg-emerald-500" />
                     </div>
-                    <span className="mt-1 truncate font-medium text-muted-foreground text-xs">
+                    <span className="mt-1 truncate font-medium text-muted-foreground text-[10px] sm:text-xs">
                       Origin Socket
                     </span>
                   </div>
 
-                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 px-3 py-2.5">
-                    <div className="flex items-center justify-between gap-1.5">
-                      <span className="truncate font-bold font-mono text-foreground text-sm">
+                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 p-2 sm:px-3 sm:py-2.5">
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="truncate font-bold font-mono text-foreground text-xs sm:text-sm">
                         TLS 1.3
                       </span>
                       <span className="size-1.5 rounded-full bg-emerald-500" />
                     </div>
-                    <span className="mt-1 truncate font-medium text-muted-foreground text-xs">
+                    <span className="mt-1 truncate font-medium text-muted-foreground text-[10px] sm:text-xs">
                       Edge Cipher
                     </span>
                   </div>
 
-                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 px-3 py-2.5">
-                    <div className="flex items-center justify-between gap-1.5">
-                      <span className="truncate font-bold font-mono text-foreground text-sm">
+                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 p-2 sm:px-3 sm:py-2.5">
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="truncate font-bold font-mono text-foreground text-xs sm:text-sm">
                         HTTP/3
                       </span>
                       <span className="size-1.5 rounded-full bg-emerald-500" />
                     </div>
-                    <span className="mt-1 truncate font-medium text-muted-foreground text-xs">
+                    <span className="mt-1 truncate font-medium text-muted-foreground text-[10px] sm:text-xs">
                       Transport
                     </span>
                   </div>
@@ -204,39 +204,39 @@ export function PreviewSection() {
                 <div className="mb-2.5 font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
                   Agent Bridge Specification
                 </div>
-                <div className="grid grid-cols-3 gap-2.5">
-                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 px-3 py-2.5">
-                    <div className="flex items-center justify-between gap-1.5">
-                      <span className="font-bold font-mono text-foreground text-sm tabular-nums">
+                <div className="grid grid-cols-3 gap-1.5 sm:gap-2.5">
+                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 p-2 sm:px-3 sm:py-2.5">
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="font-bold font-mono text-foreground text-xs sm:text-sm tabular-nums">
                         :8080
                       </span>
                       <span className="size-1.5 rounded-full bg-emerald-500" />
                     </div>
-                    <span className="mt-1 truncate font-medium text-muted-foreground text-xs">
+                    <span className="mt-1 truncate font-medium text-muted-foreground text-[10px] sm:text-xs">
                       Bridge Socket
                     </span>
                   </div>
 
-                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 px-3 py-2.5">
-                    <div className="flex items-center justify-between gap-1.5">
-                      <span className="truncate font-bold font-mono text-foreground text-sm">
+                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 p-2 sm:px-3 sm:py-2.5">
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="truncate font-bold font-mono text-foreground text-xs sm:text-sm">
                         JSON-RPC
                       </span>
                       <span className="size-1.5 rounded-full bg-emerald-500" />
                     </div>
-                    <span className="mt-1 truncate font-medium text-muted-foreground text-xs">
+                    <span className="mt-1 truncate font-medium text-muted-foreground text-[10px] sm:text-xs">
                       Wire Protocol
                     </span>
                   </div>
 
-                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 px-3 py-2.5">
-                    <div className="flex items-center justify-between gap-1.5">
-                      <span className="truncate font-bold font-mono text-foreground text-sm">
+                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 p-2 sm:px-3 sm:py-2.5">
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="truncate font-bold font-mono text-foreground text-xs sm:text-sm">
                         Sandbox
                       </span>
                       <span className="size-1.5 rounded-full bg-emerald-500" />
                     </div>
-                    <span className="mt-1 truncate font-medium text-muted-foreground text-xs">
+                    <span className="mt-1 truncate font-medium text-muted-foreground text-[10px] sm:text-xs">
                       Execution Mode
                     </span>
                   </div>
@@ -293,24 +293,31 @@ export function PreviewSection() {
                 ? `Viewport · ${viewportMode === "app" ? "Application" : "DSH Harness"} (${activeViewportUrl})`
                 : "Viewport · Ingress Endpoint Offline"
             }
-            footerRight="If target blocks iframe embedding, click Open ↗"
+            footerRight={
+              <span className="truncate max-w-[140px] sm:max-w-none">
+                <span className="sm:hidden">Open ↗ to embed</span>
+                <span className="hidden sm:inline">If target blocks iframe embedding, click Open ↗</span>
+              </span>
+            }
             headerAction={
-              <>
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                 <Button
-                  className="h-6 rounded-none px-2.5 font-mono text-[10px] uppercase tracking-wider"
+                  className="h-6 rounded-none px-2 sm:px-2.5 font-mono text-[10px] uppercase tracking-wider"
                   onClick={() => setViewportMode("app")}
                   size="xs"
                   variant={viewportMode === "app" ? "default" : "ghost"}
                 >
-                  App Preview
+                  <span className="sm:hidden">App</span>
+                  <span className="hidden sm:inline">App Preview</span>
                 </Button>
                 <Button
-                  className="h-6 rounded-none px-2.5 font-mono text-[10px] uppercase tracking-wider"
+                  className="h-6 rounded-none px-2 sm:px-2.5 font-mono text-[10px] uppercase tracking-wider"
                   onClick={() => setViewportMode("dsh")}
                   size="xs"
                   variant={viewportMode === "dsh" ? "default" : "ghost"}
                 >
-                  DSH Harness
+                  <span className="sm:hidden">DSH</span>
+                  <span className="hidden sm:inline">DSH Harness</span>
                 </Button>
                 {activeViewportUrl && (
                   <Button
@@ -341,7 +348,7 @@ export function PreviewSection() {
                 >
                   Reload ↻
                 </Button>
-              </>
+              </div>
             }
             index="V-03"
             title="Local Runtime Web Viewport"
@@ -373,7 +380,7 @@ export function PreviewSection() {
               )}
             </div>
 
-            <div className="relative aspect-16/9 min-h-[420px] w-full bg-background">
+            <div className="relative aspect-16/9 min-h-[300px] sm:min-h-[420px] w-full bg-background">
               {activeViewportUrl ? (
                 <iframe
                   className="size-full border-0 bg-background"
@@ -387,7 +394,7 @@ export function PreviewSection() {
                   }
                 />
               ) : (
-                <div className="flex size-full min-h-[420px] flex-col items-center justify-center space-y-3 bg-muted/10 p-8 text-center font-mono">
+                <div className="flex size-full min-h-[300px] sm:min-h-[420px] flex-col items-center justify-center space-y-3 bg-muted/10 p-6 sm:p-8 text-center font-mono">
                   <span className="size-2 rounded-full bg-amber-500/60" />
                   <div className="text-foreground text-xs font-semibold uppercase tracking-widest">
                     {viewportMode === "app"

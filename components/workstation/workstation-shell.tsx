@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { GridCornerDots } from "@/components/design/line-grid";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -137,15 +137,27 @@ export function WorkstationShell() {
   const [showWizard, setShowWizard] = useState<boolean>(false);
   // Initialize as false to guarantee SSR hydration parity, then sync from localStorage on client mount
   const [isSetupComplete, setIsSetupComplete] = useState<boolean>(false);
+  const mobileNavRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    const nav = mobileNavRef.current;
+    if (typeof window !== "undefined" && window.innerWidth < 768 && nav) {
+      const activeEl = nav.querySelector<HTMLElement>('[data-active="true"]');
+      if (activeEl) {
+        const scrollLeft =
+          activeEl.offsetLeft - nav.clientWidth / 2 + activeEl.offsetWidth / 2;
+        nav.scrollTo({ left: Math.max(0, scrollLeft), behavior: "smooth" });
+      }
+    }
+  }, [activeSection, showWizard]);
+
+  // Sync setup status from localStorage and only probe backend if not already marked complete
   useEffect(() => {
     if (readStorageFlag(WIZARD_COMPLETED_KEY)) {
       setIsSetupComplete(true);
+      return;
     }
-  }, []);
 
-  // Check after initial render if setup is needed without blocking main content load
-  useEffect(() => {
     let cancelled = false;
     const timer = setTimeout(async () => {
       try {
@@ -245,16 +257,20 @@ export function WorkstationShell() {
   const currentSectionMeta = WORKSTATION_SECTION_MAP.get(activeSection);
 
   return (
-    <div className="relative w-full">
+    <div className="relative w-full min-w-0 max-w-full">
       {/* Main Layout Grid */}
-      <div className="grid items-start gap-8 md:grid-cols-[230px_1fr] lg:grid-cols-[240px_1fr]">
+      <div className="grid w-full min-w-0 max-w-full items-start gap-4 md:gap-8 md:grid-cols-[230px_1fr] lg:grid-cols-[240px_1fr]">
         {/* Sticky Workstation CAD Sidebar Navigation */}
-        <aside className="sticky top-20 z-30 self-start">
+        <aside className="sticky top-20 z-30 self-start w-full min-w-0 max-w-full">
           {/* Mobile horizontal bar (<md) */}
-          <div className="flex gap-1.5 overflow-x-auto border border-border bg-background/95 p-2 shadow-xs backdrop-blur-sm md:hidden">
+          <div
+            ref={mobileNavRef}
+            className="flex w-full min-w-0 max-w-full gap-1.5 overflow-x-auto no-scrollbar border border-border bg-background/95 p-1.5 sm:p-2 shadow-xs backdrop-blur-sm md:hidden overscroll-x-contain"
+          >
             <button
+              data-active={showWizard ? "true" : "false"}
               className={cn(
-                "flex shrink-0 items-center gap-1.5 px-3.5 py-2 font-medium text-sm tracking-tight transition-colors",
+                "flex shrink-0 items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 font-medium text-xs sm:text-sm tracking-tight transition-colors",
                 showWizard
                   ? "bg-foreground font-semibold text-background"
                   : isSetupComplete
@@ -272,11 +288,12 @@ export function WorkstationShell() {
               />
             </button>
             {WORKSTATION_SECTIONS.map((section) => {
-              const isActive = activeSection === section.id;
+              const isActive = !showWizard && activeSection === section.id;
               return (
                 <button
+                  data-active={isActive ? "true" : "false"}
                   className={cn(
-                    "shrink-0 px-3.5 py-2 font-medium text-sm tracking-tight transition-colors",
+                    "shrink-0 px-3 py-1.5 sm:px-3.5 sm:py-2 font-medium text-xs sm:text-sm tracking-tight transition-colors",
                     isActive
                       ? "bg-foreground font-semibold text-background"
                       : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
@@ -361,7 +378,7 @@ export function WorkstationShell() {
                               {item.label}
                               {isActive && (
                                 <span className="ml-0.5 animate-caret-blink font-mono">
-                                  _
+                                   _
                                 </span>
                               )}
                             </span>
@@ -395,23 +412,23 @@ export function WorkstationShell() {
         </aside>
 
         {/* Content Panel */}
-        <main className="min-w-0 flex-1">
+        <main className="w-full min-w-0 max-w-full flex-1">
           {/* Section banner */}
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-border border-b pb-3.5">
-            <div className="flex items-baseline gap-2.5">
+          <div className="mb-4 sm:mb-6 flex w-full min-w-0 flex-wrap items-center justify-between gap-2.5 sm:gap-3 border-border border-b pb-3 sm:pb-3.5">
+            <div className="flex items-baseline gap-2 sm:gap-2.5 min-w-0">
               <span className="font-mono text-muted-foreground/50 text-xs tabular-nums">
                 [{currentSectionMeta?.index}]
               </span>
-              <h2 className="font-bold text-foreground text-xl tracking-tight sm:text-2xl">
+              <h2 className="truncate font-bold text-foreground text-xl tracking-tight sm:text-2xl">
                 {currentSectionMeta?.label}
               </h2>
               <span className="hidden font-mono text-[11px] text-muted-foreground/60 uppercase tracking-widest sm:inline">
                 · Module: {currentSectionMeta?.tag}
               </span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2">
               <Badge
-                className="rounded-none border-border font-mono text-[10px] text-muted-foreground uppercase tracking-wider"
+                className="hidden xs:inline-flex rounded-none border-border font-mono text-[10px] text-muted-foreground uppercase tracking-wider"
                 variant="outline"
               >
                 Runtime: node-01

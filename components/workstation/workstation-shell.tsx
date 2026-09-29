@@ -1,8 +1,7 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { GridCornerDots } from "@/components/design/line-grid";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,68 +11,62 @@ import { OverviewSection } from "./sections/overview-section";
 import { WorkstationSpinner } from "./cad-primitives";
 import { workstationApi } from "@/lib/workstation/api";
 
-const DYNAMIC_SECTION_OPTIONS = {
-  loading: () => (
-    <WorkstationSpinner
-      className="min-h-[320px] border border-border bg-white dark:bg-black"
-      label="Loading Ai Workstation Module..."
-    />
-  ),
-};
-
-const AppSection = dynamic(
-  () => import("./sections/app-section").then((m) => m.AppSection),
-  DYNAMIC_SECTION_OPTIONS
+const AppSection = lazy(() =>
+  import("./sections/app-section").then((m) => ({ default: m.AppSection }))
 );
-const DshKeysSection = dynamic(
-  () => import("./sections/dsh-keys-section").then((m) => m.DshKeysSection),
-  DYNAMIC_SECTION_OPTIONS
+const DshKeysSection = lazy(() =>
+  import("./sections/dsh-keys-section").then((m) => ({
+    default: m.DshKeysSection,
+  }))
 );
-const GitSection = dynamic(
-  () => import("./sections/git-section").then((m) => m.GitSection),
-  DYNAMIC_SECTION_OPTIONS
+const GitSection = lazy(() =>
+  import("./sections/git-section").then((m) => ({ default: m.GitSection }))
 );
-const GitHubSection = dynamic(
-  () => import("./sections/github-section").then((m) => m.GitHubSection),
-  DYNAMIC_SECTION_OPTIONS
+const GitHubSection = lazy(() =>
+  import("./sections/github-section").then((m) => ({
+    default: m.GitHubSection,
+  }))
 );
-const HarnessSection = dynamic(
-  () => import("./sections/harness-section").then((m) => m.HarnessSection),
-  DYNAMIC_SECTION_OPTIONS
+const HarnessSection = lazy(() =>
+  import("./sections/harness-section").then((m) => ({
+    default: m.HarnessSection,
+  }))
 );
-const LogsSection = dynamic(
-  () => import("./sections/logs-section").then((m) => m.LogsSection),
-  DYNAMIC_SECTION_OPTIONS
+const LogsSection = lazy(() =>
+  import("./sections/logs-section").then((m) => ({ default: m.LogsSection }))
 );
-const MaintenanceSection = dynamic(
-  () =>
-    import("./sections/maintenance-section").then((m) => m.MaintenanceSection),
-  DYNAMIC_SECTION_OPTIONS
+const MaintenanceSection = lazy(() =>
+  import("./sections/maintenance-section").then((m) => ({
+    default: m.MaintenanceSection,
+  }))
 );
-const PreviewSection = dynamic(
-  () => import("./sections/preview-section").then((m) => m.PreviewSection),
-  DYNAMIC_SECTION_OPTIONS
+const PreviewSection = lazy(() =>
+  import("./sections/preview-section").then((m) => ({
+    default: m.PreviewSection,
+  }))
 );
-const ProjectsSection = dynamic(
-  () => import("./sections/projects-section").then((m) => m.ProjectsSection),
-  DYNAMIC_SECTION_OPTIONS
+const ProjectsSection = lazy(() =>
+  import("./sections/projects-section").then((m) => ({
+    default: m.ProjectsSection,
+  }))
 );
-const StateSection = dynamic(
-  () => import("./sections/state-section").then((m) => m.StateSection),
-  DYNAMIC_SECTION_OPTIONS
+const StateSection = lazy(() =>
+  import("./sections/state-section").then((m) => ({ default: m.StateSection }))
 );
-const TerminalSection = dynamic(
-  () => import("./sections/terminal-section").then((m) => m.TerminalSection),
-  DYNAMIC_SECTION_OPTIONS
+const TerminalSection = lazy(() =>
+  import("./sections/terminal-section").then((m) => ({
+    default: m.TerminalSection,
+  }))
 );
-const TunnelSection = dynamic(
-  () => import("./sections/tunnel-section").then((m) => m.TunnelSection),
-  DYNAMIC_SECTION_OPTIONS
+const TunnelSection = lazy(() =>
+  import("./sections/tunnel-section").then((m) => ({
+    default: m.TunnelSection,
+  }))
 );
-const WorkstationSetupFlow = dynamic(
-  () =>
-    import("./workstation-setup-flow").then((m) => m.WorkstationSetupFlow),
-  DYNAMIC_SECTION_OPTIONS
+const WorkstationSetupFlow = lazy(() =>
+  import("./workstation-setup-flow").then((m) => ({
+    default: m.WorkstationSetupFlow,
+  }))
 );
 
 export const WORKSTATION_GROUPS = [
@@ -504,31 +497,40 @@ export function WorkstationShell() {
           </div>
 
           {/* Conditional: Setup Wizard Full View vs Regular Module View */}
-          {showWizard ? (
-            <WorkstationSetupFlow onComplete={handleCompleteWizard} />
-          ) : (
-            <div className="space-y-6">
-              {activeSection === "overview" && (
-                <OverviewSection
-                  onSelectTab={(tab) =>
-                    handleSelectSection(tab as WorkstationSectionId)
-                  }
-                />
-              )}
-              {activeSection === "terminal" && <TerminalSection />}
-              {activeSection === "app" && <AppSection />}
-              {activeSection === "preview" && <PreviewSection />}
-              {activeSection === "projects" && <ProjectsSection />}
-              {activeSection === "git" && <GitSection />}
-              {activeSection === "github" && <GitHubSection />}
-              {activeSection === "tunnel" && <TunnelSection />}
-              {activeSection === "harness" && <HarnessSection />}
-              {activeSection === "dsh-keys" && <DshKeysSection />}
-              {activeSection === "maintenance" && <MaintenanceSection />}
-              {activeSection === "state" && <StateSection />}
-              {activeSection === "logs" && <LogsSection />}
-            </div>
-          )}
+          <Suspense
+            fallback={
+              <WorkstationSpinner
+                className="min-h-[320px] border border-border bg-white dark:bg-black"
+                label="Loading Ai Workstation Module..."
+              />
+            }
+          >
+            {showWizard ? (
+              <WorkstationSetupFlow onComplete={handleCompleteWizard} />
+            ) : (
+              <div className="space-y-6">
+                {activeSection === "overview" && (
+                  <OverviewSection
+                    onSelectTab={(tab) =>
+                      handleSelectSection(tab as WorkstationSectionId)
+                    }
+                  />
+                )}
+                {activeSection === "terminal" && <TerminalSection />}
+                {activeSection === "app" && <AppSection />}
+                {activeSection === "preview" && <PreviewSection />}
+                {activeSection === "projects" && <ProjectsSection />}
+                {activeSection === "git" && <GitSection />}
+                {activeSection === "github" && <GitHubSection />}
+                {activeSection === "tunnel" && <TunnelSection />}
+                {activeSection === "harness" && <HarnessSection />}
+                {activeSection === "dsh-keys" && <DshKeysSection />}
+                {activeSection === "maintenance" && <MaintenanceSection />}
+                {activeSection === "state" && <StateSection />}
+                {activeSection === "logs" && <LogsSection />}
+              </div>
+            )}
+          </Suspense>
         </main>
       </div>
     </div>

@@ -1,8 +1,15 @@
 "use client";
 
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { DesignSectionHeader } from "@/components/design/section-header";
-import { TelemetryShowcaseGrid } from "@/components/workstation/sections/overview-section";
+import { WorkstationSpinner } from "@/components/workstation/cad-primitives";
 import type { WorkstationTelemetryMetrics } from "@/lib/workstation/api";
+
+const TelemetryShowcaseGrid = lazy(() =>
+  import("@/components/workstation/telemetry-showcase-grid").then((m) => ({
+    default: m.TelemetryShowcaseGrid,
+  }))
+);
 
 const LANDING_MOCK_TELEMETRY_METRICS: WorkstationTelemetryMetrics = {
   cpu: {
@@ -58,7 +65,35 @@ const LANDING_MOCK_TELEMETRY_METRICS: WorkstationTelemetryMetrics = {
   platform: "Linux 6.8.0-x86_64",
 };
 
+const TELEMETRY_FALLBACK = (
+  <WorkstationSpinner
+    className="min-h-[420px] border border-border bg-white dark:bg-black"
+    label="Loading Runtime Telemetry..."
+  />
+);
+
 export function HomeTelemetrySection() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [shouldRenderCharts, setShouldRenderCharts] = useState(false);
+
+  useEffect(() => {
+    const node = containerRef.current;
+    if (!node || shouldRenderCharts) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setShouldRenderCharts(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "350px 0px" }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [shouldRenderCharts]);
+
   return (
     <section
       aria-labelledby="telemetry-heading"
@@ -71,8 +106,14 @@ export function HomeTelemetrySection() {
           titleId="telemetry-heading"
         />
 
-        <div className="relative w-full">
-          <TelemetryShowcaseGrid metrics={LANDING_MOCK_TELEMETRY_METRICS} />
+        <div className="relative w-full" ref={containerRef}>
+          {shouldRenderCharts ? (
+            <Suspense fallback={TELEMETRY_FALLBACK}>
+              <TelemetryShowcaseGrid metrics={LANDING_MOCK_TELEMETRY_METRICS} />
+            </Suspense>
+          ) : (
+            TELEMETRY_FALLBACK
+          )}
         </div>
       </div>
     </section>

@@ -1,8 +1,8 @@
 "use client";
 
-import { PatternLines } from "@aiws/ui/charts";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { PartnerPlaceholderPattern } from "@/components/design/partner-placeholder-pattern";
 import { usePauseWhenOffscreen } from "@/lib/use-pause-when-offscreen";
 import { cn } from "@/lib/utils";
 
@@ -82,32 +82,11 @@ function pickRandomCell(
 }
 
 function GridCellPulsePattern({ preset }: { preset: DiagonalPreset }) {
-  const uniqueId = useId();
-  const patternId = `grid-cell-pulse-${uniqueId.replace(/:/g, "")}`;
-
   return (
-    <svg
-      aria-hidden
+    <PartnerPlaceholderPattern
       className="pointer-events-none absolute inset-0 h-full w-full"
-      preserveAspectRatio="none"
-    >
-      <title>Grid cell pattern</title>
-      <defs>
-        <PatternLines
-          height={8}
-          id={patternId}
-          orientation={
-            preset === "diagonalRightToLeft"
-              ? ["diagonalRightToLeft"]
-              : ["diagonal"]
-          }
-          stroke="var(--border)"
-          strokeWidth={1}
-          width={8}
-        />
-      </defs>
-      <rect fill={`url(#${patternId})`} height="100%" width="100%" />
-    </svg>
+      reversed={preset === "diagonalRightToLeft"}
+    />
   );
 }
 

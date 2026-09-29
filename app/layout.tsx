@@ -48,6 +48,7 @@ export default function RootLayout({
         <RootProvider
           search={{
             SearchDialog: DocsSearchDialog,
+            preload: false,
           }}
           theme={{
             defaultTheme: "light",

@@ -37,10 +37,11 @@ export async function proxy(request: NextRequest) {
   const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME)?.value;
   const authSecret = getAuthSecret();
 
-  // Verify cookie session using Web Crypto only for protected routes
-  const isSessionValid = authSecret
-    ? await verifySession(sessionCookie, authSecret)
-    : false;
+  // Verify cookie session using Web Crypto only when a session cookie is actually present
+  const isSessionValid =
+    sessionCookie && authSecret
+      ? await verifySession(sessionCookie, authSecret)
+      : false;
 
   // 2. Login Page Logic
   if (pathname === "/login") {
@@ -76,6 +77,13 @@ export async function proxy(request: NextRequest) {
 
   // 4. Protected Workstation Console
   if (pathname.startsWith("/workstation") && !isSessionValid) {
+    const isPrefetch =
+      request.headers.get("next-router-prefetch") === "1" ||
+      request.headers.get("purpose") === "prefetch";
+    if (isPrefetch) {
+      return new NextResponse(null, { status: 204 });
+    }
+
     const loginUrl = new URL("/login", request.url);
     const destination = pathname + search;
     if (destination !== "/workstation") {

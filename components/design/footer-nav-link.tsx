@@ -12,6 +12,7 @@ export function FooterNavLink({ text, href, external }: FooterNavLinkProps) {
       className="group inline-flex items-center font-mono text-muted-foreground text-xs uppercase tracking-widest no-underline transition-colors hover:text-foreground"
       external={external}
       href={href}
+      prefetch={href.startsWith("/workstation") ? false : undefined}
     >
       {text}
       <span

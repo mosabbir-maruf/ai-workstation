@@ -4,12 +4,17 @@ const withMDX = createMDX();
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: "standalone",
+  ...(process.env.NETLIFY ? {} : { output: "standalone" }),
   reactStrictMode: true,
   transpilePackages: ["@aiws/ui", "geist"],
   experimental: {
-    // Keeps dev/prod from pulling the entire charts package per page.
-    optimizePackageImports: ["@aiws/ui", "@aiws/ui/charts"],
+    // Keeps dev/prod from pulling the entire charts/icons/ui packages per page.
+    optimizePackageImports: [
+      "@aiws/ui",
+      "@aiws/ui/charts",
+      "@aiws/icons",
+      "fumadocs-ui",
+    ],
   },
 };
 

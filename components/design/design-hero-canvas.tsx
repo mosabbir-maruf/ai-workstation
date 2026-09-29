@@ -1,9 +1,7 @@
-"use client";
-
 import Link from "next/link";
 import { HeroStudioPill } from "@/components/hero";
 import { GitHubIcon } from "@/components/icons/github";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { SOCIAL_LINKS } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
@@ -35,6 +33,7 @@ export function DesignHeroCanvas() {
               "h-9 px-3.5 text-xs sm:h-10 sm:px-6 sm:text-sm"
             )}
             href="/workstation"
+            prefetch={false}
           >
             Launch console
           </Link>

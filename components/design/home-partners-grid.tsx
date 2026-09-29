@@ -1,6 +1,5 @@
 "use client";
 
-import { DEFAULT_CHART_ENTER_TRANSITION } from "@aiws/ui/charts";
 import { motion, useReducedMotion } from "motion/react";
 import { useState } from "react";
 import {
@@ -18,12 +17,7 @@ import { cn } from "@/lib/utils";
 import { GridCornerDots } from "./line-grid";
 import { DesignPartnerPanel } from "./partner-panel";
 
-const chartEase = DEFAULT_CHART_ENTER_TRANSITION.ease as [
-  number,
-  number,
-  number,
-  number,
-];
+const chartEase: [number, number, number, number] = [0.22, 1, 0.36, 1];
 const partnerLogoEnterDuration = 0.45;
 const partnerLogoExitDuration = 0.32;
 const partnerLabelEnterDuration = 0.45;

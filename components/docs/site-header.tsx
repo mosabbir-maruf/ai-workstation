@@ -185,6 +185,7 @@ function MobileMenu({
                 href={link.url}
                 key={link.url}
                 onClick={onClose}
+                prefetch={link.url.startsWith("/workstation") ? false : undefined}
                 style={getStaggerStyle(index)}
               >
                 <Button
@@ -362,7 +363,13 @@ export function SiteHeader({
               {/* Desktop nav */}
               <nav className="hidden items-center gap-1 md:flex">
                 {links.map((link) => (
-                  <Link href={link.url} key={link.url}>
+                  <Link
+                    href={link.url}
+                    key={link.url}
+                    prefetch={
+                      link.url.startsWith("/workstation") ? false : undefined
+                    }
+                  >
                     <Button variant="ghost">
                       <NavLinkLabel text={link.text} url={link.url} />
                     </Button>

@@ -1,10 +1,8 @@
-"use client";
-
 import Link from "next/link";
 import type { SVGProps } from "react";
 import { GridCornerDots } from "@/components/design/line-grid";
 import { DesignSectionHeader } from "@/components/design/section-header";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/utils";
 
 function ArrowUpRightIcon(props: SVGProps<SVGSVGElement>) {
@@ -427,6 +425,7 @@ export function HomeHowItWorksSection() {
                       "font-mono text-xs uppercase tracking-wider"
                     )}
                     href="/workstation"
+                    prefetch={false}
                   >
                     Open Console
                     <ArrowUpRightIcon className="ml-1.5 size-3.5" />

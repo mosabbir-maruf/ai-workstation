@@ -127,3 +127,28 @@ export function CadCell({
     </div>
   );
 }
+
+export function WorkstationSpinner({
+  label = "Loading Ai Workstation Console...",
+  className,
+}: {
+  label?: string;
+  className?: string;
+}) {
+  return (
+    <div
+      aria-live="polite"
+      className={cn(
+        "flex min-h-[400px] w-full flex-col items-center justify-center gap-3 font-mono text-muted-foreground text-xs",
+        className
+      )}
+      role="status"
+    >
+      <span
+        aria-hidden="true"
+        className="size-5 animate-spin rounded-full border-2 border-muted-foreground/25 border-t-foreground"
+      />
+      <span className="tracking-wider">{label}</span>
+    </div>
+  );
+}

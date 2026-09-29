@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { HomeFooter } from "@/components/design/home-footer";
+import { WorkstationSpinner } from "@/components/workstation/cad-primitives";
 import { WorkstationHero } from "@/components/workstation/workstation-hero";
 import { WorkstationShell } from "@/components/workstation/workstation-shell";
 import { createMetadata } from "@/lib/seo";
@@ -26,13 +27,7 @@ export default function WorkstationPage() {
         id="workstation-console"
       >
         <div className="container mx-auto w-full min-w-0 overflow-visible">
-          <Suspense
-            fallback={
-              <div className="flex min-h-[400px] items-center justify-center font-mono text-muted-foreground text-xs">
-                Loading Ai Workstation Console...
-              </div>
-            }
-          >
+          <Suspense fallback={<WorkstationSpinner />}>
             <WorkstationShell />
           </Suspense>
         </div>

@@ -470,25 +470,6 @@ function ChartEmptyState({
   height?: string;
   isLoading?: boolean;
 }) {
-  if (isLoading) {
-    return (
-      <div
-        className={cn(
-          "flex w-full flex-col items-center justify-center border border-dashed border-border/70 bg-muted/5 p-4 text-center",
-          height
-        )}
-      >
-        <div className="flex items-center gap-2 font-mono text-[11px] text-amber-500 animate-pulse uppercase tracking-wider">
-          <span className="size-1.5 rounded-full bg-amber-500" />
-          Synchronizing Telemetry...
-        </div>
-        <p className="mt-1 max-w-[280px] font-mono text-[10px] text-muted-foreground/70">
-          Reading real-time compute & memory timeseries from host...
-        </p>
-      </div>
-    );
-  }
-
   return (
     <div
       className={cn(
@@ -496,12 +477,26 @@ function ChartEmptyState({
         height
       )}
     >
-      <div className="flex items-center gap-1.5 font-mono text-[11px] text-muted-foreground uppercase tracking-wider">
-        <span className="size-1.5 rounded-full bg-muted-foreground/40" />
-        {title}
+      <div
+        className={cn(
+          "flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider",
+          isLoading ? "text-amber-500" : "text-muted-foreground"
+        )}
+      >
+        {isLoading ? (
+          <span
+            aria-hidden="true"
+            className="size-3 animate-spin rounded-full border-2 border-amber-500/30 border-t-amber-500"
+          />
+        ) : (
+          <span className="size-1.5 rounded-full bg-muted-foreground/40" />
+        )}
+        {isLoading ? "Synchronizing Telemetry..." : title}
       </div>
       <p className="mt-1 max-w-[280px] font-mono text-[10px] text-muted-foreground/70">
-        {description}
+        {isLoading
+          ? "Reading real-time compute & memory timeseries from host..."
+          : description}
       </p>
     </div>
   );

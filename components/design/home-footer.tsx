@@ -19,18 +19,18 @@ const documentationLinks = [
 ] as const;
 
 const consoleMenuLinks = [
-  { text: "System Overview", href: "/workstation?tab=overview" },
-  { text: "Projects & Workspaces", href: "/workstation?tab=projects" },
-  { text: "App Runtime", href: "/workstation?tab=app" },
-  { text: "Live Preview", href: "/workstation?tab=preview" },
-  { text: "Git Sync", href: "/workstation?tab=git" },
-  { text: "GitHub App Broker", href: "/workstation?tab=github" },
-  { text: "Cloudflare Tunnel", href: "/workstation?tab=tunnel" },
-  { text: "Harness & DSH", href: "/workstation?tab=harness" },
-  { text: "DSH Model Keys", href: "/workstation?tab=dsh-keys" },
-  { text: "Maintenance & Doctor", href: "/workstation?tab=maintenance" },
-  { text: "State Snapshots", href: "/workstation?tab=state" },
-  { text: "Workstation Logs", href: "/workstation?tab=logs" },
+  { text: "System Overview", href: "/workstation?tab=overview#workstation-console" },
+  { text: "Projects & Workspaces", href: "/workstation?tab=projects#workstation-console" },
+  { text: "App Runtime", href: "/workstation?tab=app#workstation-console" },
+  { text: "Live Preview", href: "/workstation?tab=preview#workstation-console" },
+  { text: "Git Sync", href: "/workstation?tab=git#workstation-console" },
+  { text: "GitHub App Broker", href: "/workstation?tab=github#workstation-console" },
+  { text: "Cloudflare Tunnel", href: "/workstation?tab=tunnel#workstation-console" },
+  { text: "Harness & DSH", href: "/workstation?tab=harness#workstation-console" },
+  { text: "DSH Model Keys", href: "/workstation?tab=dsh-keys#workstation-console" },
+  { text: "Maintenance & Doctor", href: "/workstation?tab=maintenance#workstation-console" },
+  { text: "State Snapshots", href: "/workstation?tab=state#workstation-console" },
+  { text: "Workstation Logs", href: "/workstation?tab=logs#workstation-console" },
 ] as const;
 
 const communityLinks = [

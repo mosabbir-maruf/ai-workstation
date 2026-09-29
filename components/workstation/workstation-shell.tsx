@@ -188,46 +188,42 @@ export function WorkstationShell() {
     };
   }, []);
 
-  const tabQueryParam = searchParams.get("tab");
-  useEffect(() => {
-    if (tabQueryParam === "setup") {
-      setShowWizard(true);
-      return;
-    }
-    if (tabQueryParam && WORKSTATION_SECTION_MAP.has(tabQueryParam)) {
-      setActiveSection(tabQueryParam as WorkstationSectionId);
-    }
-  }, [tabQueryParam]);
-
   const scrollToConsole = useCallback(() => {
     document
       .getElementById("workstation-console")
-      ?.scrollIntoView({ behavior: "smooth" });
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, []);
 
-  // Ensure Remote Terminal is brought smoothly into full viewport view
+  const tabQueryParam = searchParams.get("tab");
   useEffect(() => {
-    if (activeSection === "terminal") {
-      const raf = requestAnimationFrame(scrollToConsole);
-      return () => cancelAnimationFrame(raf);
+    if (!tabQueryParam) {
+      return;
     }
-  }, [activeSection, scrollToConsole]);
+    if (tabQueryParam === "setup") {
+      setShowWizard(true);
+    } else if (WORKSTATION_SECTION_MAP.has(tabQueryParam)) {
+      setActiveSection(tabQueryParam as WorkstationSectionId);
+    }
+    const raf = requestAnimationFrame(scrollToConsole);
+    return () => cancelAnimationFrame(raf);
+  }, [tabQueryParam, scrollToConsole]);
 
   const handleSelectSection = useCallback(
     (id: WorkstationSectionId) => {
       setShowWizard(false);
-      setActiveSection((prev) => {
-        if (prev === id && id === "terminal") {
-          scrollToConsole();
-        }
-        return id;
-      });
+      setActiveSection(id);
+      scrollToConsole();
       const url = new URL(window.location.href);
       url.searchParams.set("tab", id);
       window.history.replaceState({}, "", url.toString());
     },
     [scrollToConsole]
   );
+
+  const handleOpenWizard = useCallback(() => {
+    setShowWizard(true);
+    scrollToConsole();
+  }, [scrollToConsole]);
 
 
   const handleCompleteWizard = useCallback(() => {
@@ -265,7 +261,7 @@ export function WorkstationShell() {
                     ? "text-emerald-600 dark:text-emerald-400 hover:bg-muted/50"
                     : "text-amber-600 dark:text-amber-400 hover:bg-muted/50"
               )}
-              onClick={() => setShowWizard(true)}
+              onClick={handleOpenWizard}
               suppressHydrationWarning
               type="button"
             >
@@ -326,7 +322,7 @@ export function WorkstationShell() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => setShowWizard(true)}
+                  onClick={handleOpenWizard}
                   suppressHydrationWarning
                   className={cn(
                     "flex shrink-0 items-center gap-1 font-mono text-[10px] whitespace-nowrap uppercase tracking-tight transition-colors hover:underline",

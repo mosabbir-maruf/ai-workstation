@@ -22,7 +22,7 @@ export default function WorkstationPage() {
       </section>
 
       <section
-        className="relative w-full pb-16 md:pb-24"
+        className="relative w-full pb-16 md:pb-24 scroll-mt-20"
         id="workstation-console"
       >
         <div className="container mx-auto w-full overflow-visible">

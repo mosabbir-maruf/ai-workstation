@@ -67,39 +67,3 @@ export function resolveChartThemeModeFromElement(
 ): ChartThemeMode {
   return element.classList.contains("dark") ? "dark" : "light";
 }
-
-export function resolveRootChartThemeMode(): ChartThemeMode {
-  return resolveChartThemeModeFromElement(document.documentElement);
-}
-
-/** Detect dark mode before React hydrates (matches next-themes class strategy). */
-export function resolveChartThemeModeForScript(): ChartThemeMode {
-  const root = document.documentElement;
-
-  if (root.classList.contains("dark")) {
-    return "dark";
-  }
-
-  try {
-    const storedTheme = localStorage.getItem("theme");
-
-    if (storedTheme === "dark") {
-      return "dark";
-    }
-
-    if (storedTheme === "light") {
-      return "light";
-    }
-
-    if (
-      storedTheme === "system" &&
-      window.matchMedia("(prefers-color-scheme: dark)").matches
-    ) {
-      return "dark";
-    }
-  } catch {
-    // localStorage may be unavailable
-  }
-
-  return "light";
-}

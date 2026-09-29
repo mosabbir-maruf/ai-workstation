@@ -68,40 +68,27 @@ export function ChartThemeProvider({
   const [themeId, setThemeIdState] = useState(initialThemeId);
   const theme = getChartTheme(themeId);
 
-  const applyCurrentTheme = useCallback(() => {
-    const rootMode =
+  const resolveMode = useCallback(
+    () =>
       resolvedTheme === "dark" || resolvedTheme === "light"
         ? resolvedTheme
-        : resolveChartThemeModeFromElement(document.documentElement);
+        : resolveChartThemeModeFromElement(document.documentElement),
+    [resolvedTheme]
+  );
 
-    applyChartThemeVars(theme, { rootMode });
-  }, [theme, resolvedTheme]);
-
-  const setThemeId = useCallback((id: string) => {
-    const nextTheme = getChartTheme(id);
-    setThemeIdState(nextTheme.id);
-    setChartThemeCookie(nextTheme.id);
-
-    const rootMode = resolveChartThemeModeFromElement(document.documentElement);
-    applyChartThemeVars(nextTheme, { rootMode });
-  }, []);
-
-  useEffect(() => {
-    applyCurrentTheme();
-  }, [applyCurrentTheme]);
+  const setThemeId = useCallback(
+    (id: string) => {
+      const nextTheme = getChartTheme(id);
+      setThemeIdState(nextTheme.id);
+      setChartThemeCookie(nextTheme.id);
+      applyChartThemeVars(nextTheme, { rootMode: resolveMode() });
+    },
+    [resolveMode]
+  );
 
   useEffect(() => {
-    const observer = new MutationObserver(() => {
-      applyCurrentTheme();
-    });
-
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true,
-    });
-
-    return () => observer.disconnect();
-  }, [applyCurrentTheme]);
+    applyChartThemeVars(theme, { rootMode: resolveMode() });
+  }, [theme, resolveMode]);
 
   const value = useMemo(
     () => ({

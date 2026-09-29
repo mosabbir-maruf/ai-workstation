@@ -49,15 +49,20 @@ export default async function RootLayout({
         />
         <ChartThemeScript themeId={chartThemeId} />
         <SiteLeftDotGrid />
-        <ChartThemeProvider initialThemeId={chartThemeId}>
-          <RootProvider
-            search={{
-              SearchDialog: DocsSearchDialog,
-            }}
-          >
+        <RootProvider
+          search={{
+            SearchDialog: DocsSearchDialog,
+          }}
+          theme={{
+            defaultTheme: "light",
+            enableSystem: false,
+            storageKey: "aiws-theme",
+          }}
+        >
+          <ChartThemeProvider initialThemeId={chartThemeId}>
             {children}
-          </RootProvider>
-        </ChartThemeProvider>
+          </ChartThemeProvider>
+        </RootProvider>
       </body>
     </html>
   );

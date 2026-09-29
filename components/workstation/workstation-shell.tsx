@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { GridCornerDots } from "@/components/design/line-grid";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Icon } from "@aiws/icons";
 import { cn } from "@/lib/utils";
 import { AppSection } from "./sections/app-section";
 import { DshKeysSection } from "./sections/dsh-keys-section";
@@ -70,6 +71,59 @@ const WORKSTATION_SECTION_MAP = new Map<string, WorkstationSectionItem>(
   WORKSTATION_SECTIONS.map((section) => [section.id, section])
 );
 
+const WIZARD_COMPLETED_KEY = "aiws.wizard.completed";
+const WIZARD_DISMISSED_KEY = "aiws.wizard.dismissed";
+
+function readStorageFlag(key: string): boolean {
+  try {
+    return localStorage.getItem(key) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function writeStorageFlag(key: string, value: boolean): void {
+  try {
+    if (value) {
+      localStorage.setItem(key, "true");
+    } else {
+      localStorage.removeItem(key);
+    }
+  } catch {
+    // ignore
+  }
+}
+
+function SetupGuideLabel({
+  isSetupComplete,
+  isMobile,
+  showWizard,
+}: {
+  isSetupComplete: boolean;
+  isMobile?: boolean;
+  showWizard?: boolean;
+}) {
+  if (isSetupComplete) {
+    return (
+      <span className="inline-flex items-center gap-0.5 whitespace-nowrap">
+        <Icon
+          className={cn(
+            isMobile ? "size-3.5 -mr-0.5" : "size-3 -mr-0.5",
+            showWizard
+              ? "text-background"
+              : "text-emerald-600 dark:text-emerald-400",
+            "shrink-0"
+          )}
+          name="IconCheckmark1"
+          size={isMobile ? 14 : 12}
+        />
+        <span>Completed Setup</span>
+      </span>
+    );
+  }
+  return <span className="whitespace-nowrap">⚡ Setup Guide</span>;
+}
+
 export function WorkstationShell() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -81,17 +135,17 @@ export function WorkstationShell() {
       : "overview"
   );
   const [showWizard, setShowWizard] = useState<boolean>(false);
+  // Initialize as false to guarantee SSR hydration parity, then sync from localStorage on client mount
+  const [isSetupComplete, setIsSetupComplete] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (readStorageFlag(WIZARD_COMPLETED_KEY)) {
+      setIsSetupComplete(true);
+    }
+  }, []);
 
   // Check after initial render if setup is needed without blocking main content load
   useEffect(() => {
-    try {
-      if (localStorage.getItem("aiws.wizard.dismissed") === "true") {
-        return;
-      }
-    } catch {
-      // ignore
-    }
-
     let cancelled = false;
     const timer = setTimeout(async () => {
       try {
@@ -113,7 +167,14 @@ export function WorkstationShell() {
           pRes.status === "fulfilled" &&
           !pRes.value.projects?.some((p: { active: boolean }) => p.active);
 
-        if (ghUnconfigured || tunnelUnconfigured || noProject) {
+        const isComplete = !ghUnconfigured && !tunnelUnconfigured && !noProject;
+        if (isComplete) {
+          setIsSetupComplete(true);
+          writeStorageFlag(WIZARD_COMPLETED_KEY, true);
+        }
+
+        const isDismissed = readStorageFlag(WIZARD_DISMISSED_KEY);
+        if (!isDismissed && !isComplete) {
           setShowWizard(true);
         }
       } catch {
@@ -168,13 +229,12 @@ export function WorkstationShell() {
     [scrollToConsole]
   );
 
-  const handleDismissWizard = useCallback(() => {
+
+  const handleCompleteWizard = useCallback(() => {
     setShowWizard(false);
-    try {
-      localStorage.setItem("aiws.wizard.dismissed", "true");
-    } catch {
-      // ignore
-    }
+    setIsSetupComplete(true);
+    writeStorageFlag(WIZARD_COMPLETED_KEY, true);
+    writeStorageFlag(WIZARD_DISMISSED_KEY, true);
   }, []);
 
   const handleLogout = useCallback(async () => {
@@ -191,22 +251,29 @@ export function WorkstationShell() {
   return (
     <div className="relative w-full">
       {/* Main Layout Grid */}
-      <div className="grid items-start gap-8 md:grid-cols-[220px_1fr] lg:grid-cols-[240px_1fr]">
+      <div className="grid items-start gap-8 md:grid-cols-[230px_1fr] lg:grid-cols-[240px_1fr]">
         {/* Sticky Workstation CAD Sidebar Navigation */}
         <aside className="sticky top-20 z-30 self-start">
           {/* Mobile horizontal bar (<md) */}
           <div className="flex gap-1.5 overflow-x-auto border border-border bg-background/95 p-2 shadow-xs backdrop-blur-sm md:hidden">
             <button
               className={cn(
-                "shrink-0 px-3.5 py-2 font-medium text-sm tracking-tight transition-colors",
+                "flex shrink-0 items-center gap-1.5 px-3.5 py-2 font-medium text-sm tracking-tight transition-colors",
                 showWizard
                   ? "bg-foreground font-semibold text-background"
-                  : "text-amber-600 dark:text-amber-400 hover:bg-muted/50"
+                  : isSetupComplete
+                    ? "text-emerald-600 dark:text-emerald-400 hover:bg-muted/50"
+                    : "text-amber-600 dark:text-amber-400 hover:bg-muted/50"
               )}
               onClick={() => setShowWizard(true)}
+              suppressHydrationWarning
               type="button"
             >
-              ⚡ Setup Guide
+              <SetupGuideLabel
+                isMobile
+                isSetupComplete={isSetupComplete}
+                showWizard={showWizard}
+              />
             </button>
             {WORKSTATION_SECTIONS.map((section) => {
               const isActive = activeSection === section.id;
@@ -250,8 +317,8 @@ export function WorkstationShell() {
 
             <div className="border-border border-r border-b">
               {/* Panel Header */}
-              <div className="flex items-center justify-between border-border border-b bg-muted/30 px-4 py-3">
-                <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between gap-2 border-border border-b bg-muted/30 px-3.5 py-3">
+                <div className="flex shrink-0 items-center gap-2">
                   <span className="size-2 bg-foreground" />
                   <span className="font-bold text-foreground text-sm tracking-tight">
                     Workstation
@@ -260,9 +327,15 @@ export function WorkstationShell() {
                 <button
                   type="button"
                   onClick={() => setShowWizard(true)}
-                  className="font-mono text-[10px] text-amber-600 dark:text-amber-400 hover:underline uppercase tracking-wider"
+                  suppressHydrationWarning
+                  className={cn(
+                    "flex shrink-0 items-center gap-1 font-mono text-[10px] whitespace-nowrap uppercase tracking-tight transition-colors hover:underline",
+                    isSetupComplete
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : "text-amber-600 dark:text-amber-400 tracking-wider"
+                  )}
                 >
-                  ⚡ Setup Guide
+                  <SetupGuideLabel isSetupComplete={isSetupComplete} />
                 </button>
               </div>
 
@@ -366,12 +439,7 @@ export function WorkstationShell() {
 
           {/* Conditional: Setup Wizard Full View vs Regular Module View */}
           {showWizard ? (
-            <WorkstationSetupFlow
-              onComplete={() => {
-                setShowWizard(false);
-                handleDismissWizard();
-              }}
-            />
+            <WorkstationSetupFlow onComplete={handleCompleteWizard} />
           ) : (
             <div className="space-y-6">
               {activeSection === "overview" && (

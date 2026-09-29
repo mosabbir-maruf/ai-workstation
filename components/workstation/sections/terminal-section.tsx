@@ -73,12 +73,16 @@ export function TerminalSection() {
 
     const chosenTarget = explicitTarget ?? target;
 
-    // If running on host, begins with 'sudo' and no password entered yet, prompt for password interactively
-    if (chosenTarget === "host" && !sudoPassword && (cmd.startsWith("sudo ") || cmd === "sudo")) {
+    const promptForSudo = () => {
       setSudoPromptPending({ command: cmd, target: chosenTarget });
       setSudoPasswordInput("");
-      if (!cmdToRun) setCommandInput("");
       setTimeout(() => sudoPasswordRef.current?.focus({ preventScroll: true }), 50);
+    };
+
+    // If running on host, begins with 'sudo' and no password entered yet, prompt for password interactively
+    if (chosenTarget === "host" && !sudoPassword && (cmd.startsWith("sudo ") || cmd === "sudo")) {
+      promptForSudo();
+      if (!cmdToRun) setCommandInput("");
       return;
     }
 
@@ -98,9 +102,7 @@ export function TerminalSection() {
 
       // If backend reports that sudo authentication is required, open sudo password prompt
       if (!res.ok && res.requiresSudo && !sudoPassword) {
-        setSudoPromptPending({ command: cmd, target: chosenTarget });
-        setSudoPasswordInput("");
-        setTimeout(() => sudoPasswordRef.current?.focus({ preventScroll: true }), 50);
+        promptForSudo();
         return;
       }
 

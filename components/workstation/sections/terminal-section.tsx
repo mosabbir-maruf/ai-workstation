@@ -27,6 +27,9 @@ const QUICK_COMMANDS = [
   { label: "systemctl status", cmd: "systemctl status ai-workstation-daemon --no-pager", target: "host" },
 ] as const;
 
+const INTERACTIVE_CONFIRM_REGEX =
+  /(\[y\/n\]|\[n\/y\]|\(y\/n\)|are you sure you want to continue\?|do you want to continue\?)\s*$/i;
+
 export function TerminalSection() {
   const [target, setTarget] = useState<"host" | "workstation">("host");
   const [commandInput, setCommandInput] = useState("");
@@ -49,6 +52,12 @@ export function TerminalSection() {
   const [sudoPasswordInput, setSudoPasswordInput] = useState("");
   const sudoPasswordRef = useRef<HTMLInputElement>(null);
 
+  const [confirmPromptPending, setConfirmPromptPending] = useState<{
+    command: string;
+    target: "host" | "workstation";
+    sudoPassword?: string;
+  } | null>(null);
+
   const logContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -66,11 +75,58 @@ export function TerminalSection() {
   const handleRunCommand = async (
     cmdToRun?: string,
     explicitTarget?: "host" | "workstation",
-    sudoPassword?: string
+    sudoPassword?: string,
+    displayCommand?: string
   ) => {
-    const cmd = (cmdToRun ?? commandInput).trim();
-    if (!cmd || executing) return;
+    const rawInput = (cmdToRun ?? commandInput).trim();
+    if (!rawInput || executing) return;
 
+    const normalizedLower = rawInput.toLowerCase();
+
+    // Handle [y/N] confirmation responses if a previous command prompted for confirmation
+    if (
+      confirmPromptPending &&
+      !displayCommand &&
+      (normalizedLower === "y" ||
+        normalizedLower === "yes" ||
+        normalizedLower === "n" ||
+        normalizedLower === "no")
+    ) {
+      const pending = confirmPromptPending;
+      setConfirmPromptPending(null);
+      if (!cmdToRun) setCommandInput("");
+
+      if (normalizedLower === "n" || normalizedLower === "no") {
+        setHistory((prev) => [
+          ...prev,
+          {
+            id: Math.random().toString(36).substring(2, 9),
+            command: rawInput,
+            target: pending.target,
+            output: `Cancelled: ${pending.command}`,
+            ok: true,
+            timestamp: new Date().toLocaleTimeString(),
+          },
+        ]);
+        return;
+      }
+
+      const confirmedCommand = pending.command.startsWith("sudo ")
+        ? `sudo sh -c 'yes | ${pending.command.slice(5).trim()}'`
+        : `yes | ${pending.command}`;
+
+      await handleRunCommand(
+        confirmedCommand,
+        pending.target,
+        pending.sudoPassword,
+        `${rawInput} → ${pending.command}`
+      );
+      return;
+    }
+
+    setConfirmPromptPending(null);
+    const cmd = rawInput;
+    const shownCmd = displayCommand ?? cmd;
     const chosenTarget = explicitTarget ?? target;
 
     const promptForSudo = () => {
@@ -90,7 +146,9 @@ export function TerminalSection() {
     if (!cmdToRun) setCommandInput("");
 
     // Store in command navigation buffer
-    pastCommands.current.push(cmd);
+    if (!displayCommand) {
+      pastCommands.current.push(cmd);
+    }
     setNavIndex(-1);
 
     try {
@@ -106,13 +164,29 @@ export function TerminalSection() {
         return;
       }
 
+      const trimmedOut = (res.output || "").trim();
+      const needsConfirmation =
+        !displayCommand && INTERACTIVE_CONFIRM_REGEX.test(trimmedOut);
+
+      if (needsConfirmation) {
+        setConfirmPromptPending({
+          command: cmd,
+          target: chosenTarget,
+          sudoPassword,
+        });
+      }
+
       setHistory((prev) => [
         ...prev,
         {
           id: Math.random().toString(36).substring(2, 9),
-          command: cmd,
+          command: shownCmd,
           target: chosenTarget,
-          output: res.output || (res.ok ? "(Command exited with code 0 without output)" : "Command failed"),
+          output:
+            res.output ||
+            (res.ok
+              ? "(Command exited with code 0 without output)"
+              : "Command failed"),
           ok: res.ok,
           timestamp: new Date().toLocaleTimeString(),
         },
@@ -122,7 +196,7 @@ export function TerminalSection() {
         ...prev,
         {
           id: Math.random().toString(36).substring(2, 9),
-          command: cmd,
+          command: shownCmd,
           target: chosenTarget,
           output: `Execution error: ${err instanceof Error ? err.message : String(err)}`,
           ok: false,
@@ -288,6 +362,39 @@ export function TerminalSection() {
                   )}
                 </div>
 
+                {/* Optional [y/N] Interactive Confirmation Strip */}
+                {confirmPromptPending && !sudoPromptPending && (
+                  <div className="flex w-full min-w-0 shrink-0 flex-wrap items-center justify-between gap-2 border-t border-amber-500/40 bg-amber-950/30 px-3 py-2 text-xs">
+                    <div className="flex min-w-0 items-center gap-2 text-amber-300">
+                      <span className="shrink-0 font-bold uppercase">[y/N]</span>
+                      <span className="truncate">
+                        Confirm execution of <code className="text-amber-100">{confirmPromptPending.command}</code>? (Type <code className="text-amber-100">y</code> or <code className="text-amber-100">n</code> below)
+                      </span>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-1.5">
+                      <Button
+                        className="h-6 rounded-none bg-emerald-600 px-2.5 font-mono text-[11px] text-white hover:bg-emerald-500"
+                        disabled={executing}
+                        onClick={() => handleRunCommand("y")}
+                        size="xs"
+                        type="button"
+                      >
+                        Confirm (y)
+                      </Button>
+                      <Button
+                        className="h-6 rounded-none border-zinc-700 bg-zinc-900 px-2.5 font-mono text-[11px] text-zinc-300 hover:bg-zinc-800"
+                        disabled={executing}
+                        onClick={() => handleRunCommand("n")}
+                        size="xs"
+                        type="button"
+                        variant="outline"
+                      >
+                        Abort (n)
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
                 {/* Input prompt line or Sudo password prompt */}
                 {sudoPromptPending ? (
                   <form
@@ -351,9 +458,11 @@ export function TerminalSection() {
                       onKeyDown={handleKeyDown}
                       disabled={executing}
                       placeholder={
-                        target === "host"
-                          ? "Run host CLI command (e.g. ai status, docker ps)..."
-                          : "Run container command (e.g. npm test, ls -la)..."
+                        confirmPromptPending
+                          ? `Type 'y' to confirm '${confirmPromptPending.command}' or 'n' to cancel...`
+                          : target === "host"
+                            ? "Run host CLI command (e.g. ai status, docker ps)..."
+                            : "Run container command (e.g. npm test, ls -la)..."
                       }
                       className="flex-1 min-w-0 bg-transparent border-none outline-none text-zinc-100 placeholder:text-zinc-600 font-mono text-base sm:text-xs focus:ring-0"
                     />

@@ -52,13 +52,27 @@ export function ModelDropdownSelector({
     }
   }, [isOpen]);
 
+  const freeModelsCount = useMemo(() => {
+    return models.filter((m) => m.toLowerCase().includes(":free") || m.toLowerCase().includes("free")).length;
+  }, [models]);
+
   const filteredModels = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return models;
-    return models.filter((m) => m.toLowerCase().includes(q));
+    return models.filter((m) => {
+      const lower = m.toLowerCase();
+      if (q === "free") {
+        return lower.includes(":free") || lower.includes("free");
+      }
+      return lower.includes(q);
+    });
   }, [models, search]);
 
+  const isFreeSearch = search.trim().toLowerCase() === "free";
   const displayText = selectedModel || placeholder;
+  const isSelectedFree = Boolean(
+    selectedModel && (selectedModel.toLowerCase().includes(":free") || selectedModel.toLowerCase().endsWith("free"))
+  );
 
   return (
     <div className={cn("relative w-full", className)} ref={containerRef}>
@@ -71,8 +85,13 @@ export function ModelDropdownSelector({
           isOpen && "ring-1 ring-ring border-foreground/40 bg-muted/30"
         )}
       >
-        <span className={cn("truncate text-left", !selectedModel && "text-muted-foreground/70")}>
-          {displayText}
+        <span className={cn("truncate text-left flex items-center gap-1.5", !selectedModel && "text-muted-foreground/70")}>
+          <span className="truncate">{displayText}</span>
+          {isSelectedFree && (
+            <span className="shrink-0 rounded bg-emerald-500/15 border border-emerald-500/30 px-1 py-0.2 text-[9px] font-bold text-emerald-400 uppercase tracking-wider">
+              FREE
+            </span>
+          )}
         </span>
         <svg
           className={cn(
@@ -126,11 +145,31 @@ export function ModelDropdownSelector({
                   </button>
                 )}
               </div>
-              <div className="flex items-center justify-between px-1 pt-1 text-[10px] font-mono text-muted-foreground/70">
-                <span>
-                  Showing {filteredModels.length} of {models.length}
-                </span>
-                {search && <span>Filter: &quot;{search}&quot;</span>}
+              <div className="flex items-center justify-between px-1 pt-1.5 text-[10px] font-mono">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-muted-foreground/70">
+                    Showing {filteredModels.length} of {models.length}
+                  </span>
+                  {freeModelsCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setSearch((prev) => (prev.trim().toLowerCase() === "free" ? "" : "free"))}
+                      className={cn(
+                        "rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider transition-colors",
+                        isFreeSearch
+                          ? "bg-emerald-500 text-black font-bold shadow-xs"
+                          : "bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 border border-emerald-500/30"
+                      )}
+                    >
+                      {isFreeSearch ? "✓ Free only" : `Free (${freeModelsCount})`}
+                    </button>
+                  )}
+                </div>
+                {search && !isFreeSearch && (
+                  <span className="text-muted-foreground/70 truncate max-w-[120px]">
+                    Filter: &quot;{search}&quot;
+                  </span>
+                )}
               </div>
             </div>
           )}
@@ -144,6 +183,7 @@ export function ModelDropdownSelector({
             ) : (
               filteredModels.map((m) => {
                 const isSelected = m === selectedModel;
+                const isFree = m.toLowerCase().includes(":free") || m.toLowerCase().endsWith("free");
                 return (
                   <button
                     key={m}
@@ -160,7 +200,14 @@ export function ModelDropdownSelector({
                         : "text-foreground hover:bg-muted/60"
                     )}
                   >
-                    <span className="truncate">{m}</span>
+                    <div className="flex items-center gap-1.5 truncate">
+                      <span className="truncate">{m}</span>
+                      {isFree && (
+                        <span className="shrink-0 rounded bg-emerald-500/15 border border-emerald-500/30 px-1 py-0.2 text-[9px] font-bold text-emerald-400 uppercase tracking-wider">
+                          FREE
+                        </span>
+                      )}
+                    </div>
                     {isSelected && (
                       <svg
                         className="size-3.5 text-emerald-500 shrink-0 ml-2"

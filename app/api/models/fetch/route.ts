@@ -25,6 +25,13 @@ const DEFAULT_MODELS: Record<string, string[]> = {
   ],
   gemini: ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-1.5-pro", "gemini-1.5-flash"],
   openrouter: [
+    "deepseek/deepseek-r1:free",
+    "deepseek/deepseek-chat:free",
+    "meta-llama/llama-3.3-70b-instruct:free",
+    "qwen/qwen-2.5-coder-32b-instruct:free",
+    "google/gemini-2.0-flash-exp:free",
+    "mistralai/mistral-small-24b-instruct-2501:free",
+    "nvidia/nemotron-3.5-lightning:free",
     "deepseek/deepseek-r1",
     "deepseek/deepseek-chat",
     "anthropic/claude-3.7-sonnet",
@@ -229,7 +236,14 @@ export async function POST(request: Request) {
               const ids = data.data
                 .map((m: ModelItem) => m?.id)
                 .filter((m): m is string => Boolean(m));
-              if (ids.length > 0) models = ids.slice(0, 50);
+              if (ids.length > 0) {
+                // Prioritize free models at the top, followed by all remaining models
+                models = ids.sort((a, b) => {
+                  const aFree = a.toLowerCase().includes(":free") || a.toLowerCase().endsWith("free") ? 0 : 1;
+                  const bFree = b.toLowerCase().includes(":free") || b.toLowerCase().endsWith("free") ? 0 : 1;
+                  return aFree - bFree || a.localeCompare(b);
+                });
+              }
             }
           }
         } catch (e: unknown) {

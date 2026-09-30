@@ -81,6 +81,31 @@ export interface ActionFeedbackInfo {
 // 1. Command Strip + 5-Service CAD Matrix
 // ---------------------------------------------------------------------------
 
+function WorkstationGuardedAction({
+  workstationRunning,
+  tooltip = "First start AI Workstation",
+  children,
+}: {
+  workstationRunning: boolean;
+  tooltip?: string;
+  children: React.ReactNode;
+}) {
+  if (workstationRunning) return <>{children}</>;
+
+  return (
+    <div
+      className="relative inline-flex group/guarded cursor-not-allowed"
+      title={tooltip}
+    >
+      <div className="pointer-events-none opacity-50">{children}</div>
+      <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden whitespace-nowrap border border-border bg-popover px-2 py-0.5 font-mono text-[10px] text-popover-foreground shadow-md group-hover/guarded:flex items-center gap-1.5 z-50 animate-in fade-in-0 zoom-in-95">
+        <span className="size-1 rounded-full bg-amber-500 shrink-0" />
+        {tooltip}
+      </div>
+    </div>
+  );
+}
+
 function CommandAndServicesMatrix({
   workstationState,
   workstationRunning,
@@ -248,19 +273,9 @@ function CommandAndServicesMatrix({
                 {actionInProgress === "Stop App" ? "Stopping..." : "Stop App"}
               </Button>
             ) : (
-              <div
-                className={cn(
-                  "relative inline-flex group/runapp",
-                  !workstationRunning && "cursor-not-allowed"
-                )}
-                title={!workstationRunning ? "First start AI Workstation" : undefined}
-              >
+              <WorkstationGuardedAction workstationRunning={workstationRunning}>
                 <Button
-                  className={cn(
-                    "h-6 shrink-0 rounded-none px-2 font-mono text-[10px] uppercase tracking-tight sm:px-2.5 sm:tracking-wider",
-                    !workstationRunning &&
-                      "bg-zinc-400 text-white hover:bg-zinc-400 dark:bg-zinc-600 dark:text-zinc-100 dark:hover:bg-zinc-600 pointer-events-none border-transparent opacity-85 shadow-none"
-                  )}
+                  className="h-6 shrink-0 rounded-none px-2 font-mono text-[10px] uppercase tracking-tight sm:px-2.5 sm:tracking-wider"
                   disabled={loading || actionInProgress !== null || !workstationRunning}
                   onClick={onRun}
                   size="xs"
@@ -270,14 +285,7 @@ function CommandAndServicesMatrix({
                     ? "Starting..."
                     : "Run App"}
                 </Button>
-
-                {!workstationRunning && (
-                  <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden whitespace-nowrap border border-border bg-popover px-2 py-0.5 font-mono text-[10px] text-popover-foreground shadow-md group-hover/runapp:flex items-center gap-1.5 z-50 animate-in fade-in-0 zoom-in-95">
-                    <span className="size-1 rounded-full bg-amber-500 shrink-0" />
-                    First start AI Workstation
-                  </div>
-                )}
-              </div>
+              </WorkstationGuardedAction>
             )}
 
             <Button
@@ -290,19 +298,9 @@ function CommandAndServicesMatrix({
               Preview ↗
             </Button>
 
-            <div
-              className={cn(
-                "relative inline-flex group/restartapp",
-                !workstationRunning && "cursor-not-allowed"
-              )}
-              title={!workstationRunning ? "First start AI Workstation" : undefined}
-            >
+            <WorkstationGuardedAction workstationRunning={workstationRunning}>
               <Button
-                className={cn(
-                  "h-6 shrink-0 rounded-none px-2 font-mono text-[10px] uppercase tracking-tight sm:px-2.5 sm:tracking-wider",
-                  !workstationRunning &&
-                    "bg-zinc-400 text-white hover:bg-zinc-400 dark:bg-zinc-600 dark:text-zinc-100 dark:hover:bg-zinc-600 pointer-events-none border-transparent opacity-85 shadow-none"
-                )}
+                className="h-6 shrink-0 rounded-none px-2 font-mono text-[10px] uppercase tracking-tight sm:px-2.5 sm:tracking-wider"
                 disabled={loading || actionInProgress !== null || !workstationRunning}
                 onClick={onRestart}
                 size="xs"
@@ -311,14 +309,7 @@ function CommandAndServicesMatrix({
               >
                 {actionInProgress === "App Restart" ? "Restarting..." : "Restart App"}
               </Button>
-
-              {!workstationRunning && (
-                <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden whitespace-nowrap border border-border bg-popover px-2 py-0.5 font-mono text-[10px] text-popover-foreground shadow-md group-hover/restartapp:flex items-center gap-1.5 z-50 animate-in fade-in-0 zoom-in-95">
-                  <span className="size-1 rounded-full bg-amber-500 shrink-0" />
-                  First start AI Workstation
-                </div>
-              )}
-            </div>
+            </WorkstationGuardedAction>
 
             <Button
               className="h-6 shrink-0 rounded-none px-2 font-mono text-[10px] uppercase tracking-tight sm:px-2.5 sm:tracking-wider"
@@ -1107,8 +1098,18 @@ export function OverviewSection({ onSelectTab }: OverviewSectionProps) {
 
       if (res.ok) {
         if (name === "Start Workstation") setWorkstationRunning(true);
-        if (name === "Stop Workstation") setWorkstationRunning(false);
-        if (name === "Start App" || name === "Run App") setAppRunning(true);
+        if (name === "Stop Workstation") {
+          setWorkstationRunning(false);
+          setAppRunning(false);
+          setAppPid(null);
+        }
+        if (
+          name === "Start App" ||
+          name === "Run App" ||
+          name === "App Restart"
+        ) {
+          setAppRunning(true);
+        }
         if (name === "Stop App") {
           setAppRunning(false);
           setAppPid(null);

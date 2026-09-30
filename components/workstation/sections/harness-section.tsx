@@ -225,7 +225,7 @@ export function HarnessSection() {
                     </Button>
                     <Button
                       className="h-8 rounded-none font-mono text-xs uppercase tracking-wider"
-                      disabled={loading || !isHarnessOnline}
+                      disabled={loading}
                       onClick={() =>
                         handleAction(
                           "Restart Bridge",

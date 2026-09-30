@@ -844,7 +844,11 @@ export function BarDepthFront({ dataKey }: BarDepthFrontProps) {
             // Anchor the grow at the baseline (not bottomY) so the glass grows
             // outward in whichever direction the bar extends. Keyed on
             // revealEpoch so it replays the grow on every reveal, like `<Bar>`.
-            initial={isLoaded ? false : { y: e.baselineY, height: 0 }}
+            initial={
+              isLoaded
+                ? { opacity: isFaded ? BAR_FADED_OPACITY : 1 }
+                : { y: e.baselineY, height: 0, opacity: 1 }
+            }
             key={`${e.label}-${revealEpoch}-${isLoaded}`}
             transition={{ ...baseTransition, opacity: BAR_HOVER_TRANSITION }}
             width={e.bandWidth}

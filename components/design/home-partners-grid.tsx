@@ -111,7 +111,7 @@ function PartnerLogoHoverContent({
     <div className="flex flex-col items-center">
       <motion.span
         animate={{ y: active ? -14 : 0 }}
-        initial={false}
+        initial={{ y: 0 }}
         transition={logoTransition}
       >
         <Logo className={logoClassName} />
@@ -124,7 +124,11 @@ function PartnerLogoHoverContent({
         }}
         aria-hidden={!showLabel}
         className="whitespace-nowrap font-light text-muted-foreground text-xs"
-        initial={false}
+        initial={{
+          y: -13,
+          opacity: 0,
+          filter: "blur(2px)",
+        }}
         transition={labelTransition}
       >
         {tierLabel}

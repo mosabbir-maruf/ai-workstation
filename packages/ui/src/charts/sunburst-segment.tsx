@@ -130,7 +130,7 @@ export const SunburstSegment = memo(function SunburstSegment({
     return (
       <motion.g
         animate={{ opacity: layerOpacity }}
-        initial={false}
+        initial={{ opacity: 1 }}
         onClick={hitHandlers.onClick}
         onPointerEnter={hitHandlers.onPointerEnter}
         style={groupStyle}
@@ -145,7 +145,7 @@ export const SunburstSegment = memo(function SunburstSegment({
   return (
     <motion.g
       animate={{ opacity: layerOpacity }}
-      initial={false}
+      initial={{ opacity: 1 }}
       onClick={hitHandlers.onClick}
       onPointerEnter={hitHandlers.onPointerEnter}
       style={{

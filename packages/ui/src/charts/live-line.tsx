@@ -243,6 +243,7 @@ export function LiveLine({
       {/* Live indicator (dot + badge) — dims when crosshair is active */}
       <motion.g
         animate={{ opacity: isScrubbing ? 0.25 : 1 }}
+        initial={{ opacity: 1 }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
       >
         {/* Pulsing dot */}

@@ -304,17 +304,12 @@ export function GridCellPulse({
             <AnimatePresence mode="wait">
               {isActive ? (
                 <motion.div
-                  animate={{
-                    opacity: 1,
-                    transition: fadeInTransition,
-                  }}
+                  animate={{ opacity: 1 }}
                   className="pointer-events-none absolute inset-0"
-                  exit={{
-                    opacity: 0,
-                    transition: fadeOutTransition,
-                  }}
+                  exit={{ opacity: 0 }}
                   initial={{ opacity: 0 }}
                   key={id}
+                  transition={fadeInTransition}
                 >
                   <GridCellPulsePattern preset={preset} />
                 </motion.div>

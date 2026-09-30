@@ -258,6 +258,7 @@ function HSegment({
     <motion.div
       animate={{ opacity: dimmed ? 0.4 : 1 }}
       className="pointer-events-none relative shrink-0 overflow-visible"
+      initial={{ opacity: 1 }}
       style={{
         width: segW,
         height: fullH,
@@ -469,6 +470,7 @@ function VSegment({
     <motion.div
       animate={{ opacity: dimmed ? 0.4 : 1 }}
       className="pointer-events-none relative shrink-0 overflow-visible"
+      initial={{ opacity: 1 }}
       style={{
         width: fullW,
         height: segH,
@@ -1010,6 +1012,7 @@ export function FunnelChart({
               <motion.div
                 animate={{ opacity: isDimmed ? 0.4 : 1 }}
                 className="absolute cursor-pointer"
+                initial={{ opacity: 1 }}
                 key={`lbl-${stage.label}`}
                 onMouseEnter={() => setHoveredIndex(i)}
                 onMouseLeave={() => setHoveredIndex(null)}

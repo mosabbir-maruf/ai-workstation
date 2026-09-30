@@ -109,6 +109,7 @@ function XAxisLabel({
     <motion.div
       animate={{ opacity }}
       className="absolute whitespace-nowrap text-xs"
+      initial={{ opacity: 1 }}
       style={{
         left: x,
         bottom: 12,

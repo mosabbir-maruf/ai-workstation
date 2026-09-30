@@ -38,7 +38,7 @@ export function ChartLoadingLabel({
         "pointer-events-none absolute inset-0 flex items-center justify-center",
         className
       )}
-      initial={false}
+      initial={{ y: 0, opacity: 1, filter: "blur(0px)" }}
       role="status"
       transition={{
         duration: LOADING_LABEL_EXIT_S,

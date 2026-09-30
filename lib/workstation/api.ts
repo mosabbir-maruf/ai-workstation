@@ -60,6 +60,23 @@ export interface ActiveProjectGitInfo {
   dirtyFilesCount: number;
 }
 
+export interface GitFileChange {
+  status: string;
+  path: string;
+}
+
+export interface GitDiffResponse {
+  ok: boolean;
+  clean: boolean;
+  project?: string;
+  path?: string;
+  filesCount: number;
+  files: GitFileChange[];
+  stat: string;
+  diff: string;
+  output: string;
+}
+
 export interface OverviewResponse {
   ok: boolean;
   health: boolean;
@@ -305,6 +322,7 @@ export const workstationApi = {
     }),
 
   // Git
+  gitDiff: () => requestJson<GitDiffResponse>("/api/git/diff"),
   gitPull: () =>
     requestJson<StandardOutputResponse>("/api/git/pull", {
       method: "POST",

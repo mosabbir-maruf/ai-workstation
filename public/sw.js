@@ -1,4 +1,4 @@
-const CACHE_NAME = "aiws-pwa-v2.1";
+const CACHE_NAME = "aiws-pwa-v2.2";
 const PRECACHE_URLS = [
   "/",
   "/site.webmanifest",

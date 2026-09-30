@@ -117,7 +117,7 @@ export function GitSection() {
       if (res.name) {
         setAuthorNameInput(res.name);
       }
-      if (res.email) {
+      if (res.isConfigured && res.email) {
         setAuthorEmailInput(res.email);
       }
     } catch {
@@ -169,7 +169,7 @@ export function GitSection() {
       setIdentityFeedback("Please enter your author name or username.");
       return;
     }
-    if (!email || !email.includes("@")) {
+    if (!email || !email.includes("@") || email.includes(" ")) {
       setIdentityFeedback("Please enter a valid GitHub account email address.");
       return;
     }

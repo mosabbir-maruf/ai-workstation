@@ -102,13 +102,16 @@ export async function POST(request: Request) {
       const name = bodyJson.name.trim();
       const email = bodyJson.email.trim();
 
+      const safeName = name.replace(/(["\\$`])/g, "\\$1");
+      const safeEmail = email.replace(/(["\\$`])/g, "\\$1");
+
       const fallbackReq = new Request(
         request.url.replace("/api/git/config", "/api/terminal/exec"),
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            command: `git config --global user.name "${name}" && git config --global user.email "${email}"`,
+            command: `git config --global user.name "${safeName}" && git config --global user.email "${safeEmail}" && if [ -n "$ACTIVE_PROJECT_PATH" ] && [ -d "$ACTIVE_PROJECT_PATH/.git" ]; then git -C "$ACTIVE_PROJECT_PATH" config user.name "${safeName}" && git -C "$ACTIVE_PROJECT_PATH" config user.email "${safeEmail}"; fi`,
             target: "host",
           }),
           signal: request.signal,

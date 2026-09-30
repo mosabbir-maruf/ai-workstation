@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { CopyButton } from "@/components/copy-button";
 import { GridCornerDots } from "@/components/design/line-grid";
 import { Badge } from "@/components/ui/badge";
@@ -78,7 +78,6 @@ export function GitSection() {
   const [lastCmdStatus, setLastCmdStatus] = useState<boolean | null>(null);
   const [cmdHistory, setCmdHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState<number>(-1);
-  const terminalSectionRef = useRef<HTMLDivElement>(null);
 
   // Git Committer Identity Configuration state
   const [gitConfig, setGitConfig] = useState<GitConfigResponse | null>(null);
@@ -430,59 +429,35 @@ export function GitSection() {
                   ))}
                 </div>
 
-                {/* Inline Output Feedback for G-01 */}
+                {/* Integrated Verbatim Terminal Output for G-01 */}
                 {!lastExecutedCmd?.startsWith("git push") && output && (
-                  <div className="space-y-1.5 border-border/50 border-t pt-2.5">
-                    <div className="flex items-center justify-between font-mono text-[10px]">
-                      <span className="flex items-center gap-1.5 font-semibold">
-                        <span
-                          className={cn(
-                            "size-1.5 rounded-full",
-                            lastCmdStatus ? "bg-emerald-500" : "bg-destructive"
-                          )}
-                        />
-                        <span
-                          className={
-                            lastCmdStatus
-                              ? "text-emerald-500"
-                              : "text-destructive"
-                          }
-                        >
-                          {lastCmdStatus
-                            ? "Command Succeeded"
-                            : "Execution Error"}
-                        </span>
-                        {lastExecutedCmd && (
-                          <span className="max-w-[140px] truncate text-muted-foreground/80 sm:max-w-[200px]">
-                            ({lastExecutedCmd})
-                          </span>
-                        )}
+                  <div className="space-y-1.5 border-border/50 border-t pt-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
+                        Terminal Output
                       </span>
                       <button
-                        className="text-primary text-[10px] underline decoration-dotted transition-colors hover:text-foreground"
-                        onClick={() =>
-                          terminalSectionRef.current?.scrollIntoView({
-                            behavior: "smooth",
-                            block: "center",
-                          })
-                        }
+                        className="font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                        onClick={() => {
+                          setOutput(null);
+                          setLastExecutedCmd(null);
+                          setLastCmdStatus(null);
+                        }}
                         type="button"
                       >
-                        Terminal Log ↓
+                        Clear ✕
                       </button>
                     </div>
-                    <div
-                      className={cn(
-                        "max-h-[90px] overflow-y-auto border p-2 font-mono text-[11px] leading-relaxed break-all select-text",
-                        lastCmdStatus
-                          ? "border-emerald-500/30 bg-emerald-500/5 text-emerald-400"
-                          : "border-destructive/40 bg-destructive/10 text-destructive"
-                      )}
-                    >
-                      <pre className="whitespace-pre-wrap font-mono text-[11px]">
-                        {output}
-                      </pre>
-                    </div>
+                    <VerbatimOutput
+                      label={
+                        lastExecutedCmd
+                          ? `$ ${lastExecutedCmd}`
+                          : "Git Subprocess Output"
+                      }
+                      ok={lastCmdStatus ?? true}
+                      output={output}
+                      preClassName="min-h-[60px] max-h-[160px] p-2.5 text-[11px]"
+                    />
                   </div>
                 )}
               </div>
@@ -727,54 +702,35 @@ export function GitSection() {
                     : "Stage, Commit & Push ↑"}
                 </Button>
 
-                {/* Inline Output Feedback for G-02 */}
+                {/* Integrated Verbatim Terminal Output for G-02 */}
                 {lastExecutedCmd?.startsWith("git push") && output && (
-                  <div className="space-y-1.5 border-border/50 border-t pt-2.5">
-                    <div className="flex items-center justify-between font-mono text-[10px]">
-                      <span className="flex items-center gap-1.5 font-semibold">
-                        <span
-                          className={cn(
-                            "size-1.5 rounded-full",
-                            lastCmdStatus ? "bg-emerald-500" : "bg-destructive"
-                          )}
-                        />
-                        <span
-                          className={
-                            lastCmdStatus
-                              ? "text-emerald-500"
-                              : "text-destructive"
-                          }
-                        >
-                          {lastCmdStatus
-                            ? "Push Succeeded"
-                            : "Push Failed / Error"}
-                        </span>
+                  <div className="space-y-1.5 border-border/50 border-t pt-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
+                        Terminal Output
                       </span>
                       <button
-                        className="text-primary text-[10px] underline decoration-dotted transition-colors hover:text-foreground"
-                        onClick={() =>
-                          terminalSectionRef.current?.scrollIntoView({
-                            behavior: "smooth",
-                            block: "center",
-                          })
-                        }
+                        className="font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                        onClick={() => {
+                          setOutput(null);
+                          setLastExecutedCmd(null);
+                          setLastCmdStatus(null);
+                        }}
                         type="button"
                       >
-                        Terminal Log ↓
+                        Clear ✕
                       </button>
                     </div>
-                    <div
-                      className={cn(
-                        "max-h-[100px] overflow-y-auto border p-2 font-mono text-[11px] leading-relaxed break-all select-text",
-                        lastCmdStatus
-                          ? "border-emerald-500/30 bg-emerald-500/5 text-emerald-400"
-                          : "border-destructive/40 bg-destructive/10 text-destructive"
-                      )}
-                    >
-                      <pre className="whitespace-pre-wrap font-mono text-[11px]">
-                        {output}
-                      </pre>
-                    </div>
+                    <VerbatimOutput
+                      label={
+                        lastExecutedCmd
+                          ? `$ ${lastExecutedCmd}`
+                          : "Git Commit & Push"
+                      }
+                      ok={lastCmdStatus ?? true}
+                      output={output}
+                      preClassName="min-h-[60px] max-h-[160px] p-2.5 text-[11px]"
+                    />
                   </div>
                 )}
               </form>
@@ -790,65 +746,7 @@ export function GitSection() {
         </div>
       </CadGridFrame>
 
-      {/* Row 2: [G-03] Git Subprocess Terminal Output */}
-      <div ref={terminalSectionRef}>
-        <CadGridFrame showRulers>
-          <div className="relative w-full overflow-visible">
-            <CadCell
-              footerLeft="Subprocess · git stdout & stderr stream"
-              footerRight={
-                <span className="max-w-[220px] truncate sm:max-w-none">
-                  <span className="sm:hidden">
-                    Dir:{" "}
-                    {diffData?.project && diffData.project !== "none"
-                      ? diffData.project
-                      : "active-project"}
-                  </span>
-                  <span className="hidden sm:inline">
-                    Working Directory ·{" "}
-                    {diffData?.path && diffData.path !== "none"
-                      ? diffData.path
-                      : "/workspace/projects/active-project"}
-                  </span>
-                </span>
-              }
-              headerAction={
-                output ? (
-                  <Button
-                    className="h-6 rounded-none px-2 font-mono text-[10px] uppercase tracking-wider"
-                    onClick={() => {
-                      setOutput(null);
-                      setLastExecutedCmd(null);
-                      setLastCmdStatus(null);
-                    }}
-                    size="xs"
-                    variant="ghost"
-                  >
-                    Clear Output ✕
-                  </Button>
-                ) : undefined
-              }
-              index="G-03"
-              title="Git Subprocess Terminal Output"
-            >
-              <VerbatimOutput
-                emptyText="No git command executed yet. Run an action in [G-01] or [G-02] above to inspect stdout/stderr results."
-                label={lastExecutedCmd ? `$ ${lastExecutedCmd}` : "Git Execution Output"}
-                ok={lastCmdStatus ?? true}
-                output={output}
-              />
-            </CadCell>
-
-            <GridCornerDots
-              className="z-3 hidden md:block"
-              columns={1}
-              rows={1}
-            />
-          </div>
-        </CadGridFrame>
-      </div>
-
-      {/* Row 3: [G-04] Working Tree Diff & Changed Files */}
+      {/* Row 2: [G-03] Working Tree Diff & Changed Files */}
       <CadGridFrame showRulers>
         <div className="relative w-full overflow-visible">
           <CadCell
@@ -923,7 +821,7 @@ export function GitSection() {
                 </Button>
               </div>
             }
-            index="G-04"
+            index="G-03"
             title="Working Tree Diff & Changed Files"
           >
             <div className="space-y-4">

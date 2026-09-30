@@ -9,6 +9,7 @@ interface VerbatimOutputProps {
   label?: string;
   emptyText?: string;
   className?: string;
+  preClassName?: string;
 }
 
 export function VerbatimOutput({
@@ -17,6 +18,7 @@ export function VerbatimOutput({
   label = "Backend Output",
   emptyText = "No output recorded yet. Run an action to inspect results.",
   className,
+  preClassName,
 }: VerbatimOutputProps) {
   if (!output) {
     return (
@@ -60,7 +62,12 @@ export function VerbatimOutput({
         />
       </div>
 
-      <pre className="max-h-[260px] min-h-[120px] flex-1 select-text overflow-x-auto overflow-y-auto whitespace-pre-wrap break-all p-3 font-mono text-foreground text-xs leading-relaxed">
+      <pre
+        className={cn(
+          "max-h-[260px] min-h-[120px] flex-1 select-text overflow-x-auto overflow-y-auto whitespace-pre-wrap break-all p-3 font-mono text-foreground text-xs leading-relaxed",
+          preClassName
+        )}
+      >
         {output}
       </pre>
     </div>

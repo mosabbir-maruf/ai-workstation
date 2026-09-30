@@ -23,14 +23,8 @@ async function handleGitDiffRequest(request: Request) {
       const body = await cloned.json();
       if (body?.output && typeof body.output === "string" && body.output.includes("Endpoint not found")) {
         return NextResponse.json({
+          ...FALLBACK_DIFF_PAYLOAD,
           ok: false,
-          clean: true,
-          project: "none",
-          path: "",
-          filesCount: 0,
-          files: [],
-          stat: "",
-          diff: "",
           needsDaemonRestart: true,
           output: "Host daemon endpoint /api/git/diff not loaded. The running host daemon instance on the server must be restarted to register the new endpoint: run 'ai daemon restart' or 'sudo systemctl restart ai-workstation-daemon'.",
         });

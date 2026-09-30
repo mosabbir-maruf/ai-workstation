@@ -49,6 +49,8 @@ function getDiffLineClass(line: string): string {
   return "text-muted-foreground";
 }
 
+const MAX_DIFF_LINES = 300;
+
 export function GitSection() {
   const [commitMessage, setCommitMessage] = useState("");
   const [output, setOutput] = useState<string | null>(null);
@@ -56,6 +58,14 @@ export function GitSection() {
   const [diffData, setDiffData] = useState<GitDiffResponse | null>(null);
   const [diffLoading, setDiffLoading] = useState(false);
   const [diffError, setDiffError] = useState<string | null>(null);
+
+  const isDaemonRestartRequired = Boolean(
+    diffData?.needsDaemonRestart ||
+      diffData?.output?.includes("Endpoint not found")
+  );
+  const isDiffError = Boolean(
+    !isDaemonRestartRequired && (diffError || diffData?.ok === false)
+  );
 
   const fetchDiff = useCallback(async () => {
     try {
@@ -80,6 +90,11 @@ export function GitSection() {
     }
     return diffData.diff.split("\n");
   }, [diffData?.diff]);
+
+  const visibleDiffLines = useMemo(
+    () => diffLines.slice(0, MAX_DIFF_LINES),
+    [diffLines]
+  );
 
   const handlePull = async () => {
     try {
@@ -352,8 +367,7 @@ export function GitSection() {
                   >
                     Checking...
                   </Badge>
-                ) : diffData?.needsDaemonRestart ||
-                  diffData?.output?.includes("Endpoint not found") ? (
+                ) : isDaemonRestartRequired ? (
                   <Badge
                     className="border-amber-500/40 bg-amber-500/10 text-amber-500 font-mono text-[10px] uppercase"
                     size="sm"
@@ -361,7 +375,7 @@ export function GitSection() {
                   >
                     Daemon Update Required
                   </Badge>
-                ) : diffData?.ok === false ? (
+                ) : isDiffError ? (
                   <Badge
                     className="border-destructive/40 bg-destructive/10 text-destructive font-mono text-[10px] uppercase"
                     size="sm"
@@ -409,10 +423,9 @@ export function GitSection() {
                   <span
                     className={cn(
                       "size-2 shrink-0 rounded-full",
-                      diffData?.needsDaemonRestart ||
-                        diffData?.output?.includes("Endpoint not found")
+                      isDaemonRestartRequired
                         ? "bg-amber-500"
-                        : diffData?.ok === false
+                        : isDiffError
                         ? "bg-destructive"
                         : diffData?.clean
                         ? "bg-emerald-500"
@@ -421,10 +434,9 @@ export function GitSection() {
                   />
                   <span className="text-muted-foreground">Status:</span>
                   <span className="font-semibold text-foreground">
-                    {diffData?.needsDaemonRestart ||
-                    diffData?.output?.includes("Endpoint not found")
+                    {isDaemonRestartRequired
                       ? "Host Daemon Restart Required"
-                      : diffData?.ok === false
+                      : isDiffError
                       ? "Git Diff Inspection Error"
                       : diffData?.clean
                       ? "Working Tree Clean"
@@ -467,8 +479,7 @@ export function GitSection() {
                 <div className="flex min-h-[140px] items-center justify-center border border-border/70 border-dashed bg-muted/10 p-4 text-center font-mono text-muted-foreground/60 text-xs">
                   Computing working tree diff...
                 </div>
-              ) : diffData?.needsDaemonRestart ||
-                diffData?.output?.includes("Endpoint not found") ? (
+              ) : isDaemonRestartRequired ? (
                 <div className="flex flex-col gap-3 border border-amber-500/40 bg-amber-500/5 p-4 sm:p-5">
                   <div className="flex items-center gap-2 font-mono text-xs font-semibold text-amber-500">
                     <span className="size-2 rounded-full bg-amber-500 animate-pulse" />
@@ -498,7 +509,7 @@ export function GitSection() {
                     </Button>
                   </div>
                 </div>
-              ) : diffError || diffData?.ok === false ? (
+              ) : isDiffError ? (
                 <div className="border border-destructive/50 bg-destructive/10 p-3 font-mono text-destructive text-xs">
                   {diffError || diffData?.output || "Failed to inspect git diff."}
                 </div>
@@ -520,7 +531,7 @@ export function GitSection() {
                     <div className="flex min-w-0 items-center gap-2">
                       <span className="size-1.5 shrink-0 rounded-full bg-amber-500" />
                       <span className="truncate font-mono text-[11px] text-muted-foreground">
-                        git diff HEAD
+                        git diff HEAD{diffLines.length > MAX_DIFF_LINES ? ` · Showing first ${MAX_DIFF_LINES} of ${diffLines.length} lines` : ""}
                       </span>
                     </div>
                     <CopyButton
@@ -531,7 +542,7 @@ export function GitSection() {
                   </div>
 
                   <div className="max-h-[360px] min-h-[120px] select-text overflow-x-auto overflow-y-auto p-2 font-mono text-xs leading-relaxed">
-                    {diffLines.map((line, idx) => (
+                    {visibleDiffLines.map((line, idx) => (
                       <div
                         className={cn(
                           "whitespace-pre px-2 py-0.5 font-mono text-[11px]",
@@ -542,6 +553,11 @@ export function GitSection() {
                         {line || " "}
                       </div>
                     ))}
+                    {diffLines.length > MAX_DIFF_LINES ? (
+                      <div className="mt-2 border-border/50 border-t pt-2 text-center font-mono text-[11px] text-muted-foreground/70">
+                        ... ({diffLines.length - MAX_DIFF_LINES} lines hidden). Use the copy button above for the complete diff.
+                      </div>
+                    ) : null}
                   </div>
                 </div>
               ) : (

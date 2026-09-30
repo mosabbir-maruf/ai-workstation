@@ -209,7 +209,7 @@ function CommandAndServicesMatrix({
             </h4>
           </div>
 
-          <div className="flex w-full min-w-0 flex-nowrap items-center gap-1 overflow-x-auto no-scrollbar sm:ml-auto sm:w-auto sm:shrink-0 sm:gap-1.5">
+          <div className="flex w-full min-w-0 flex-nowrap items-center gap-1 overflow-x-auto sm:overflow-visible no-scrollbar sm:ml-auto sm:w-auto sm:shrink-0 sm:gap-1.5">
             {workstationRunning ? (
               <Button
                 className="h-6 shrink-0 rounded-none px-2 font-mono text-[10px] uppercase tracking-tight text-rose-500 hover:bg-rose-500/10 hover:text-rose-600 border-rose-500/30 sm:px-2.5 sm:tracking-wider"
@@ -247,17 +247,36 @@ function CommandAndServicesMatrix({
                 {actionInProgress === "Stop App" ? "Stopping..." : "Stop App"}
               </Button>
             ) : (
-              <Button
-                className="h-6 shrink-0 rounded-none px-2 font-mono text-[10px] uppercase tracking-tight sm:px-2.5 sm:tracking-wider"
-                disabled={loading || actionInProgress !== null || !workstationRunning}
-                onClick={onRun}
-                size="xs"
-                variant="default"
+              <div
+                className={cn(
+                  "relative inline-flex group/runapp",
+                  !workstationRunning && "cursor-not-allowed"
+                )}
+                title={!workstationRunning ? "First start AI Workstation" : undefined}
               >
-                {actionInProgress === "Start App" || actionInProgress === "Run App"
-                  ? "Starting..."
-                  : "Start App"}
-              </Button>
+                <Button
+                  className={cn(
+                    "h-6 shrink-0 rounded-none px-2 font-mono text-[10px] uppercase tracking-tight sm:px-2.5 sm:tracking-wider",
+                    !workstationRunning &&
+                      "bg-zinc-400 text-white hover:bg-zinc-400 dark:bg-zinc-600 dark:text-zinc-100 dark:hover:bg-zinc-600 pointer-events-none border-transparent opacity-85 shadow-none"
+                  )}
+                  disabled={loading || actionInProgress !== null || !workstationRunning}
+                  onClick={onRun}
+                  size="xs"
+                  variant="default"
+                >
+                  {actionInProgress === "Run App" || actionInProgress === "Start App"
+                    ? "Starting..."
+                    : "Run App"}
+                </Button>
+
+                {!workstationRunning && (
+                  <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden whitespace-nowrap border border-border bg-popover px-2 py-0.5 font-mono text-[10px] text-popover-foreground shadow-md group-hover/runapp:flex items-center gap-1.5 z-50 animate-in fade-in-0 zoom-in-95">
+                    <span className="size-1 rounded-full bg-amber-500 shrink-0" />
+                    First start AI Workstation
+                  </div>
+                )}
+              </div>
             )}
 
             <Button
@@ -1161,7 +1180,7 @@ export function OverviewSection({ onSelectTab }: OverviewSectionProps) {
             workstationApi.stopWorkstation
           )
         }
-        onRun={() => executeQuickAction("Start App", "ai run", workstationApi.appRun)}
+        onRun={() => executeQuickAction("Run App", "ai run", workstationApi.appRun)}
         onStopApp={() =>
           executeQuickAction("Stop App", "ai app stop", workstationApi.appStop)
         }

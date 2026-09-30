@@ -486,7 +486,7 @@ export function DshKeysSection() {
             >
               <div className="space-y-4">
                 {/* Provider Selection Tabs */}
-                <div className="flex items-center gap-1 p-1 bg-muted/20 border border-border/60 rounded overflow-x-auto no-scrollbar">
+                <div className="flex flex-wrap items-center gap-1 p-1 bg-muted/20 border border-border/60 rounded">
                   {providerRows.map((prov) => {
                     const isSelected = selectedProvider === prov.id;
                     return (
@@ -498,7 +498,7 @@ export function DshKeysSection() {
                           setModelFetchNotice(null);
                         }}
                         className={cn(
-                          "flex items-center gap-1.5 px-2.5 py-1.5 rounded text-xs font-mono transition-all shrink-0 whitespace-nowrap",
+                          "flex items-center gap-1.5 px-2 py-1.5 rounded text-xs font-mono transition-all whitespace-nowrap",
                           isSelected
                             ? "bg-background text-foreground shadow-sm border border-border/80 font-medium"
                             : "text-muted-foreground hover:text-foreground hover:bg-muted/40"

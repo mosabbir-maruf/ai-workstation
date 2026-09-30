@@ -75,6 +75,8 @@ export function GitSection() {
   const [cmdHistory, setCmdHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState<number>(-1);
 
+  const isGitBusy = loading || executingGit;
+
   const isDaemonRestartRequired = Boolean(
     diffData?.needsDaemonRestart ||
       diffData?.output?.includes("Endpoint not found")
@@ -202,7 +204,7 @@ export function GitSection() {
               headerAction={
                 <Button
                   className="h-6 rounded-none px-2 font-mono text-[10px] uppercase tracking-wider"
-                  disabled={loading}
+                  disabled={isGitBusy}
                   onClick={handlePull}
                   size="xs"
                   variant="outline"
@@ -268,7 +270,7 @@ export function GitSection() {
 
                 <Button
                   className="h-9 w-full rounded-none font-mono text-xs uppercase tracking-wider"
-                  disabled={loading}
+                  disabled={isGitBusy}
                   onClick={handlePull}
                   variant="default"
                 >
@@ -358,7 +360,7 @@ export function GitSection() {
 
                 <Input
                   className="h-9 rounded-none border-border/80 bg-muted/15 font-mono text-base sm:text-xs"
-                  disabled={loading}
+                  disabled={isGitBusy}
                   id="git-commit-msg"
                   onChange={(e) => setCommitMessage(e.target.value)}
                   placeholder="feat(workstation): update environment definitions..."
@@ -367,7 +369,7 @@ export function GitSection() {
 
                 <Button
                   className="h-9 w-full rounded-none font-mono text-xs uppercase tracking-wider"
-                  disabled={loading || !commitMessage.trim()}
+                  disabled={isGitBusy || !commitMessage.trim()}
                   type="submit"
                 >
                   Stage, Commit & Push ↑
@@ -451,7 +453,7 @@ export function GitSection() {
 
                 <Button
                   className="h-6 rounded-none px-2 font-mono text-[10px] uppercase tracking-wider"
-                  disabled={diffLoading}
+                  disabled={diffLoading || isGitBusy}
                   onClick={fetchDiff}
                   size="xs"
                   variant="outline"
@@ -547,7 +549,7 @@ export function GitSection() {
                   <div className="pt-1">
                     <Button
                       className="h-7 rounded-none px-3 font-mono text-xs uppercase tracking-wider"
-                      disabled={diffLoading}
+                      disabled={diffLoading || isGitBusy}
                       onClick={fetchDiff}
                       size="xs"
                       variant="outline"
@@ -684,7 +686,7 @@ export function GitSection() {
                     </span>
                     <Input
                       className="h-9 rounded-none border-border/80 bg-background/80 pl-11 font-mono text-xs text-foreground placeholder:text-muted-foreground/50 focus-visible:ring-1 focus-visible:ring-primary"
-                      disabled={executingGit}
+                      disabled={isGitBusy}
                       onChange={(e) => setManualCommand(e.target.value)}
                       onKeyDown={(e) => {
                         if (e.key === "ArrowUp") {
@@ -715,7 +717,7 @@ export function GitSection() {
                   </div>
                   <Button
                     className="h-9 shrink-0 rounded-none px-4 font-mono text-xs uppercase tracking-wider"
-                    disabled={executingGit || !manualCommand.trim()}
+                    disabled={isGitBusy || !manualCommand.trim()}
                     type="submit"
                     variant="default"
                   >
@@ -731,7 +733,7 @@ export function GitSection() {
                   {GIT_QUICK_ACTIONS.map((preset) => (
                     <button
                       className="border border-border/70 bg-muted/20 px-2 py-1 font-mono text-[11px] text-muted-foreground transition-colors hover:border-primary/50 hover:bg-muted/40 hover:text-foreground disabled:opacity-50"
-                      disabled={executingGit}
+                      disabled={isGitBusy}
                       key={preset.command}
                       onClick={() => handleExecuteGit(preset.command)}
                       title={preset.description}

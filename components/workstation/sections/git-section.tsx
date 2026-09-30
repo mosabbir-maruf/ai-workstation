@@ -195,11 +195,11 @@ export function GitSection() {
       <CadGridFrame showRulers>
         <div className="relative w-full overflow-visible">
           <div className="grid w-full grid-cols-1 md:grid-cols-12">
-            {/* Left 6 cols: [G-01] Git Synchronize (Pull) */}
+            {/* Left 6 cols: [G-01] Git Synchronize & CLI Execution */}
             <CadCell
-              bodyClassName="space-y-5"
+              bodyClassName="space-y-4"
               className="md:col-span-6"
-              footerLeft="POST /api/git/pull · Fetch & Fast-Forward"
+              footerLeft="POST /api/git/pull · Synchronize & CLI Execution"
               footerRight="Remote · origin/main"
               headerAction={
                 <Button
@@ -213,63 +213,65 @@ export function GitSection() {
                 </Button>
               }
               index="G-01"
-              title="Git Synchronize (Pull)"
+              title="Git Synchronize & CLI Execution"
             >
+              {/* Upstream Sync Spec */}
               <div>
-                <div className="mb-2.5 font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
+                <div className="mb-2 font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
                   Upstream Sync Specification
                 </div>
-                <div className="grid grid-cols-3 gap-1.5 sm:gap-2.5">
-                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 p-2 sm:px-3 sm:py-2.5">
+                <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
+                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 p-2 sm:px-2.5 sm:py-2">
                     <div className="flex items-center justify-between gap-1.5">
                       <span className="truncate font-bold font-mono text-foreground text-xs sm:text-sm">
                         origin
                       </span>
                       <span className="size-1.5 shrink-0 rounded-full bg-emerald-500" />
                     </div>
-                    <span className="mt-1 truncate font-medium text-muted-foreground text-[10px] sm:text-xs">
+                    <span className="mt-1 truncate font-medium text-muted-foreground text-[10px]">
                       Upstream Remote
                     </span>
                   </div>
 
-                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 p-2 sm:px-3 sm:py-2.5">
+                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 p-2 sm:px-2.5 sm:py-2">
                     <div className="flex items-center justify-between gap-1.5">
                       <span className="truncate font-bold font-mono text-foreground text-xs sm:text-sm">
                         ⎇ main
                       </span>
                       <span className="size-1.5 shrink-0 rounded-full bg-emerald-500" />
                     </div>
-                    <span className="mt-1 truncate font-medium text-muted-foreground text-[10px] sm:text-xs">
+                    <span className="mt-1 truncate font-medium text-muted-foreground text-[10px]">
                       Tracked Branch
                     </span>
                   </div>
 
-                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 p-2 sm:px-3 sm:py-2.5">
+                  <div className="flex flex-col justify-between border border-border/80 bg-muted/15 p-2 sm:px-2.5 sm:py-2">
                     <div className="flex items-center justify-between gap-1.5">
                       <span className="truncate font-bold font-mono text-foreground text-xs sm:text-sm">
                         FF-Only
                       </span>
                       <span className="size-1.5 shrink-0 rounded-full bg-emerald-500" />
                     </div>
-                    <span className="mt-1 truncate font-medium text-muted-foreground text-[10px] sm:text-xs">
+                    <span className="mt-1 truncate font-medium text-muted-foreground text-[10px]">
                       Merge Strategy
                     </span>
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-3 border-border/50 border-t pt-4">
+              {/* Execution Pipeline & Primary Pull */}
+              <div className="space-y-2 border-border/50 border-t pt-3">
                 <div className="flex flex-wrap items-center justify-between gap-1 font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
-                  <span>Execution Command Pipeline</span>
+                  <span>Fast-Forward Pipeline</span>
                   <span>Clean Index Verified</span>
                 </div>
 
-                <div className="border border-border/70 bg-muted/15 px-3.5 py-2 font-mono text-foreground text-xs break-all overflow-x-auto">
+                <div className="border border-border/70 bg-muted/15 px-3 py-1.5 font-mono text-foreground text-[11px] break-all overflow-x-auto">
                   git fetch --prune origin && git pull --ff-only origin main
                 </div>
 
                 <Button
-                  className="h-9 w-full rounded-none font-mono text-xs uppercase tracking-wider"
+                  className="h-8 w-full rounded-none font-mono text-xs uppercase tracking-wider"
                   disabled={isGitBusy}
                   onClick={handlePull}
                   variant="default"
@@ -278,6 +280,85 @@ export function GitSection() {
                     ? "Synchronizing Working Tree..."
                     : "Execute Git Pull ↓"}
                 </Button>
+              </div>
+
+              {/* Manual Git CLI Command & Presets */}
+              <div className="space-y-2 border-border/50 border-t pt-3">
+                <div className="flex flex-wrap items-center justify-between gap-1 font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
+                  <span>Manual Git Command Execution</span>
+                  <span>Press Enter ↵ · ↑↓ History</span>
+                </div>
+
+                <form
+                  className="flex items-center gap-1.5"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleExecuteGit();
+                  }}
+                >
+                  <div className="relative flex flex-1 items-center">
+                    <span className="pointer-events-none absolute left-2.5 select-none font-bold font-mono text-emerald-500 text-xs">
+                      git
+                    </span>
+                    <Input
+                      className="h-8 rounded-none border-border/80 bg-background/80 pl-9 font-mono text-xs text-foreground placeholder:text-muted-foreground/50 focus-visible:ring-1 focus-visible:ring-primary"
+                      disabled={isGitBusy}
+                      onChange={(e) => setManualCommand(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "ArrowUp") {
+                          e.preventDefault();
+                          if (cmdHistory.length > 0) {
+                            const nextIdx = Math.min(
+                              historyIndex + 1,
+                              cmdHistory.length - 1
+                            );
+                            setHistoryIndex(nextIdx);
+                            setManualCommand(cmdHistory[nextIdx]);
+                          }
+                        } else if (e.key === "ArrowDown") {
+                          e.preventDefault();
+                          if (historyIndex > 0) {
+                            const nextIdx = historyIndex - 1;
+                            setHistoryIndex(nextIdx);
+                            setManualCommand(cmdHistory[nextIdx]);
+                          } else if (historyIndex === 0) {
+                            setHistoryIndex(-1);
+                            setManualCommand("");
+                          }
+                        }
+                      }}
+                      placeholder="status, log -n 5, branch -a, checkout main..."
+                      value={manualCommand}
+                    />
+                  </div>
+                  <Button
+                    className="h-8 shrink-0 rounded-none px-3 font-mono text-xs uppercase tracking-wider"
+                    disabled={isGitBusy || !manualCommand.trim()}
+                    type="submit"
+                    variant="outline"
+                  >
+                    {executingGit ? "Running..." : "Execute ↵"}
+                  </Button>
+                </form>
+
+                {/* Quick-action Presets */}
+                <div className="flex flex-wrap items-center gap-1 pt-0.5">
+                  <span className="mr-0.5 font-mono text-[9px] text-muted-foreground/60 uppercase tracking-wider">
+                    Presets:
+                  </span>
+                  {GIT_QUICK_ACTIONS.map((preset) => (
+                    <button
+                      className="border border-border/70 bg-muted/20 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground transition-colors hover:border-primary/50 hover:bg-muted/40 hover:text-foreground disabled:opacity-50"
+                      disabled={isGitBusy}
+                      key={preset.command}
+                      onClick={() => handleExecuteGit(preset.command)}
+                      title={preset.description}
+                      type="button"
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             </CadCell>
 
@@ -625,11 +706,11 @@ export function GitSection() {
         </div>
       </CadGridFrame>
 
-      {/* Row 3: [G-04] Git CLI & Subprocess Execution Console */}
+      {/* Row 3: [G-04] Git Subprocess Terminal Output */}
       <CadGridFrame showRulers>
         <div className="relative w-full overflow-visible">
           <CadCell
-            footerLeft="CLI · interactive git stdout & stderr stream"
+            footerLeft="Subprocess · git stdout & stderr stream"
             footerRight={
               <span className="max-w-[220px] truncate sm:max-w-none">
                 <span className="sm:hidden">
@@ -663,98 +744,14 @@ export function GitSection() {
               ) : undefined
             }
             index="G-04"
-            title="Manual Git CLI & Command Execution"
+            title="Git Subprocess Terminal Output"
           >
-            <div className="space-y-4">
-              {/* Interactive Command Input Form */}
-              <div className="space-y-2.5">
-                <div className="flex flex-wrap items-center justify-between gap-1 font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
-                  <span>Manual Command Prompt</span>
-                  <span>Press Enter ↵ to Execute · ↑↓ History</span>
-                </div>
-
-                <form
-                  className="flex items-center gap-2"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    handleExecuteGit();
-                  }}
-                >
-                  <div className="relative flex flex-1 items-center">
-                    <span className="pointer-events-none absolute left-3 select-none font-bold font-mono text-emerald-500 text-xs sm:text-sm">
-                      git
-                    </span>
-                    <Input
-                      className="h-9 rounded-none border-border/80 bg-background/80 pl-11 font-mono text-xs text-foreground placeholder:text-muted-foreground/50 focus-visible:ring-1 focus-visible:ring-primary"
-                      disabled={isGitBusy}
-                      onChange={(e) => setManualCommand(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "ArrowUp") {
-                          e.preventDefault();
-                          if (cmdHistory.length > 0) {
-                            const nextIdx = Math.min(
-                              historyIndex + 1,
-                              cmdHistory.length - 1
-                            );
-                            setHistoryIndex(nextIdx);
-                            setManualCommand(cmdHistory[nextIdx]);
-                          }
-                        } else if (e.key === "ArrowDown") {
-                          e.preventDefault();
-                          if (historyIndex > 0) {
-                            const nextIdx = historyIndex - 1;
-                            setHistoryIndex(nextIdx);
-                            setManualCommand(cmdHistory[nextIdx]);
-                          } else if (historyIndex === 0) {
-                            setHistoryIndex(-1);
-                            setManualCommand("");
-                          }
-                        }
-                      }}
-                      placeholder="status, log -n 5 --oneline, branch -a, checkout main, stash..."
-                      value={manualCommand}
-                    />
-                  </div>
-                  <Button
-                    className="h-9 shrink-0 rounded-none px-4 font-mono text-xs uppercase tracking-wider"
-                    disabled={isGitBusy || !manualCommand.trim()}
-                    type="submit"
-                    variant="default"
-                  >
-                    {executingGit ? "Running..." : "Execute ↵"}
-                  </Button>
-                </form>
-
-                {/* Preset Chips */}
-                <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-                  <span className="mr-1 font-mono text-[10px] text-muted-foreground/60 uppercase tracking-wider">
-                    Presets:
-                  </span>
-                  {GIT_QUICK_ACTIONS.map((preset) => (
-                    <button
-                      className="border border-border/70 bg-muted/20 px-2 py-1 font-mono text-[11px] text-muted-foreground transition-colors hover:border-primary/50 hover:bg-muted/40 hover:text-foreground disabled:opacity-50"
-                      disabled={isGitBusy}
-                      key={preset.command}
-                      onClick={() => handleExecuteGit(preset.command)}
-                      title={preset.description}
-                      type="button"
-                    >
-                      git {preset.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Subprocess Output Stream */}
-              <div className="border-border/40 border-t pt-1">
-                <VerbatimOutput
-                  emptyText="No git command executed yet. Run an action above or execute a manual git command."
-                  label={lastExecutedCmd ? `$ ${lastExecutedCmd}` : "Git Execution Output"}
-                  ok={lastCmdStatus ?? true}
-                  output={output}
-                />
-              </div>
-            </div>
+            <VerbatimOutput
+              emptyText="No git command executed yet. Run an action in [G-01] or [G-02] above to inspect stdout/stderr results."
+              label={lastExecutedCmd ? `$ ${lastExecutedCmd}` : "Git Execution Output"}
+              ok={lastCmdStatus ?? true}
+              output={output}
+            />
           </CadCell>
 
           <GridCornerDots

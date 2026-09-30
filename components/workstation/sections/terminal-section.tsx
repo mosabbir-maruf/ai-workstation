@@ -248,7 +248,7 @@ export function TerminalSection() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-10 md:space-y-11">
       {/* CAD Terminal Execution Cell */}
       <CadGridFrame>
         <div className="relative w-full min-w-0 max-w-full overflow-visible">

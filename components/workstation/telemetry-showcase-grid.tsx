@@ -28,46 +28,9 @@ import {
 import { homeTooltipPanelStyle } from "@/lib/home-tooltip-style";
 import { cn } from "@/lib/utils";
 import type { WorkstationTelemetryMetrics } from "@/lib/workstation/api";
+import { CadGridFrame } from "./cad-primitives";
 
-/**
- * CAD Grid Frame with technical corner ruler ticks
- * matching the landing page grid frames.
- */
-export function CadGridFrame({
-  children,
-  className,
-  showRulers = true,
-}: {
-  children: ReactNode;
-  className?: string;
-  showRulers?: boolean;
-}) {
-  return (
-    <div
-      className={cn(
-        "relative flex w-full min-w-0 max-w-full flex-col overflow-visible border-border border-t border-l",
-        className
-      )}
-    >
-      {children}
-      {showRulers && (
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -top-px right-0 bottom-0 -left-px -z-10 hidden md:block"
-        >
-          <div className="absolute -top-4 left-0 h-5 w-px bg-muted-foreground/35" />
-          <div className="absolute top-0 -left-4 h-px w-5 bg-muted-foreground/35" />
-          <div className="absolute -top-4 right-0 h-5 w-px bg-muted-foreground/35" />
-          <div className="absolute top-0 -right-4 h-px w-5 bg-muted-foreground/35" />
-          <div className="absolute -bottom-4 left-0 h-5 w-px bg-muted-foreground/35" />
-          <div className="absolute bottom-0 -left-4 h-px w-5 bg-muted-foreground/35" />
-          <div className="absolute right-0 -bottom-4 h-5 w-px bg-muted-foreground/35" />
-          <div className="absolute -right-4 bottom-0 h-px w-5 bg-muted-foreground/35" />
-        </div>
-      )}
-    </div>
-  );
-}
+export { CadGridFrame };
 
 function ChartEmptyState({
   title = "Telemetry Offline",

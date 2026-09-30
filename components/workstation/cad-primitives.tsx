@@ -7,7 +7,6 @@ export function CadGridFrame({
   children,
   className,
   showRulers = true,
-  showDots = true,
 }: {
   children: ReactNode;
   className?: string;
@@ -22,36 +21,20 @@ export function CadGridFrame({
       )}
     >
       {children}
-
-      {/* 4 Corner Crosshair Intersection Dots */}
-      {showDots && (
-        <div aria-hidden className="pointer-events-none absolute inset-0 z-3">
-          <span className="absolute top-0 left-0 size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border border-border bg-white sm:size-3 dark:bg-background" />
-          <span className="absolute top-0 left-full size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border border-border bg-white sm:size-3 dark:bg-background" />
-          <span className="absolute top-full left-0 size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border border-border bg-white sm:size-3 dark:bg-background" />
-          <span className="absolute top-full left-full size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border border-border bg-white sm:size-3 dark:bg-background" />
-        </div>
-      )}
-
-      {/* Blueprint Grid Rulers & Diagonal Striped Hatch Corners */}
       {showRulers && (
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 -z-10 hidden md:block"
+          className="pointer-events-none absolute -top-px right-0 bottom-0 -left-px -z-10 hidden md:block"
           data-grid-rulers
         >
-          <div className="absolute -top-8 left-0 block h-10 w-px bg-muted-foreground/40" />
-          <div className="absolute top-0 -left-8 block h-px w-10 bg-muted-foreground/40" />
-          <div className="absolute -top-8 right-0 block h-10 w-px bg-muted-foreground/40" />
-          <div className="absolute top-0 -right-8 block h-px w-10 bg-muted-foreground/40" />
-
-          <div className="absolute -bottom-8 left-0 block h-10 w-px bg-muted-foreground/40" />
-          <div className="absolute bottom-0 -left-8 block h-px w-10 bg-muted-foreground/40" />
-          <div className="absolute right-0 -bottom-8 block h-10 w-px bg-muted-foreground/40" />
-          <div className="absolute -right-8 bottom-0 block h-px w-10 bg-muted-foreground/40" />
-
-          <div className="absolute -top-8 -right-8 block h-6 w-6 bg-[repeating-linear-gradient(45deg,color-mix(in_oklch,var(--muted-foreground)_40%,transparent)_0,color-mix(in_oklch,var(--muted-foreground)_40%,transparent)_1px,transparent_0,transparent_50%)] bg-size-[5px_5px] bg-fixed opacity-80" />
-          <div className="absolute -bottom-8 -left-8 block h-6 w-6 bg-[repeating-linear-gradient(45deg,color-mix(in_oklch,var(--muted-foreground)_40%,transparent)_0,color-mix(in_oklch,var(--muted-foreground)_40%,transparent)_1px,transparent_0,transparent_50%)] bg-size-[5px_5px] bg-fixed opacity-80" />
+          <div className="absolute -top-4 left-0 h-5 w-px bg-muted-foreground/35" />
+          <div className="absolute top-0 -left-4 h-px w-5 bg-muted-foreground/35" />
+          <div className="absolute -top-4 right-0 h-5 w-px bg-muted-foreground/35" />
+          <div className="absolute top-0 -right-4 h-px w-5 bg-muted-foreground/35" />
+          <div className="absolute -bottom-4 left-0 h-5 w-px bg-muted-foreground/35" />
+          <div className="absolute bottom-0 -left-4 h-px w-5 bg-muted-foreground/35" />
+          <div className="absolute right-0 -bottom-4 h-5 w-px bg-muted-foreground/35" />
+          <div className="absolute -right-4 bottom-0 h-px w-5 bg-muted-foreground/35" />
         </div>
       )}
     </div>

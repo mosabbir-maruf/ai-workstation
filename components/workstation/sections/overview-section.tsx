@@ -16,8 +16,9 @@ import {
   type WorkstationTelemetryMetrics,
   workstationApi,
 } from "@/lib/workstation/api";
+import { CadGridFrame } from "../cad-primitives";
 import { SseLogViewer } from "../sse-log-viewer";
-import { CadGridFrame, TelemetryShowcaseGrid } from "../telemetry-showcase-grid";
+import { TelemetryShowcaseGrid } from "../telemetry-showcase-grid";
 
 export { TelemetryShowcaseGrid };
 

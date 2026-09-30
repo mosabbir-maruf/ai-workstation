@@ -25,6 +25,7 @@ const DEFAULT_MODELS: Record<string, string[]> = {
   ],
   gemini: ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-1.5-pro", "gemini-1.5-flash"],
   openrouter: [
+    "openrouter/free",
     "deepseek/deepseek-r1:free",
     "deepseek/deepseek-chat:free",
     "meta-llama/llama-3.3-70b-instruct:free",

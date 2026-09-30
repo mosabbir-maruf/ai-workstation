@@ -11,6 +11,12 @@ interface ModelDropdownSelectorProps {
   className?: string;
 }
 
+function isFreeModel(modelId: string): boolean {
+  if (!modelId) return false;
+  const lower = modelId.toLowerCase();
+  return lower.includes(":free") || lower.endsWith("free") || lower.includes("/free");
+}
+
 export function ModelDropdownSelector({
   models,
   selectedModel,
@@ -53,26 +59,23 @@ export function ModelDropdownSelector({
   }, [isOpen]);
 
   const freeModelsCount = useMemo(() => {
-    return models.filter((m) => m.toLowerCase().includes(":free") || m.toLowerCase().includes("free")).length;
+    return models.filter(isFreeModel).length;
   }, [models]);
 
   const filteredModels = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return models;
     return models.filter((m) => {
-      const lower = m.toLowerCase();
       if (q === "free") {
-        return lower.includes(":free") || lower.includes("free");
+        return isFreeModel(m);
       }
-      return lower.includes(q);
+      return m.toLowerCase().includes(q);
     });
   }, [models, search]);
 
   const isFreeSearch = search.trim().toLowerCase() === "free";
   const displayText = selectedModel || placeholder;
-  const isSelectedFree = Boolean(
-    selectedModel && (selectedModel.toLowerCase().includes(":free") || selectedModel.toLowerCase().endsWith("free"))
-  );
+  const isSelectedFree = Boolean(selectedModel && isFreeModel(selectedModel));
 
   return (
     <div className={cn("relative w-full", className)} ref={containerRef}>
@@ -183,7 +186,7 @@ export function ModelDropdownSelector({
             ) : (
               filteredModels.map((m) => {
                 const isSelected = m === selectedModel;
-                const isFree = m.toLowerCase().includes(":free") || m.toLowerCase().endsWith("free");
+                const isFree = isFreeModel(m);
                 return (
                   <button
                     key={m}

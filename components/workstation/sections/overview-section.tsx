@@ -157,7 +157,11 @@ function CommandAndServicesMatrix({
       index: "S-02",
       title: "App + PID",
       state: isInitialSync ? "pending" : appState,
-      value: isInitialSync ? "Syncing..." : appRunning ? (appPid && appPid !== "—" ? `PID ${appPid}` : "Active") : "Stopped",
+      value: isInitialSync
+        ? "Syncing..."
+        : appRunning && appPid
+          ? `PID ${appPid}`
+          : "Stopped",
       sub: isInitialSync ? "Probing runtime..." : "Next.js Application Runtime",
       route: "GET /api/app/status",
       badge: isInitialSync ? "SYNC" : appRunning ? "ACTIVE" : "IDLE",
@@ -250,7 +254,9 @@ function CommandAndServicesMatrix({
                 size="xs"
                 variant="default"
               >
-                {actionInProgress === "Run App" ? "Launching..." : "Run App"}
+                {actionInProgress === "Start App" || actionInProgress === "Run App"
+                  ? "Starting..."
+                  : "Start App"}
               </Button>
             )}
 
@@ -970,8 +976,14 @@ export function OverviewSection({ onSelectTab }: OverviewSectionProps) {
         setHealthOk(isHealthy);
         setBrokerOnline(ov.broker?.online ?? false);
         setWorkstationRunning(ov.workstation?.running ?? false);
-        setAppRunning(ov.app?.running ?? false);
-        setAppPid(ov.app?.pid ?? null);
+        const isAppActive = Boolean(
+          ov.app?.running &&
+            ov.app?.pid &&
+            ov.app.pid !== "—" &&
+            ov.app.pid !== "none"
+        );
+        setAppRunning(isAppActive);
+        setAppPid(isAppActive ? (ov.app?.pid ?? null) : null);
         setHarnessActive(ov.harness?.active ?? false);
         setTunnelOnline(ov.tunnel?.online ?? false);
         if (ov.activeProject) {
@@ -993,8 +1005,8 @@ export function OverviewSection({ onSelectTab }: OverviewSectionProps) {
         lastOverviewCache = {
           healthOk: isHealthy,
           workstationRunning: ov.workstation?.running ?? false,
-          appRunning: ov.app?.running ?? false,
-          appPid: ov.app?.pid ?? null,
+          appRunning: isAppActive,
+          appPid: isAppActive ? (ov.app?.pid ?? null) : null,
           harnessActive: ov.harness?.active ?? false,
           brokerOnline: ov.broker?.online ?? false,
           tunnelOnline: ov.tunnel?.online ?? false,
@@ -1056,8 +1068,19 @@ export function OverviewSection({ onSelectTab }: OverviewSectionProps) {
       if (res.ok) {
         if (name === "Start Workstation") setWorkstationRunning(true);
         if (name === "Stop Workstation") setWorkstationRunning(false);
-        if (name === "Run App") setAppRunning(true);
-        if (name === "Stop App") setAppRunning(false);
+        if (name === "Start App" || name === "Run App") setAppRunning(true);
+        if (name === "Stop App") {
+          setAppRunning(false);
+          setAppPid(null);
+        }
+      }
+
+      if (
+        trimmedOutput.includes("Project is not running") ||
+        trimmedOutput.includes("Project stopped")
+      ) {
+        setAppRunning(false);
+        setAppPid(null);
       }
 
       setActionFeedback({
@@ -1138,7 +1161,7 @@ export function OverviewSection({ onSelectTab }: OverviewSectionProps) {
             workstationApi.stopWorkstation
           )
         }
-        onRun={() => executeQuickAction("Run App", "ai run", workstationApi.appRun)}
+        onRun={() => executeQuickAction("Start App", "ai run", workstationApi.appRun)}
         onStopApp={() =>
           executeQuickAction("Stop App", "ai app stop", workstationApi.appStop)
         }

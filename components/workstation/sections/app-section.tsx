@@ -11,6 +11,7 @@ import { VerbatimOutput } from "../verbatim-output";
 export function AppSection() {
   const [appStatus, setAppStatus] = useState<string | null>(null);
   const [actionOutput, setActionOutput] = useState<string | null>(null);
+  const [actionOk, setActionOk] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(false);
   const [streamKey, setStreamKey] = useState(0);
 
@@ -53,10 +54,12 @@ export function AppSection() {
       setLoading(true);
       const res = await fn();
       setActionOutput(res.output);
+      setActionOk(res.ok ?? true);
       await fetchStatus();
       setStreamKey((k) => k + 1);
     } catch (err) {
       setActionOutput(`Action error: ${String(err)}`);
+      setActionOk(false);
     } finally {
       setLoading(false);
     }
@@ -185,10 +188,27 @@ export function AppSection() {
               </div>
 
               {actionOutput && (
-                <div className="pt-1">
+                <div className="space-y-1.5 border-border/50 border-t pt-3">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
+                      Process Action Output
+                    </span>
+                    <button
+                      className="font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                      onClick={() => {
+                        setActionOutput(null);
+                        setActionOk(null);
+                      }}
+                      type="button"
+                    >
+                      Clear ✕
+                    </button>
+                  </div>
                   <VerbatimOutput
                     label="Last Action Result"
+                    ok={actionOk ?? true}
                     output={actionOutput}
+                    preClassName="min-h-[60px] max-h-[160px] p-2.5 text-[11px]"
                   />
                 </div>
               )}

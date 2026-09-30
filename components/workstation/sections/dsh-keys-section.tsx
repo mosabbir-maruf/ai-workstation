@@ -35,6 +35,8 @@ export function DshKeysSection() {
   const [content, setContent] = useState("");
   const [mtime, setMtime] = useState<string | null>(null);
   const [actionOutput, setActionOutput] = useState<string | null>(null);
+  const [lastAction, setLastAction] = useState<"keys" | "payload" | "matrix" | null>(null);
+  const [actionOk, setActionOk] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(false);
   const [revealKeys, setRevealKeys] = useState(false);
 
@@ -215,20 +217,29 @@ export function DshKeysSection() {
   const handleStageToJson = () => {
     const nextJson = buildSyncedJson(content);
     setContent(nextJson);
+    setLastAction("keys");
+    setActionOk(true);
     setActionOutput(
       "[Stage Provider Keys]\nInjected staged API keys and model identifiers into dsh-settings JSON editor payload."
     );
   };
 
-  const handleSave = async (payloadOverride?: string, logHeader = "[POST /api/dsh-settings]") => {
+  const handleSave = async (
+    payloadOverride?: string,
+    logHeader = "[POST /api/dsh-settings]",
+    source: "keys" | "payload" | "matrix" = "payload"
+  ) => {
     const payloadToSave = payloadOverride ?? content;
     try {
       setLoading(true);
+      setLastAction(source);
       const res = await workstationApi.saveDshSettings(payloadToSave);
       setActionOutput(`${logHeader}\n${res.output || "Settings saved successfully."}`);
+      setActionOk(res.ok ?? true);
       await fetchSettings();
     } catch (err) {
       setActionOutput(`Failed to save settings: ${String(err)}`);
+      setActionOk(false);
     } finally {
       setLoading(false);
     }
@@ -277,21 +288,26 @@ export function DshKeysSection() {
     }
 
     setContent(nextJson);
-    await handleSave(nextJson, `[DELETE Provider → ${provName}]`);
+    await handleSave(nextJson, `[DELETE Provider → ${provName}]`, "matrix");
   };
 
   const handleSyncAndSave = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     const nextJson = buildSyncedJson(content);
     setContent(nextJson);
-    await handleSave(nextJson);
+    await handleSave(nextJson, "[POST /api/dsh-settings]", "keys");
   };
 
   const handleFormatJson = () => {
     try {
+      setLastAction("payload");
       const parsed = JSON.parse(content || "{}");
       setContent(JSON.stringify(parsed, null, 2));
+      setActionOk(true);
+      setActionOutput("[JSON Format]\nSuccessfully parsed and formatted dsh-settings JSON.");
     } catch (err) {
+      setLastAction("payload");
+      setActionOk(false);
       setActionOutput(`JSON format error: ${String(err)}`);
     }
   };
@@ -736,6 +752,33 @@ export function DshKeysSection() {
                     <span className="italic text-muted-foreground/60 text-[10px]">No keys configured yet</span>
                   )}
                 </div>
+
+                {lastAction === "keys" && actionOutput && (
+                  <div className="space-y-1.5 border-border/50 border-t pt-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
+                        Provider Key Sync Output
+                      </span>
+                      <button
+                        className="font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                        onClick={() => {
+                          setActionOutput(null);
+                          setLastAction(null);
+                          setActionOk(null);
+                        }}
+                        type="button"
+                      >
+                        Clear ✕
+                      </button>
+                    </div>
+                    <VerbatimOutput
+                      label="Key Vault Mutation"
+                      ok={actionOk ?? true}
+                      output={actionOutput}
+                      preClassName="min-h-[60px] max-h-[160px] p-2.5 text-[11px]"
+                    />
+                  </div>
+                )}
               </div>
             </CadCell>
 
@@ -845,6 +888,33 @@ export function DshKeysSection() {
                   spellCheck={false}
                   value={content}
                 />
+
+                {lastAction === "payload" && actionOutput && (
+                  <div className="space-y-1.5 border-border/50 border-t pt-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
+                        JSON Payload Output
+                      </span>
+                      <button
+                        className="font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                        onClick={() => {
+                          setActionOutput(null);
+                          setLastAction(null);
+                          setActionOk(null);
+                        }}
+                        type="button"
+                      >
+                        Clear ✕
+                      </button>
+                    </div>
+                    <VerbatimOutput
+                      label="POST /api/dsh-settings"
+                      ok={actionOk ?? true}
+                      output={actionOutput}
+                      preClassName="min-h-[60px] max-h-[160px] p-2.5 text-[11px]"
+                    />
+                  </div>
+                )}
               </div>
             </CadCell>
           </div>
@@ -858,14 +928,14 @@ export function DshKeysSection() {
         </div>
       </CadGridFrame>
 
-      {/* Row 2: Balanced 6/6 CAD Grid — Provider Fingerprint Audit Matrix + Mutation Output */}
+      {/* Row 2: Provider Key Fingerprint & Routing Matrix */}
       <CadGridFrame>
         <div className="relative w-full overflow-visible">
           <div className="grid w-full grid-cols-1 md:grid-cols-12">
             {/* [K-03] Provider Key Fingerprint & Routing Matrix */}
             <CadCell
               bodyClassName="flex flex-col justify-between gap-4 p-5"
-              className="md:col-span-6"
+              className="md:col-span-12"
               footerLeft="Masked credential fingerprint audit"
               footerRight="RUNTIME ENV INJECTION"
               headerAction={
@@ -962,45 +1032,39 @@ export function DshKeysSection() {
                   );
                 })}
               </div>
-            </CadCell>
 
-            {/* [K-04] Configuration Mutation Output */}
-            <CadCell
-              bodyClassName="p-0"
-              className="md:col-span-6"
-              footerLeft="Response payload from GET/POST /api/dsh-settings"
-              footerRight="EXECUTION LOG"
-              headerAction={
-                actionOutput ? (
-                  <Button
-                    className="h-6 rounded-none px-2 font-mono text-[10px] uppercase tracking-wider"
-                    onClick={() => setActionOutput(null)}
-                    size="sm"
-                    type="button"
-                    variant="ghost"
-                  >
-                    Clear
-                  </Button>
-                ) : null
-              }
-              index="K-04"
-              title="Configuration Mutation Output"
-            >
-              <VerbatimOutput
-                className="min-h-[200px] border-0 shadow-none"
-                label="POST /api/dsh-settings"
-                output={
-                  actionOutput ??
-                  "Ready. Sync provider keys or save the dsh-settings JSON payload above to inspect mutation output."
-                }
-              />
+              {lastAction === "matrix" && actionOutput && (
+                <div className="space-y-1.5 border-border/50 border-t pt-3">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
+                      Credential Deletion Output
+                    </span>
+                    <button
+                      className="font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                      onClick={() => {
+                        setActionOutput(null);
+                        setLastAction(null);
+                        setActionOk(null);
+                      }}
+                      type="button"
+                    >
+                      Clear ✕
+                    </button>
+                  </div>
+                  <VerbatimOutput
+                    label="Key Vault Deletion"
+                    ok={actionOk ?? true}
+                    output={actionOutput}
+                    preClassName="min-h-[60px] max-h-[160px] p-2.5 text-[11px]"
+                  />
+                </div>
+              )}
             </CadCell>
           </div>
 
           <GridCornerDots
             className="z-3 hidden md:block"
-            columns={2}
-            columnWeights={[6, 6]}
+            columns={1}
             rows={1}
           />
         </div>

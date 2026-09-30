@@ -41,6 +41,8 @@ export function StateSection() {
     downloadUrl: string;
   } | null>(null);
   const [actionOutput, setActionOutput] = useState<string | null>(null);
+  const [lastAction, setLastAction] = useState<"export" | "import" | null>(null);
+  const [actionOk, setActionOk] = useState<boolean | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -48,6 +50,7 @@ export function StateSection() {
   const handleExport = async () => {
     try {
       setLoading(true);
+      setLastAction("export");
       const res = await workstationApi.exportState();
       if (res.ok) {
         setExportResult({
@@ -57,9 +60,14 @@ export function StateSection() {
         setActionOutput(
           `[POST /api/state/export]\nState snapshot created successfully: ${res.filename}\nDownload URL: ${res.downloadUrl}`
         );
+        setActionOk(true);
+      } else {
+        setActionOutput(`State export response: ${JSON.stringify(res)}`);
+        setActionOk(false);
       }
     } catch (err) {
       setActionOutput(`State export failed: ${String(err)}`);
+      setActionOk(false);
     } finally {
       setLoading(false);
     }
@@ -73,16 +81,19 @@ export function StateSection() {
 
     try {
       setLoading(true);
+      setLastAction("import");
       const res = await workstationApi.importState(selectedFile);
       setActionOutput(
         `[POST /api/state/import · ${selectedFile.name}]\n${res.output}`
       );
+      setActionOk(res.ok ?? true);
       setSelectedFile(null);
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
     } catch (err) {
       setActionOutput(`State import failed: ${String(err)}`);
+      setActionOk(false);
     } finally {
       setLoading(false);
     }
@@ -244,6 +255,33 @@ export function StateSection() {
                     </div>
                   </div>
                 </div>
+
+                {lastAction === "export" && actionOutput && (
+                  <div className="space-y-1.5 border-border/50 border-t pt-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
+                        Export Operation Output
+                      </span>
+                      <button
+                        className="font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                        onClick={() => {
+                          setActionOutput(null);
+                          setLastAction(null);
+                          setActionOk(null);
+                        }}
+                        type="button"
+                      >
+                        Clear ✕
+                      </button>
+                    </div>
+                    <VerbatimOutput
+                      label="POST /api/state/export"
+                      ok={actionOk ?? true}
+                      output={actionOutput}
+                      preClassName="min-h-[60px] max-h-[160px] p-2.5 text-[11px]"
+                    />
+                  </div>
+                )}
               </div>
             </CadCell>
 
@@ -392,6 +430,33 @@ export function StateSection() {
                     </div>
                   </div>
                 </div>
+
+                {lastAction === "import" && actionOutput && (
+                  <div className="space-y-1.5 border-border/50 border-t pt-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
+                        Restore Operation Output
+                      </span>
+                      <button
+                        className="font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                        onClick={() => {
+                          setActionOutput(null);
+                          setLastAction(null);
+                          setActionOk(null);
+                        }}
+                        type="button"
+                      >
+                        Clear ✕
+                      </button>
+                    </div>
+                    <VerbatimOutput
+                      label="POST /api/state/import"
+                      ok={actionOk ?? true}
+                      output={actionOutput}
+                      preClassName="min-h-[60px] max-h-[160px] p-2.5 text-[11px]"
+                    />
+                  </div>
+                )}
               </form>
             </CadCell>
           </div>
@@ -405,14 +470,14 @@ export function StateSection() {
         </div>
       </CadGridFrame>
 
-      {/* Row 2: Balanced 6/6 CAD Grid — Snapshot Filesystem Manifest + Operation Output */}
+      {/* Row 2: Snapshot Filesystem Path Manifest */}
       <CadGridFrame>
         <div className="relative w-full overflow-visible">
           <div className="grid w-full grid-cols-1 md:grid-cols-12">
             {/* [ST-03] Snapshot Filesystem Path Manifest */}
             <CadCell
               bodyClassName="flex flex-col justify-between gap-4 p-5"
-              className="md:col-span-6"
+              className="md:col-span-12"
               footerLeft="Filesystem targets included in state archive"
               footerRight="TAR MANIFEST"
               index="ST-03"
@@ -439,44 +504,11 @@ export function StateSection() {
                 ))}
               </div>
             </CadCell>
-
-            {/* [ST-04] State Operation Output */}
-            <CadCell
-              bodyClassName="p-0"
-              className="md:col-span-6"
-              footerLeft="Snapshot archive export & restore telemetry"
-              footerRight="EXECUTION LOG"
-              headerAction={
-                actionOutput ? (
-                  <Button
-                    className="h-6 rounded-none px-2 font-mono text-[10px] uppercase tracking-wider"
-                    onClick={() => setActionOutput(null)}
-                    size="sm"
-                    type="button"
-                    variant="ghost"
-                  >
-                    Clear
-                  </Button>
-                ) : null
-              }
-              index="ST-04"
-              title="State Operation Output"
-            >
-              <VerbatimOutput
-                className="min-h-[210px] border-0 shadow-none"
-                label="POST /api/state/export | /api/state/import"
-                output={
-                  actionOutput ??
-                  "Ready. Export a workstation snapshot (.tar.gz) or stage an archive to restore runtime state."
-                }
-              />
-            </CadCell>
           </div>
 
           <GridCornerDots
             className="z-3 hidden md:block"
-            columns={2}
-            columnWeights={[6, 6]}
+            columns={1}
             rows={1}
           />
         </div>

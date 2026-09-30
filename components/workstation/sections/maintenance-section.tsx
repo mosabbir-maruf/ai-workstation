@@ -14,6 +14,8 @@ const DISK_SIZE_REGEX = /(\d+(?:\.\d+)?\s*(?:B|KB|MB|GB|TB|K|M|G))/i;
 export function MaintenanceSection() {
   const [cacheStatus, setCacheStatus] = useState<string | null>(null);
   const [actionOutput, setActionOutput] = useState<string | null>(null);
+  const [lastAction, setLastAction] = useState<"system" | "purge" | null>(null);
+  const [actionOk, setActionOk] = useState<boolean | null>(null);
   const [clearDocker, setClearDocker] = useState(true);
   const [clearLogs, setClearLogs] = useState(true);
   const [clearDeps, setClearDeps] = useState(false);
@@ -42,21 +44,27 @@ export function MaintenanceSection() {
   ) => {
     try {
       setLoading(true);
+      setLastAction("system");
       const res = await fn();
       setActionOutput(`[${label}]\n${res.output}`);
+      setActionOk(res.ok ?? true);
     } catch (err) {
       setActionOutput(`[${label}] Operation error: ${String(err)}`);
+      setActionOk(false);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleClearCache = async (override?: {
-    docker?: boolean;
-    logs?: boolean;
-    deps?: boolean;
-    temp?: boolean;
-  }) => {
+  const handleClearCache = async (
+    override?: {
+      docker?: boolean;
+      logs?: boolean;
+      deps?: boolean;
+      temp?: boolean;
+    },
+    source: "system" | "purge" = "purge"
+  ) => {
     const payload = {
       docker: override?.docker ?? clearDocker,
       logs: override?.logs ?? clearLogs,
@@ -65,6 +73,7 @@ export function MaintenanceSection() {
     };
     try {
       setLoading(true);
+      setLastAction(source);
       const res = await workstationApi.clearCache(payload);
       const activeFlags = Object.entries(payload)
         .filter(([, v]) => v)
@@ -73,9 +82,11 @@ export function MaintenanceSection() {
       setActionOutput(
         `[Purge Cache & Subsystems · targets=build${activeFlags ? `,${activeFlags}` : ""}]\n${res.output}`
       );
+      setActionOk(res.ok ?? true);
       await fetchCache();
     } catch (err) {
       setActionOutput(`Cache clear error: ${String(err)}`);
+      setActionOk(false);
     } finally {
       setLoading(false);
     }
@@ -235,12 +246,15 @@ export function MaintenanceSection() {
                       className="h-8 rounded-none px-2 font-mono text-[10px] sm:text-xs uppercase tracking-wider truncate"
                       disabled={loading}
                       onClick={() =>
-                        handleClearCache({
-                          docker: true,
-                          logs: false,
-                          deps: false,
-                          temp: true,
-                        })
+                        handleClearCache(
+                          {
+                            docker: true,
+                            logs: false,
+                            deps: false,
+                            temp: true,
+                          },
+                          "system"
+                        )
                       }
                       size="sm"
                       type="button"
@@ -252,12 +266,15 @@ export function MaintenanceSection() {
                       className="h-8 rounded-none px-2 font-mono text-[10px] sm:text-xs uppercase tracking-wider truncate"
                       disabled={loading}
                       onClick={() =>
-                        handleClearCache({
-                          docker: false,
-                          logs: true,
-                          deps: false,
-                          temp: true,
-                        })
+                        handleClearCache(
+                          {
+                            docker: false,
+                            logs: true,
+                            deps: false,
+                            temp: true,
+                          },
+                          "system"
+                        )
                       }
                       size="sm"
                       type="button"
@@ -300,6 +317,33 @@ export function MaintenanceSection() {
                     </div>
                   </div>
                 </div>
+
+                {lastAction === "system" && actionOutput && (
+                  <div className="space-y-1.5 border-border/50 border-t pt-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
+                        System Operation Output
+                      </span>
+                      <button
+                        className="font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                        onClick={() => {
+                          setActionOutput(null);
+                          setLastAction(null);
+                          setActionOk(null);
+                        }}
+                        type="button"
+                      >
+                        Clear ✕
+                      </button>
+                    </div>
+                    <VerbatimOutput
+                      label="System Runner Output"
+                      ok={actionOk ?? true}
+                      output={actionOutput}
+                      preClassName="min-h-[60px] max-h-[160px] p-2.5 text-[11px]"
+                    />
+                  </div>
+                )}
               </div>
             </CadCell>
 
@@ -537,6 +581,33 @@ export function MaintenanceSection() {
                     </div>
                   </div>
                 </div>
+
+                {lastAction === "purge" && actionOutput && (
+                  <div className="space-y-1.5 border-border/50 border-t pt-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
+                        Cache Purge Output
+                      </span>
+                      <button
+                        className="font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                        onClick={() => {
+                          setActionOutput(null);
+                          setLastAction(null);
+                          setActionOk(null);
+                        }}
+                        type="button"
+                      >
+                        Clear ✕
+                      </button>
+                    </div>
+                    <VerbatimOutput
+                      label="POST /api/cache/clear"
+                      ok={actionOk ?? true}
+                      output={actionOutput}
+                      preClassName="min-h-[60px] max-h-[160px] p-2.5 text-[11px]"
+                    />
+                  </div>
+                )}
               </div>
             </CadCell>
           </div>
@@ -550,13 +621,13 @@ export function MaintenanceSection() {
         </div>
       </CadGridFrame>
 
-      {/* Row 2: Balanced 6/6 CAD Grid — Live Cache Footprint Dump + Maintenance Execution Output */}
+      {/* Row 2: Live Storage, Docker & Log Breakdown */}
       <CadGridFrame>
         <div className="relative w-full overflow-visible">
           <div className="grid w-full grid-cols-1 md:grid-cols-12">
             <CadCell
               bodyClassName="p-0"
-              className="md:col-span-6"
+              className="md:col-span-12"
               footerLeft="Filesystem, Docker layers & log ring report"
               footerRight="GET /api/cache"
               headerAction={
@@ -580,43 +651,11 @@ export function MaintenanceSection() {
                 output={cacheStatus}
               />
             </CadCell>
-
-            <CadCell
-              bodyClassName="p-0"
-              className="md:col-span-6"
-              footerLeft="Standard output from maintenance runner"
-              footerRight="EXECUTION LOG"
-              headerAction={
-                actionOutput ? (
-                  <Button
-                    className="h-6 rounded-none px-2 font-mono text-[10px] uppercase tracking-wider"
-                    onClick={() => setActionOutput(null)}
-                    size="sm"
-                    type="button"
-                    variant="ghost"
-                  >
-                    Clear
-                  </Button>
-                ) : null
-              }
-              index="M-04"
-              title="Maintenance Execution Output"
-            >
-              <VerbatimOutput
-                className="min-h-[220px] border-0 shadow-none"
-                label="POST /api/system/* | /api/cache/clear"
-                output={
-                  actionOutput ??
-                  "Ready. Trigger a system diagnostic audit, Docker prune, log rotation, or cache cleanup above to inspect execution output."
-                }
-              />
-            </CadCell>
           </div>
 
           <GridCornerDots
             className="z-3 hidden md:block"
-            columns={2}
-            columnWeights={[6, 6]}
+            columns={1}
             rows={1}
           />
         </div>

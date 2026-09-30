@@ -13,6 +13,8 @@ import { VerbatimOutput } from "../verbatim-output";
 export function GitHubSection() {
   const [status, setStatus] = useState<string | null>(null);
   const [actionOutput, setActionOutput] = useState<string | null>(null);
+  const [lastAction, setLastAction] = useState<"test" | "setup" | null>(null);
+  const [actionOk, setActionOk] = useState<boolean | null>(null);
   const [appId, setAppId] = useState("");
   const [installationId, setInstallationId] = useState("");
   const [pemText, setPemText] = useState("");
@@ -42,15 +44,18 @@ export function GitHubSection() {
 
     try {
       setLoading(true);
+      setLastAction("setup");
       const res = await workstationApi.setupGithub(
         appId.trim(),
         installationId.trim(),
         pemText.trim()
       );
       setActionOutput(res.output);
+      setActionOk(res.ok);
       await fetchStatus();
     } catch (err) {
       setActionOutput(`Setup failed: ${String(err)}`);
+      setActionOk(false);
     } finally {
       setLoading(false);
     }
@@ -59,10 +64,13 @@ export function GitHubSection() {
   const handleTest = async () => {
     try {
       setLoading(true);
+      setLastAction("test");
       const res = await workstationApi.testGithub();
       setActionOutput(res.output);
+      setActionOk(res.ok);
     } catch (err) {
       setActionOutput(`Test failed: ${String(err)}`);
+      setActionOk(false);
     } finally {
       setLoading(false);
     }
@@ -194,6 +202,33 @@ export function GitHubSection() {
                   </div>
                 ))}
               </div>
+
+              {lastAction === "test" && actionOutput && (
+                <div className="space-y-1.5 border-border/50 border-t pt-3">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
+                      Auth Test Telemetry
+                    </span>
+                    <button
+                      className="font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                      onClick={() => {
+                        setActionOutput(null);
+                        setLastAction(null);
+                        setActionOk(null);
+                      }}
+                      type="button"
+                    >
+                      Clear ✕
+                    </button>
+                  </div>
+                  <VerbatimOutput
+                    label="POST /api/github/test"
+                    ok={actionOk ?? true}
+                    output={actionOutput}
+                    preClassName="min-h-[60px] max-h-[160px] p-2.5 text-[11px]"
+                  />
+                </div>
+              )}
             </CadCell>
 
             {/* Right 6 cols: [GH-02] Configure GitHub App Credentials */}
@@ -322,6 +357,33 @@ export function GitHubSection() {
                   <span className="sm:hidden">Save & Authenticate →</span>
                   <span className="hidden sm:inline">Save & Authenticate GitHub App →</span>
                 </Button>
+
+                {lastAction === "setup" && actionOutput && (
+                  <div className="space-y-1.5 border-border/50 border-t pt-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
+                        Setup Operation Telemetry
+                      </span>
+                      <button
+                        className="font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                        onClick={() => {
+                          setActionOutput(null);
+                          setLastAction(null);
+                          setActionOk(null);
+                        }}
+                        type="button"
+                      >
+                        Clear ✕
+                      </button>
+                    </div>
+                    <VerbatimOutput
+                      label="POST /api/github/setup"
+                      ok={actionOk ?? true}
+                      output={actionOutput}
+                      preClassName="min-h-[60px] max-h-[160px] p-2.5 text-[11px]"
+                    />
+                  </div>
+                )}
               </form>
             </CadCell>
           </div>
@@ -335,38 +397,32 @@ export function GitHubSection() {
         </div>
       </CadGridFrame>
 
-      {/* Row 2: [GH-03] Installation Status + [GH-04] Auth Verification Output */}
+      {/* Row 2: [GH-03] Installation Status */}
       <CadGridFrame showRulers>
         <div className="relative w-full overflow-visible">
-          <div className="grid w-full grid-cols-1 md:grid-cols-12">
-            <CadCell
-              className="md:col-span-6"
-              footerLeft="GET /api/github/status"
-              footerRight="Installation State"
-              index="GH-03"
-              title="GitHub App Installation Status"
-            >
-              <VerbatimOutput label="GET /api/github/status" output={status} />
-            </CadCell>
-
-            <CadCell
-              className="md:col-span-6"
-              footerLeft="POST /api/github/test · setup"
-              footerRight="Auth Handshake Output"
-              index="GH-04"
-              title="GitHub Operation & Handshake Telemetry"
-            >
-              <VerbatimOutput
-                label="GitHub Operation Output"
-                output={actionOutput}
-              />
-            </CadCell>
-          </div>
+          <CadCell
+            footerLeft="GET /api/github/status"
+            footerRight="Installation State"
+            headerAction={
+              <Button
+                className="h-6 rounded-none px-2 font-mono text-[10px] uppercase tracking-wider"
+                disabled={loading}
+                onClick={fetchStatus}
+                size="xs"
+                variant="ghost"
+              >
+                Refresh ↻
+              </Button>
+            }
+            index="GH-03"
+            title="GitHub App Installation Status"
+          >
+            <VerbatimOutput label="GET /api/github/status" output={status} />
+          </CadCell>
 
           <GridCornerDots
             className="z-3 hidden md:block"
-            columns={2}
-            columnWeights={[6, 6]}
+            columns={1}
             rows={1}
           />
         </div>

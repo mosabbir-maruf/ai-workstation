@@ -12,6 +12,8 @@ import { VerbatimOutput } from "../verbatim-output";
 export function TunnelSection() {
   const [tunnelStatus, setTunnelStatus] = useState<string | null>(null);
   const [actionOutput, setActionOutput] = useState<string | null>(null);
+  const [lastAction, setLastAction] = useState<"control" | "setup" | null>(null);
+  const [actionOk, setActionOk] = useState<boolean | null>(null);
   const [token, setToken] = useState("");
   const [appHost, setAppHost] = useState("");
   const [dshHost, setDshHost] = useState("");
@@ -38,11 +40,14 @@ export function TunnelSection() {
   const handleStart = async () => {
     try {
       setLoading(true);
+      setLastAction("control");
       const res = await workstationApi.startTunnel();
       setActionOutput(res.output);
+      setActionOk(res.ok ?? true);
       await fetchStatus();
     } catch (err) {
       setActionOutput(`Tunnel start error: ${String(err)}`);
+      setActionOk(false);
     } finally {
       setLoading(false);
     }
@@ -51,11 +56,14 @@ export function TunnelSection() {
   const handleStop = async () => {
     try {
       setLoading(true);
+      setLastAction("control");
       const res = await workstationApi.stopTunnel();
       setActionOutput(res.output);
+      setActionOk(res.ok ?? true);
       await fetchStatus();
     } catch (err) {
       setActionOutput(`Tunnel stop error: ${String(err)}`);
+      setActionOk(false);
     } finally {
       setLoading(false);
     }
@@ -65,6 +73,7 @@ export function TunnelSection() {
     e.preventDefault();
     try {
       setLoading(true);
+      setLastAction("setup");
       const res = await workstationApi.setupTunnel({
         token: token.trim() || undefined,
         appHost: appHost.trim() || undefined,
@@ -72,9 +81,11 @@ export function TunnelSection() {
         appPort: appPort ? Number(appPort) : undefined,
       });
       setActionOutput(res.output);
+      setActionOk(res.ok ?? true);
       await fetchStatus();
     } catch (err) {
       setActionOutput(`Tunnel setup error: ${String(err)}`);
+      setActionOk(false);
     } finally {
       setLoading(false);
     }
@@ -84,14 +95,17 @@ export function TunnelSection() {
     e.preventDefault();
     try {
       setLoading(true);
+      setLastAction("control");
       const res = await workstationApi.syncTunnel(
         syncPort ? Number(syncPort) : undefined
       );
       setActionOutput(res.output);
+      setActionOk(res.ok ?? true);
       setSyncPort("");
       await fetchStatus();
     } catch (err) {
       setActionOutput(`Tunnel sync error: ${String(err)}`);
+      setActionOk(false);
     } finally {
       setLoading(false);
     }
@@ -212,6 +226,33 @@ export function TunnelSection() {
                     Sync Port ↻
                   </Button>
                 </form>
+
+                {lastAction === "control" && actionOutput && (
+                  <div className="space-y-1.5 border-border/50 border-t pt-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
+                        Tunnel Operation Output
+                      </span>
+                      <button
+                        className="font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                        onClick={() => {
+                          setActionOutput(null);
+                          setLastAction(null);
+                          setActionOk(null);
+                        }}
+                        type="button"
+                      >
+                        Clear ✕
+                      </button>
+                    </div>
+                    <VerbatimOutput
+                      label="Tunnel Operation Result"
+                      ok={actionOk ?? true}
+                      output={actionOutput}
+                      preClassName="min-h-[60px] max-h-[160px] p-2.5 text-[11px]"
+                    />
+                  </div>
+                )}
               </div>
             </CadCell>
 
@@ -352,6 +393,33 @@ export function TunnelSection() {
                   <span className="hidden sm:inline">Save & Apply Tunnel Configuration →</span>
                 </Button>
               </form>
+
+              {lastAction === "setup" && actionOutput && (
+                <div className="space-y-1.5 border-border/50 border-t pt-3">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
+                      Setup Configuration Output
+                    </span>
+                    <button
+                      className="font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                      onClick={() => {
+                        setActionOutput(null);
+                        setLastAction(null);
+                        setActionOk(null);
+                      }}
+                      type="button"
+                    >
+                      Clear ✕
+                    </button>
+                  </div>
+                  <VerbatimOutput
+                    label="POST /api/tunnel/setup"
+                    ok={actionOk ?? true}
+                    output={actionOutput}
+                    preClassName="min-h-[60px] max-h-[160px] p-2.5 text-[11px]"
+                  />
+                </div>
+              )}
             </CadCell>
           </div>
 
@@ -364,12 +432,12 @@ export function TunnelSection() {
         </div>
       </CadGridFrame>
 
-      {/* Row 2: [TN-03] Connector Status + [TN-04] Tunnel Action Result */}
+      {/* Row 2: [TN-03] Connector Status Diagnostics */}
       <CadGridFrame showRulers>
         <div className="relative w-full overflow-visible">
           <div className="grid w-full grid-cols-1 md:grid-cols-12">
             <CadCell
-              className="md:col-span-6"
+              className="md:col-span-12"
               footerLeft="GET /api/tunnel/status"
               footerRight="cloudflared daemon"
               index="TN-03"
@@ -380,38 +448,24 @@ export function TunnelSection() {
                 output={tunnelStatus}
               />
             </CadCell>
-
-            <CadCell
-              className="md:col-span-6"
-              footerLeft="POST /api/tunnel/* [result]"
-              footerRight="Mutation Output"
-              index="TN-04"
-              title="Tunnel Lifecycle Operation Output"
-            >
-              <VerbatimOutput
-                label="Tunnel Action Result"
-                output={actionOutput}
-              />
-            </CadCell>
           </div>
 
           <GridCornerDots
             className="z-3 hidden md:block"
-            columns={2}
-            columnWeights={[6, 6]}
+            columns={1}
             rows={1}
           />
         </div>
       </CadGridFrame>
 
-      {/* Row 3: [TN-05] Live SSE Tunnel Edge Stream */}
+      {/* Row 3: [TN-04] Live SSE Tunnel Edge Stream */}
       <CadGridFrame showRulers>
         <div className="relative w-full overflow-visible">
           <div className="border-border border-r border-b bg-white dark:bg-black">
             <SseLogViewer
               className="border-0 shadow-none"
               endpoint="/api/tunnel/logs"
-              title="[TN-05] Cloudflare Edge Tunnel Log Stream"
+              title="[TN-04] Cloudflare Edge Tunnel Log Stream"
             />
           </div>
 

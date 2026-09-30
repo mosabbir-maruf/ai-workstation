@@ -26,6 +26,8 @@ export function ProjectsSection() {
   >([]);
   const [rawOutput, setRawOutput] = useState<string | null>(null);
   const [actionOutput, setActionOutput] = useState<string | null>(null);
+  const [lastAction, setLastAction] = useState<"mount" | "manage" | null>(null);
+  const [actionOk, setActionOk] = useState<boolean | null>(null);
   const [newRepoUrl, setNewRepoUrl] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -54,11 +56,14 @@ export function ProjectsSection() {
   const handleUse = async (name: string) => {
     try {
       setLoading(true);
+      setLastAction("manage");
       const res = await workstationApi.activateProject(name);
       setActionOutput(res.output);
+      setActionOk(res.ok);
       await fetchProjects();
     } catch (err) {
       setActionOutput(`Error activating project: ${String(err)}`);
+      setActionOk(false);
     } finally {
       setLoading(false);
     }
@@ -72,12 +77,15 @@ export function ProjectsSection() {
 
     try {
       setLoading(true);
+      setLastAction("mount");
       const res = await workstationApi.addProject(newRepoUrl.trim());
       setActionOutput(res.output);
+      setActionOk(res.ok);
       setNewRepoUrl("");
       await fetchProjects();
     } catch (err) {
       setActionOutput(`Error adding project: ${String(err)}`);
+      setActionOk(false);
     } finally {
       setLoading(false);
     }
@@ -86,11 +94,14 @@ export function ProjectsSection() {
   const handleRemove = async (name: string) => {
     try {
       setLoading(true);
+      setLastAction("manage");
       const res = await workstationApi.removeProject(name);
       setActionOutput(res.output);
+      setActionOk(res.ok);
       await fetchProjects();
     } catch (err) {
       setActionOutput(`Error removing project: ${String(err)}`);
+      setActionOk(false);
     } finally {
       setLoading(false);
     }
@@ -199,6 +210,33 @@ export function ProjectsSection() {
                     Add & Mount →
                   </Button>
                 </div>
+
+                {lastAction === "mount" && actionOutput && (
+                  <div className="space-y-1.5 border-border/50 border-t pt-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
+                        Mount Telemetry
+                      </span>
+                      <button
+                        className="font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                        onClick={() => {
+                          setActionOutput(null);
+                          setLastAction(null);
+                          setActionOk(null);
+                        }}
+                        type="button"
+                      >
+                        Clear ✕
+                      </button>
+                    </div>
+                    <VerbatimOutput
+                      label="POST /api/projects/add"
+                      ok={actionOk ?? true}
+                      output={actionOutput}
+                      preClassName="min-h-[60px] max-h-[160px] p-2.5 text-[11px]"
+                    />
+                  </div>
+                )}
               </form>
             </CadCell>
 
@@ -305,6 +343,32 @@ export function ProjectsSection() {
                   </div>
                 )))}
               </div>
+              {lastAction === "manage" && actionOutput && (
+                <div className="space-y-1.5 border-border/50 border-t pt-3">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
+                      Project Operation Output
+                    </span>
+                    <button
+                      className="font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                      onClick={() => {
+                        setActionOutput(null);
+                        setLastAction(null);
+                        setActionOk(null);
+                      }}
+                      type="button"
+                    >
+                      Clear ✕
+                    </button>
+                  </div>
+                  <VerbatimOutput
+                    label="POST /api/projects/*"
+                    ok={actionOk ?? true}
+                    output={actionOutput}
+                    preClassName="min-h-[60px] max-h-[160px] p-2.5 text-[11px]"
+                  />
+                </div>
+              )}
             </CadCell>
           </div>
 
@@ -317,41 +381,35 @@ export function ProjectsSection() {
         </div>
       </CadGridFrame>
 
-      {/* Row 2: [P-03] Workspace Registry Manifest + [P-04] Project Operation Telemetry */}
+      {/* Row 2: [P-03] Workspace Registry Manifest */}
       <CadGridFrame showRulers>
         <div className="relative w-full overflow-visible">
-          <div className="grid w-full grid-cols-1 md:grid-cols-12">
-            <CadCell
-              className="md:col-span-6"
-              footerLeft="GET /api/projects [raw]"
-              footerRight="Workspace Registry"
-              index="P-03"
-              title="Workspace Registry Manifest"
-            >
-              <VerbatimOutput
-                label="GET /api/projects [raw]"
-                output={rawOutput}
-              />
-            </CadCell>
-
-            <CadCell
-              className="md:col-span-6"
-              footerLeft="POST /api/projects/* [result]"
-              footerRight="Mutation Telemetry"
-              index="P-04"
-              title="Project Operation Telemetry"
-            >
-              <VerbatimOutput
-                label="POST /api/projects/* [result]"
-                output={actionOutput}
-              />
-            </CadCell>
-          </div>
+          <CadCell
+            footerLeft="GET /api/projects [raw]"
+            footerRight="Workspace Registry"
+            headerAction={
+              <Button
+                className="h-6 rounded-none px-2 font-mono text-[10px] uppercase tracking-wider"
+                disabled={loading}
+                onClick={fetchProjects}
+                size="xs"
+                variant="ghost"
+              >
+                Refresh ↻
+              </Button>
+            }
+            index="P-03"
+            title="Workspace Registry Manifest"
+          >
+            <VerbatimOutput
+              label="GET /api/projects [raw]"
+              output={rawOutput}
+            />
+          </CadCell>
 
           <GridCornerDots
             className="z-3 hidden md:block"
-            columns={2}
-            columnWeights={[6, 6]}
+            columns={1}
             rows={1}
           />
         </div>

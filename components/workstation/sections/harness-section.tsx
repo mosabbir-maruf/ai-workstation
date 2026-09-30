@@ -25,6 +25,8 @@ export function HarnessSection() {
   const [harnessStatus, setHarnessStatus] = useState<string | null>(null);
   const [dshVersion, setDshVersion] = useState<string | null>(null);
   const [actionOutput, setActionOutput] = useState<string | null>(null);
+  const [lastAction, setLastAction] = useState<"supervisor" | "dsh" | null>(null);
+  const [actionOk, setActionOk] = useState<boolean | null>(null);
   const [targetVersion, setTargetVersion] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -56,11 +58,14 @@ export function HarnessSection() {
   ) => {
     try {
       setLoading(true);
+      setLastAction("supervisor");
       const res = await fn();
       setActionOutput(`[${label}]\n${res.output}`);
+      setActionOk(res.ok ?? true);
       await fetchAll();
     } catch (err) {
       setActionOutput(`[${label}] Harness error: ${String(err)}`);
+      setActionOk(false);
     } finally {
       setLoading(false);
     }
@@ -70,15 +75,18 @@ export function HarnessSection() {
     e?.preventDefault();
     try {
       setLoading(true);
+      setLastAction("dsh");
       const versionArg = targetVersion.trim() || undefined;
       const res = await workstationApi.updateDsh(versionArg);
       setActionOutput(
         `[DSH Binary Upgrade → ${versionArg ?? "latest"}]\n${res.output}`
       );
+      setActionOk(res.ok ?? true);
       setTargetVersion("");
       await fetchAll();
     } catch (err) {
       setActionOutput(`Update error: ${String(err)}`);
+      setActionOk(false);
     } finally {
       setLoading(false);
     }
@@ -259,6 +267,33 @@ export function HarnessSection() {
                     </div>
                   </div>
                 </div>
+
+                {lastAction === "supervisor" && actionOutput && (
+                  <div className="space-y-1.5 border-border/50 border-t pt-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
+                        Supervisor Execution Telemetry
+                      </span>
+                      <button
+                        className="font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                        onClick={() => {
+                          setActionOutput(null);
+                          setLastAction(null);
+                          setActionOk(null);
+                        }}
+                        type="button"
+                      >
+                        Clear ✕
+                      </button>
+                    </div>
+                    <VerbatimOutput
+                      label="Supervisor Action Output"
+                      ok={actionOk ?? true}
+                      output={actionOutput}
+                      preClassName="min-h-[60px] max-h-[160px] p-2.5 text-[11px]"
+                    />
+                  </div>
+                )}
               </div>
             </CadCell>
 
@@ -399,6 +434,33 @@ export function HarnessSection() {
                     </p>
                   </div>
                 </div>
+
+                {lastAction === "dsh" && actionOutput && (
+                  <div className="space-y-1.5 border-border/50 border-t pt-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
+                        Binary Upgrade Output
+                      </span>
+                      <button
+                        className="font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                        onClick={() => {
+                          setActionOutput(null);
+                          setLastAction(null);
+                          setActionOk(null);
+                        }}
+                        type="button"
+                      >
+                        Clear ✕
+                      </button>
+                    </div>
+                    <VerbatimOutput
+                      label="POST /api/dsh/update"
+                      ok={actionOk ?? true}
+                      output={actionOutput}
+                      preClassName="min-h-[60px] max-h-[160px] p-2.5 text-[11px]"
+                    />
+                  </div>
+                )}
               </form>
             </CadCell>
           </div>
@@ -412,13 +474,13 @@ export function HarnessSection() {
         </div>
       </CadGridFrame>
 
-      {/* Row 2: Balanced 6/6 CAD Grid — Live Harness Diagnostics + Operation Execution Output */}
+      {/* Row 2: Live Harness Diagnostics */}
       <CadGridFrame>
         <div className="relative w-full overflow-visible">
           <div className="grid w-full grid-cols-1 md:grid-cols-12">
             <CadCell
               bodyClassName="p-0"
-              className="md:col-span-6"
+              className="md:col-span-12"
               footerLeft="Live agent bridge state & process supervisor"
               footerRight="GET /api/harness/status"
               headerAction={
@@ -442,43 +504,11 @@ export function HarnessSection() {
                 output={harnessStatus}
               />
             </CadCell>
-
-            <CadCell
-              bodyClassName="p-0"
-              className="md:col-span-6"
-              footerLeft="Last supervisor or binary upgrade response"
-              footerRight="EXECUTION LOG"
-              headerAction={
-                actionOutput ? (
-                  <Button
-                    className="h-6 rounded-none px-2 font-mono text-[10px] uppercase tracking-wider"
-                    onClick={() => setActionOutput(null)}
-                    size="sm"
-                    type="button"
-                    variant="ghost"
-                  >
-                    Clear
-                  </Button>
-                ) : null
-              }
-              index="H-04"
-              title="Harness & DSH Operation Output"
-            >
-              <VerbatimOutput
-                className="min-h-[220px] border-0 shadow-none"
-                label="POST /api/harness/* | /api/dsh/update"
-                output={
-                  actionOutput ??
-                  "Ready. Trigger a harness lifecycle action or DSH binary upgrade above to inspect execution output."
-                }
-              />
-            </CadCell>
           </div>
 
           <GridCornerDots
             className="z-3 hidden md:block"
-            columns={2}
-            columnWeights={[6, 6]}
+            columns={1}
             rows={1}
           />
         </div>

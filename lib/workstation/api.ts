@@ -78,6 +78,14 @@ export interface GitDiffResponse {
   needsDaemonRestart?: boolean;
 }
 
+export interface GitConfigResponse {
+  ok: boolean;
+  name: string;
+  email: string;
+  isConfigured: boolean;
+  output?: string;
+}
+
 export interface OverviewResponse {
   ok: boolean;
   health: boolean;
@@ -338,6 +346,12 @@ export const workstationApi = {
     requestJson<StandardOutputResponse>("/api/git/exec", {
       method: "POST",
       body: JSON.stringify({ command }),
+    }),
+  gitGetConfig: () => requestJson<GitConfigResponse>("/api/git/config"),
+  gitSetConfig: (params: { name: string; email: string }) =>
+    requestJson<GitConfigResponse>("/api/git/config", {
+      method: "POST",
+      body: JSON.stringify(params),
     }),
 
   // App Runtime

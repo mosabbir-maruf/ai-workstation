@@ -7,7 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { type GitDiffResponse, workstationApi } from "@/lib/workstation/api";
+import {
+  type GitConfigResponse,
+  type GitDiffResponse,
+  workstationApi,
+} from "@/lib/workstation/api";
 import { CadCell, CadGridFrame } from "../cad-primitives";
 import { VerbatimOutput } from "../verbatim-output";
 
@@ -75,6 +79,14 @@ export function GitSection() {
   const [cmdHistory, setCmdHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState<number>(-1);
 
+  // Git Committer Identity Configuration state
+  const [gitConfig, setGitConfig] = useState<GitConfigResponse | null>(null);
+  const [configSaving, setConfigSaving] = useState(false);
+  const [showIdentityEditor, setShowIdentityEditor] = useState(false);
+  const [authorNameInput, setAuthorNameInput] = useState("");
+  const [authorEmailInput, setAuthorEmailInput] = useState("");
+  const [identityFeedback, setIdentityFeedback] = useState<string | null>(null);
+
   const isGitBusy = loading || executingGit;
 
   const isDaemonRestartRequired = Boolean(
@@ -98,9 +110,25 @@ export function GitSection() {
     }
   }, []);
 
+  const fetchGitConfig = useCallback(async () => {
+    try {
+      const res = await workstationApi.gitGetConfig();
+      setGitConfig(res);
+      if (res.name) {
+        setAuthorNameInput(res.name);
+      }
+      if (res.email) {
+        setAuthorEmailInput(res.email);
+      }
+    } catch {
+      // Ignore background fetch error
+    }
+  }, []);
+
   useEffect(() => {
     fetchDiff();
-  }, [fetchDiff]);
+    fetchGitConfig();
+  }, [fetchDiff, fetchGitConfig]);
 
   const diffLines = useMemo(() => {
     if (!diffData?.diff) {
@@ -130,9 +158,50 @@ export function GitSection() {
     }
   };
 
+  const handleSaveIdentity = async (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
+    const name = authorNameInput.trim();
+    const email = authorEmailInput.trim();
+
+    if (!name) {
+      setIdentityFeedback("Please enter your author name or username.");
+      return;
+    }
+    if (!email || !email.includes("@")) {
+      setIdentityFeedback("Please enter a valid GitHub account email address.");
+      return;
+    }
+
+    try {
+      setConfigSaving(true);
+      setIdentityFeedback(null);
+      const res = await workstationApi.gitSetConfig({ name, email });
+      setGitConfig(res);
+      setShowIdentityEditor(false);
+      setOutput(
+        `Git committer identity updated successfully:\n  user.name: ${res.name}\n  user.email: ${res.email}`
+      );
+      setLastCmdStatus(true);
+    } catch (err) {
+      setIdentityFeedback(`Failed to save Git identity: ${String(err)}`);
+    } finally {
+      setConfigSaving(false);
+    }
+  };
+
   const handlePush = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!commitMessage.trim()) {
+      return;
+    }
+
+    if (!gitConfig?.isConfigured) {
+      setShowIdentityEditor(true);
+      setIdentityFeedback(
+        "Please configure your Git author name & GitHub email before committing so your profile picture and author link appear correctly on GitHub."
+      );
       return;
     }
 
@@ -364,10 +433,37 @@ export function GitSection() {
 
             {/* Right 6 cols: [G-02] Git Commit & Push */}
             <CadCell
-              bodyClassName="space-y-5"
+              bodyClassName="space-y-4"
               className="md:col-span-6"
               footerLeft="POST /api/git/push · Stage, Commit & Push"
               footerRight="Conventional Commits"
+              headerAction={
+                gitConfig?.isConfigured ? (
+                  <button
+                    className="flex items-center gap-1.5 font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                    onClick={() => setShowIdentityEditor((prev) => !prev)}
+                    title="Click to edit Git committer identity"
+                    type="button"
+                  >
+                    <span className="size-1.5 rounded-full bg-emerald-500" />
+                    <span className="font-semibold text-foreground">
+                      {gitConfig.name}
+                    </span>
+                    <span className="underline decoration-dotted text-primary/80">
+                      ✎ Edit
+                    </span>
+                  </button>
+                ) : (
+                  <button
+                    className="flex items-center gap-1.5 border border-amber-500/50 bg-amber-500/10 px-2 py-0.5 font-mono text-[10px] text-amber-500 hover:bg-amber-500/20 transition-colors"
+                    onClick={() => setShowIdentityEditor(true)}
+                    type="button"
+                  >
+                    <span className="size-1.5 rounded-full bg-amber-500 animate-pulse" />
+                    <span>Setup Identity !</span>
+                  </button>
+                )
+              }
               index="G-02"
               title="Git Commit & Push"
             >
@@ -413,6 +509,122 @@ export function GitSection() {
                   </div>
                 </div>
               </div>
+
+              {/* Committer Identity Banner / Editor */}
+              {!gitConfig?.isConfigured || showIdentityEditor ? (
+                <div className="border border-amber-500/40 bg-amber-500/5 p-3 space-y-2.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 font-mono text-xs font-semibold text-foreground">
+                      <span className="size-2 rounded-full bg-amber-500" />
+                      <span>Configure GitHub Committer Identity</span>
+                    </div>
+                    {gitConfig?.isConfigured && (
+                      <button
+                        className="font-mono text-[10px] text-muted-foreground hover:text-foreground"
+                        onClick={() => setShowIdentityEditor(false)}
+                        type="button"
+                      >
+                        ✕ Close
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    GitHub links commits to your profile picture using your{" "}
+                    <span className="font-semibold text-foreground">
+                      GitHub account email
+                    </span>
+                    . If unset or a machine default hostname is used, GitHub displays an unlinked avatar.
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-0.5">
+                    <div className="space-y-1">
+                      <label
+                        className="font-mono text-[10px] uppercase text-muted-foreground/80"
+                        htmlFor="git-author-name"
+                      >
+                        Full Name / Username
+                      </label>
+                      <Input
+                        className="h-8 rounded-none border-border/80 bg-background font-mono text-xs"
+                        disabled={configSaving}
+                        id="git-author-name"
+                        onChange={(e) => setAuthorNameInput(e.target.value)}
+                        placeholder="e.g. Mosabbir Maruf"
+                        value={authorNameInput}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label
+                        className="font-mono text-[10px] uppercase text-muted-foreground/80"
+                        htmlFor="git-author-email"
+                      >
+                        GitHub Account Email
+                      </label>
+                      <Input
+                        className="h-8 rounded-none border-border/80 bg-background font-mono text-xs"
+                        disabled={configSaving}
+                        id="git-author-email"
+                        onChange={(e) => setAuthorEmailInput(e.target.value)}
+                        placeholder="e.g. user@users.noreply.github.com"
+                        type="email"
+                        value={authorEmailInput}
+                      />
+                    </div>
+                  </div>
+
+                  {identityFeedback && (
+                    <div className="font-mono text-[11px] text-amber-500 pt-0.5">
+                      {identityFeedback}
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-end gap-2 pt-1">
+                    {gitConfig?.isConfigured && (
+                      <Button
+                        className="h-7 rounded-none px-3 font-mono text-[10px] uppercase tracking-wider"
+                        disabled={configSaving}
+                        onClick={() => setShowIdentityEditor(false)}
+                        size="xs"
+                        variant="ghost"
+                      >
+                        Cancel
+                      </Button>
+                    )}
+                    <Button
+                      className="h-7 rounded-none px-3 font-mono text-[10px] uppercase tracking-wider"
+                      disabled={
+                        configSaving ||
+                        !authorNameInput.trim() ||
+                        !authorEmailInput.trim()
+                      }
+                      onClick={handleSaveIdentity}
+                      size="xs"
+                    >
+                      {configSaving ? "Saving..." : "Save Identity ✓"}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between border border-border/60 bg-muted/10 px-2.5 py-1.5 text-xs">
+                  <div className="flex items-center gap-2 truncate">
+                    <span className="size-1.5 shrink-0 rounded-full bg-emerald-500" />
+                    <span className="font-mono text-[11px] text-muted-foreground truncate">
+                      Committer:{" "}
+                      <span className="font-semibold text-foreground">
+                        {gitConfig.name}
+                      </span>{" "}
+                      &lt;{gitConfig.email}&gt;
+                    </span>
+                  </div>
+                  <button
+                    className="font-mono text-[10px] text-primary hover:underline ml-2 shrink-0"
+                    onClick={() => setShowIdentityEditor(true)}
+                    type="button"
+                  >
+                    Change
+                  </button>
+                </div>
+              )}
 
               <form
                 className="space-y-3 border-border/50 border-t pt-4"

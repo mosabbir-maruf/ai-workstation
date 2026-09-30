@@ -319,26 +319,15 @@ export function MaintenanceSection() {
                 </div>
 
                 {lastAction === "system" && actionOutput && (
-                  <div className="space-y-1.5 border-border/50 border-t pt-3">
-                    <div className="flex items-center justify-between">
-                      <span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
-                        System Operation Output
-                      </span>
-                      <button
-                        className="font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors"
-                        onClick={() => {
-                          setActionOutput(null);
-                          setLastAction(null);
-                          setActionOk(null);
-                        }}
-                        type="button"
-                      >
-                        Clear ✕
-                      </button>
-                    </div>
+                  <div className="border-border/50 border-t pt-3">
                     <VerbatimOutput
                       label="System Runner Output"
                       ok={actionOk ?? true}
+                      onClear={() => {
+                        setActionOutput(null);
+                        setLastAction(null);
+                        setActionOk(null);
+                      }}
                       output={actionOutput}
                       preClassName="min-h-[60px] max-h-[160px] p-2.5 text-[11px]"
                     />
@@ -583,26 +572,15 @@ export function MaintenanceSection() {
                 </div>
 
                 {lastAction === "purge" && actionOutput && (
-                  <div className="space-y-1.5 border-border/50 border-t pt-3">
-                    <div className="flex items-center justify-between">
-                      <span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
-                        Cache Purge Output
-                      </span>
-                      <button
-                        className="font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors"
-                        onClick={() => {
-                          setActionOutput(null);
-                          setLastAction(null);
-                          setActionOk(null);
-                        }}
-                        type="button"
-                      >
-                        Clear ✕
-                      </button>
-                    </div>
+                  <div className="border-border/50 border-t pt-3">
                     <VerbatimOutput
                       label="POST /api/cache/clear"
                       ok={actionOk ?? true}
+                      onClear={() => {
+                        setActionOutput(null);
+                        setLastAction(null);
+                        setActionOk(null);
+                      }}
                       output={actionOutput}
                       preClassName="min-h-[60px] max-h-[160px] p-2.5 text-[11px]"
                     />

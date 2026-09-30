@@ -10,6 +10,7 @@ interface VerbatimOutputProps {
   emptyText?: string;
   className?: string;
   preClassName?: string;
+  onClear?: () => void;
 }
 
 export function VerbatimOutput({
@@ -19,6 +20,7 @@ export function VerbatimOutput({
   emptyText = "No output recorded yet. Run an action to inspect results.",
   className,
   preClassName,
+  onClear,
 }: VerbatimOutputProps) {
   if (!output) {
     return (
@@ -55,11 +57,23 @@ export function VerbatimOutput({
             {ok ? "200 OK" : "ERR"}
           </span>
         </div>
-        <CopyButton
-          aria-label="Copy output"
-          className="h-6 w-6 shrink-0 rounded-none border border-border/60"
-          text={output}
-        />
+        <div className="flex items-center gap-1.5 shrink-0">
+          <CopyButton
+            aria-label="Copy output"
+            className="h-6 w-6 shrink-0 rounded-none border border-border/60"
+            text={output}
+          />
+          {onClear && (
+            <button
+              aria-label="Clear output"
+              className="flex h-6 items-center px-1.5 font-mono text-[10px] text-muted-foreground hover:text-foreground border border-border/60 bg-muted/20 hover:bg-muted/40 transition-colors uppercase tracking-wider cursor-pointer"
+              onClick={onClear}
+              type="button"
+            >
+              Clear ✕
+            </button>
+          )}
+        </div>
       </div>
 
       <pre

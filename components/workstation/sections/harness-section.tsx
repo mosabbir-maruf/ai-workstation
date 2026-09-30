@@ -269,26 +269,15 @@ export function HarnessSection() {
                 </div>
 
                 {lastAction === "supervisor" && actionOutput && (
-                  <div className="space-y-1.5 border-border/50 border-t pt-3">
-                    <div className="flex items-center justify-between">
-                      <span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
-                        Supervisor Execution Telemetry
-                      </span>
-                      <button
-                        className="font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors"
-                        onClick={() => {
-                          setActionOutput(null);
-                          setLastAction(null);
-                          setActionOk(null);
-                        }}
-                        type="button"
-                      >
-                        Clear ✕
-                      </button>
-                    </div>
+                  <div className="border-border/50 border-t pt-3">
                     <VerbatimOutput
                       label="Supervisor Action Output"
                       ok={actionOk ?? true}
+                      onClear={() => {
+                        setActionOutput(null);
+                        setLastAction(null);
+                        setActionOk(null);
+                      }}
                       output={actionOutput}
                       preClassName="min-h-[60px] max-h-[160px] p-2.5 text-[11px]"
                     />
@@ -436,26 +425,15 @@ export function HarnessSection() {
                 </div>
 
                 {lastAction === "dsh" && actionOutput && (
-                  <div className="space-y-1.5 border-border/50 border-t pt-3">
-                    <div className="flex items-center justify-between">
-                      <span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
-                        Binary Upgrade Output
-                      </span>
-                      <button
-                        className="font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors"
-                        onClick={() => {
-                          setActionOutput(null);
-                          setLastAction(null);
-                          setActionOk(null);
-                        }}
-                        type="button"
-                      >
-                        Clear ✕
-                      </button>
-                    </div>
+                  <div className="border-border/50 border-t pt-3">
                     <VerbatimOutput
                       label="POST /api/dsh/update"
                       ok={actionOk ?? true}
+                      onClear={() => {
+                        setActionOutput(null);
+                        setLastAction(null);
+                        setActionOk(null);
+                      }}
                       output={actionOutput}
                       preClassName="min-h-[60px] max-h-[160px] p-2.5 text-[11px]"
                     />

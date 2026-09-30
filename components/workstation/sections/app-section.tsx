@@ -188,25 +188,14 @@ export function AppSection() {
               </div>
 
               {actionOutput && (
-                <div className="space-y-1.5 border-border/50 border-t pt-3">
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
-                      Process Action Output
-                    </span>
-                    <button
-                      className="font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors"
-                      onClick={() => {
-                        setActionOutput(null);
-                        setActionOk(null);
-                      }}
-                      type="button"
-                    >
-                      Clear ✕
-                    </button>
-                  </div>
+                <div className="border-border/50 border-t pt-3">
                   <VerbatimOutput
                     label="Last Action Result"
                     ok={actionOk ?? true}
+                    onClear={() => {
+                      setActionOutput(null);
+                      setActionOk(null);
+                    }}
                     output={actionOutput}
                     preClassName="min-h-[60px] max-h-[160px] p-2.5 text-[11px]"
                   />

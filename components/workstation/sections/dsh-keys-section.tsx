@@ -754,26 +754,15 @@ export function DshKeysSection() {
                 </div>
 
                 {lastAction === "keys" && actionOutput && (
-                  <div className="space-y-1.5 border-border/50 border-t pt-3">
-                    <div className="flex items-center justify-between">
-                      <span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
-                        Provider Key Sync Output
-                      </span>
-                      <button
-                        className="font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors"
-                        onClick={() => {
-                          setActionOutput(null);
-                          setLastAction(null);
-                          setActionOk(null);
-                        }}
-                        type="button"
-                      >
-                        Clear ✕
-                      </button>
-                    </div>
+                  <div className="border-border/50 border-t pt-3">
                     <VerbatimOutput
                       label="Key Vault Mutation"
                       ok={actionOk ?? true}
+                      onClear={() => {
+                        setActionOutput(null);
+                        setLastAction(null);
+                        setActionOk(null);
+                      }}
                       output={actionOutput}
                       preClassName="min-h-[60px] max-h-[160px] p-2.5 text-[11px]"
                     />
@@ -890,26 +879,15 @@ export function DshKeysSection() {
                 />
 
                 {lastAction === "payload" && actionOutput && (
-                  <div className="space-y-1.5 border-border/50 border-t pt-3">
-                    <div className="flex items-center justify-between">
-                      <span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
-                        JSON Payload Output
-                      </span>
-                      <button
-                        className="font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors"
-                        onClick={() => {
-                          setActionOutput(null);
-                          setLastAction(null);
-                          setActionOk(null);
-                        }}
-                        type="button"
-                      >
-                        Clear ✕
-                      </button>
-                    </div>
+                  <div className="border-border/50 border-t pt-3">
                     <VerbatimOutput
                       label="POST /api/dsh-settings"
                       ok={actionOk ?? true}
+                      onClear={() => {
+                        setActionOutput(null);
+                        setLastAction(null);
+                        setActionOk(null);
+                      }}
                       output={actionOutput}
                       preClassName="min-h-[60px] max-h-[160px] p-2.5 text-[11px]"
                     />
@@ -1034,26 +1012,15 @@ export function DshKeysSection() {
               </div>
 
               {lastAction === "matrix" && actionOutput && (
-                <div className="space-y-1.5 border-border/50 border-t pt-3">
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
-                      Credential Deletion Output
-                    </span>
-                    <button
-                      className="font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors"
-                      onClick={() => {
-                        setActionOutput(null);
-                        setLastAction(null);
-                        setActionOk(null);
-                      }}
-                      type="button"
-                    >
-                      Clear ✕
-                    </button>
-                  </div>
+                <div className="border-border/50 border-t pt-3">
                   <VerbatimOutput
                     label="Key Vault Deletion"
                     ok={actionOk ?? true}
+                    onClear={() => {
+                      setActionOutput(null);
+                      setLastAction(null);
+                      setActionOk(null);
+                    }}
                     output={actionOutput}
                     preClassName="min-h-[60px] max-h-[160px] p-2.5 text-[11px]"
                   />

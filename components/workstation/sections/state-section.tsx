@@ -257,26 +257,15 @@ export function StateSection() {
                 </div>
 
                 {lastAction === "export" && actionOutput && (
-                  <div className="space-y-1.5 border-border/50 border-t pt-3">
-                    <div className="flex items-center justify-between">
-                      <span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
-                        Export Operation Output
-                      </span>
-                      <button
-                        className="font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors"
-                        onClick={() => {
-                          setActionOutput(null);
-                          setLastAction(null);
-                          setActionOk(null);
-                        }}
-                        type="button"
-                      >
-                        Clear ✕
-                      </button>
-                    </div>
+                  <div className="border-border/50 border-t pt-3">
                     <VerbatimOutput
                       label="POST /api/state/export"
                       ok={actionOk ?? true}
+                      onClear={() => {
+                        setActionOutput(null);
+                        setLastAction(null);
+                        setActionOk(null);
+                      }}
                       output={actionOutput}
                       preClassName="min-h-[60px] max-h-[160px] p-2.5 text-[11px]"
                     />
@@ -432,26 +421,15 @@ export function StateSection() {
                 </div>
 
                 {lastAction === "import" && actionOutput && (
-                  <div className="space-y-1.5 border-border/50 border-t pt-3">
-                    <div className="flex items-center justify-between">
-                      <span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
-                        Restore Operation Output
-                      </span>
-                      <button
-                        className="font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors"
-                        onClick={() => {
-                          setActionOutput(null);
-                          setLastAction(null);
-                          setActionOk(null);
-                        }}
-                        type="button"
-                      >
-                        Clear ✕
-                      </button>
-                    </div>
+                  <div className="border-border/50 border-t pt-3">
                     <VerbatimOutput
                       label="POST /api/state/import"
                       ok={actionOk ?? true}
+                      onClear={() => {
+                        setActionOutput(null);
+                        setLastAction(null);
+                        setActionOk(null);
+                      }}
                       output={actionOutput}
                       preClassName="min-h-[60px] max-h-[160px] p-2.5 text-[11px]"
                     />

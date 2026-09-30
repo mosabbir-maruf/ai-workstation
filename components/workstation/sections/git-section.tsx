@@ -431,23 +431,7 @@ export function GitSection() {
 
                 {/* Integrated Verbatim Terminal Output for G-01 */}
                 {!lastExecutedCmd?.startsWith("git push") && output && (
-                  <div className="space-y-1.5 border-border/50 border-t pt-3">
-                    <div className="flex items-center justify-between">
-                      <span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
-                        Terminal Output
-                      </span>
-                      <button
-                        className="font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors"
-                        onClick={() => {
-                          setOutput(null);
-                          setLastExecutedCmd(null);
-                          setLastCmdStatus(null);
-                        }}
-                        type="button"
-                      >
-                        Clear ✕
-                      </button>
-                    </div>
+                  <div className="border-border/50 border-t pt-3">
                     <VerbatimOutput
                       label={
                         lastExecutedCmd
@@ -455,6 +439,11 @@ export function GitSection() {
                           : "Git Subprocess Output"
                       }
                       ok={lastCmdStatus ?? true}
+                      onClear={() => {
+                        setOutput(null);
+                        setLastExecutedCmd(null);
+                        setLastCmdStatus(null);
+                      }}
                       output={output}
                       preClassName="min-h-[60px] max-h-[160px] p-2.5 text-[11px]"
                     />
@@ -704,23 +693,7 @@ export function GitSection() {
 
                 {/* Integrated Verbatim Terminal Output for G-02 */}
                 {lastExecutedCmd?.startsWith("git push") && output && (
-                  <div className="space-y-1.5 border-border/50 border-t pt-3">
-                    <div className="flex items-center justify-between">
-                      <span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
-                        Terminal Output
-                      </span>
-                      <button
-                        className="font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors"
-                        onClick={() => {
-                          setOutput(null);
-                          setLastExecutedCmd(null);
-                          setLastCmdStatus(null);
-                        }}
-                        type="button"
-                      >
-                        Clear ✕
-                      </button>
-                    </div>
+                  <div className="border-border/50 border-t pt-3">
                     <VerbatimOutput
                       label={
                         lastExecutedCmd
@@ -728,6 +701,11 @@ export function GitSection() {
                           : "Git Commit & Push"
                       }
                       ok={lastCmdStatus ?? true}
+                      onClear={() => {
+                        setOutput(null);
+                        setLastExecutedCmd(null);
+                        setLastCmdStatus(null);
+                      }}
                       output={output}
                       preClassName="min-h-[60px] max-h-[160px] p-2.5 text-[11px]"
                     />

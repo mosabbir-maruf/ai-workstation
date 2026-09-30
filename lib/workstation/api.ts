@@ -75,6 +75,7 @@ export interface GitDiffResponse {
   stat: string;
   diff: string;
   output: string;
+  needsDaemonRestart?: boolean;
 }
 
 export interface OverviewResponse {

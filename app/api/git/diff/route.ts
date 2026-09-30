@@ -15,10 +15,37 @@ const FALLBACK_DIFF_PAYLOAD = {
 
 const createFallbackResponse = () => NextResponse.json(FALLBACK_DIFF_PAYLOAD);
 
+async function handleGitDiffRequest(request: Request) {
+  const res = await proxyOrRespond(request, "/api/git/diff", createFallbackResponse);
+  if (res.status === 404) {
+    try {
+      const cloned = res.clone();
+      const body = await cloned.json();
+      if (body?.output && typeof body.output === "string" && body.output.includes("Endpoint not found")) {
+        return NextResponse.json({
+          ok: false,
+          clean: true,
+          project: "none",
+          path: "",
+          filesCount: 0,
+          files: [],
+          stat: "",
+          diff: "",
+          needsDaemonRestart: true,
+          output: "Host daemon endpoint /api/git/diff not loaded. The running host daemon instance on the server must be restarted to register the new endpoint: run 'ai daemon restart' or 'sudo systemctl restart ai-workstation-daemon'.",
+        });
+      }
+    } catch {
+      // Fall through to original response
+    }
+  }
+  return res;
+}
+
 export async function GET(request: Request) {
-  return await proxyOrRespond(request, "/api/git/diff", createFallbackResponse);
+  return await handleGitDiffRequest(request);
 }
 
 export async function POST(request: Request) {
-  return await proxyOrRespond(request, "/api/git/diff", createFallbackResponse);
+  return await handleGitDiffRequest(request);
 }

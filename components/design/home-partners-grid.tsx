@@ -129,6 +129,7 @@ function PartnerLogoHoverContent({
           opacity: 0,
           filter: "blur(2px)",
         }}
+        style={{ opacity: 0 }}
         transition={labelTransition}
       >
         {tierLabel}

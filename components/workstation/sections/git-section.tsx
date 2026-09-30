@@ -352,6 +352,23 @@ export function GitSection() {
                   >
                     Checking...
                   </Badge>
+                ) : diffData?.needsDaemonRestart ||
+                  diffData?.output?.includes("Endpoint not found") ? (
+                  <Badge
+                    className="border-amber-500/40 bg-amber-500/10 text-amber-500 font-mono text-[10px] uppercase"
+                    size="sm"
+                    variant="outline"
+                  >
+                    Daemon Update Required
+                  </Badge>
+                ) : diffData?.ok === false ? (
+                  <Badge
+                    className="border-destructive/40 bg-destructive/10 text-destructive font-mono text-[10px] uppercase"
+                    size="sm"
+                    variant="outline"
+                  >
+                    Diff Error
+                  </Badge>
                 ) : diffData?.clean ? (
                   <Badge
                     className="border-emerald-500/40 bg-emerald-500/10 text-emerald-500 font-mono text-[10px] uppercase"
@@ -392,12 +409,24 @@ export function GitSection() {
                   <span
                     className={cn(
                       "size-2 shrink-0 rounded-full",
-                      diffData?.clean ? "bg-emerald-500" : "bg-amber-500"
+                      diffData?.needsDaemonRestart ||
+                        diffData?.output?.includes("Endpoint not found")
+                        ? "bg-amber-500"
+                        : diffData?.ok === false
+                        ? "bg-destructive"
+                        : diffData?.clean
+                        ? "bg-emerald-500"
+                        : "bg-amber-500"
                     )}
                   />
                   <span className="text-muted-foreground">Status:</span>
                   <span className="font-semibold text-foreground">
-                    {diffData?.clean
+                    {diffData?.needsDaemonRestart ||
+                    diffData?.output?.includes("Endpoint not found")
+                      ? "Host Daemon Restart Required"
+                      : diffData?.ok === false
+                      ? "Git Diff Inspection Error"
+                      : diffData?.clean
                       ? "Working Tree Clean"
                       : "Uncommitted Changes Detected"}
                   </span>
@@ -433,14 +462,45 @@ export function GitSection() {
                 </div>
               ) : null}
 
-              {/* Diff Code Display or Clean State */}
+              {/* Diff Code Display, Clean State, or Actionable Alert */}
               {diffLoading && !diffData ? (
                 <div className="flex min-h-[140px] items-center justify-center border border-border/70 border-dashed bg-muted/10 p-4 text-center font-mono text-muted-foreground/60 text-xs">
                   Computing working tree diff...
                 </div>
-              ) : diffError ? (
+              ) : diffData?.needsDaemonRestart ||
+                diffData?.output?.includes("Endpoint not found") ? (
+                <div className="flex flex-col gap-3 border border-amber-500/40 bg-amber-500/5 p-4 sm:p-5">
+                  <div className="flex items-center gap-2 font-mono text-xs font-semibold text-amber-500">
+                    <span className="size-2 rounded-full bg-amber-500 animate-pulse" />
+                    Host Control Daemon Endpoint Not Loaded (/api/git/diff)
+                  </div>
+                  <p className="font-mono text-xs text-muted-foreground leading-relaxed">
+                    The host control daemon running on your server is an earlier process instance without the git diff route. Restart the daemon to activate live working tree telemetry:
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <code className="border border-border/80 bg-background/80 px-2.5 py-1 font-mono text-xs text-foreground select-all">
+                      ai daemon restart
+                    </code>
+                    <span className="font-mono text-[10px] text-muted-foreground/60 uppercase">or</span>
+                    <code className="border border-border/80 bg-background/80 px-2.5 py-1 font-mono text-xs text-foreground select-all">
+                      sudo systemctl restart ai-workstation-daemon
+                    </code>
+                  </div>
+                  <div className="pt-1">
+                    <Button
+                      className="h-7 rounded-none px-3 font-mono text-xs uppercase tracking-wider"
+                      disabled={diffLoading}
+                      onClick={fetchDiff}
+                      size="xs"
+                      variant="outline"
+                    >
+                      {diffLoading ? "Probing..." : "Recheck Daemon ↻"}
+                    </Button>
+                  </div>
+                </div>
+              ) : diffError || diffData?.ok === false ? (
                 <div className="border border-destructive/50 bg-destructive/10 p-3 font-mono text-destructive text-xs">
-                  {diffError}
+                  {diffError || diffData?.output || "Failed to inspect git diff."}
                 </div>
               ) : diffData?.clean &&
                 (!diffData?.diff || diffData.diff.trim().length === 0) ? (

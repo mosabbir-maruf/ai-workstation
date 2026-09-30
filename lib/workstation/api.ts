@@ -334,6 +334,11 @@ export const workstationApi = {
       method: "POST",
       body: JSON.stringify({ message }),
     }),
+  gitExec: (command: string) =>
+    requestJson<StandardOutputResponse>("/api/git/exec", {
+      method: "POST",
+      body: JSON.stringify({ command }),
+    }),
 
   // App Runtime
   appRun: () =>

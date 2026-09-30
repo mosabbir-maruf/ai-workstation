@@ -51,6 +51,16 @@ function getDiffLineClass(line: string): string {
 
 const MAX_DIFF_LINES = 300;
 
+const GIT_QUICK_ACTIONS = [
+  { label: "status", command: "status", description: "Show working tree status" },
+  { label: "log -5", command: "log -n 5 --oneline", description: "Recent 5 commits" },
+  { label: "branch -a", command: "branch -a", description: "List all local & remote branches" },
+  { label: "remote -v", command: "remote -v", description: "Show remote repositories" },
+  { label: "stash list", command: "stash list", description: "List stashed changes" },
+  { label: "diff --stat", command: "diff --stat", description: "Summary of changes" },
+  { label: "fetch --prune", command: "fetch --prune origin", description: "Fetch latest remote refs" },
+] as const;
+
 export function GitSection() {
   const [commitMessage, setCommitMessage] = useState("");
   const [output, setOutput] = useState<string | null>(null);
@@ -58,6 +68,12 @@ export function GitSection() {
   const [diffData, setDiffData] = useState<GitDiffResponse | null>(null);
   const [diffLoading, setDiffLoading] = useState(false);
   const [diffError, setDiffError] = useState<string | null>(null);
+  const [manualCommand, setManualCommand] = useState("");
+  const [executingGit, setExecutingGit] = useState(false);
+  const [lastExecutedCmd, setLastExecutedCmd] = useState<string | null>(null);
+  const [lastCmdStatus, setLastCmdStatus] = useState<boolean | null>(null);
+  const [cmdHistory, setCmdHistory] = useState<string[]>([]);
+  const [historyIndex, setHistoryIndex] = useState<number>(-1);
 
   const isDaemonRestartRequired = Boolean(
     diffData?.needsDaemonRestart ||
@@ -99,11 +115,14 @@ export function GitSection() {
   const handlePull = async () => {
     try {
       setLoading(true);
+      setLastExecutedCmd("git pull --ff-only");
       const res = await workstationApi.gitPull();
       setOutput(res.output);
+      setLastCmdStatus(res.ok);
       await fetchDiff();
     } catch (err) {
       setOutput(`Git pull error: ${String(err)}`);
+      setLastCmdStatus(false);
     } finally {
       setLoading(false);
     }
@@ -117,14 +136,42 @@ export function GitSection() {
 
     try {
       setLoading(true);
+      setLastExecutedCmd(`git push -m "${commitMessage.trim()}"`);
       const res = await workstationApi.gitPush(commitMessage.trim());
       setOutput(res.output);
+      setLastCmdStatus(res.ok);
       setCommitMessage("");
       await fetchDiff();
     } catch (err) {
       setOutput(`Git push error: ${String(err)}`);
+      setLastCmdStatus(false);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleExecuteGit = async (cmdToRun?: string) => {
+    const raw = (cmdToRun ?? manualCommand).trim();
+    if (!raw || executingGit) return;
+
+    try {
+      setExecutingGit(true);
+      const displayCmd = raw.startsWith("git ") ? raw : `git ${raw}`;
+      setLastExecutedCmd(displayCmd);
+      const res = await workstationApi.gitExec(raw);
+      setOutput(res.output);
+      setLastCmdStatus(res.ok);
+      if (!cmdToRun) {
+        setCmdHistory((prev) => [raw, ...prev.filter((c) => c !== raw)]);
+        setManualCommand("");
+        setHistoryIndex(-1);
+      }
+      await fetchDiff();
+    } catch (err) {
+      setOutput(`Git execution error: ${String(err)}`);
+      setLastCmdStatus(false);
+    } finally {
+      setExecutingGit(false);
     }
   };
 
@@ -576,16 +623,24 @@ export function GitSection() {
         </div>
       </CadGridFrame>
 
-      {/* Row 3: [G-04] Git Subprocess Terminal Output */}
+      {/* Row 3: [G-04] Git CLI & Subprocess Execution Console */}
       <CadGridFrame showRulers>
         <div className="relative w-full overflow-visible">
           <CadCell
-            footerLeft="Subprocess · git stdout & stderr stream"
+            footerLeft="CLI · interactive git stdout & stderr stream"
             footerRight={
-              <span className="max-w-[180px] truncate sm:max-w-none">
-                <span className="sm:hidden">Dir: ai-workstation</span>
+              <span className="max-w-[220px] truncate sm:max-w-none">
+                <span className="sm:hidden">
+                  Dir:{" "}
+                  {diffData?.project && diffData.project !== "none"
+                    ? diffData.project
+                    : "active-project"}
+                </span>
                 <span className="hidden sm:inline">
-                  Working Directory · /workspace/projects/ai-workstation
+                  Working Directory ·{" "}
+                  {diffData?.path && diffData.path !== "none"
+                    ? diffData.path
+                    : "/workspace/projects/active-project"}
                 </span>
               </span>
             }
@@ -593,18 +648,111 @@ export function GitSection() {
               output ? (
                 <Button
                   className="h-6 rounded-none px-2 font-mono text-[10px] uppercase tracking-wider"
-                  onClick={() => setOutput(null)}
+                  onClick={() => {
+                    setOutput(null);
+                    setLastExecutedCmd(null);
+                    setLastCmdStatus(null);
+                  }}
                   size="xs"
                   variant="ghost"
                 >
-                  Clear
+                  Clear Output ✕
                 </Button>
               ) : undefined
             }
             index="G-04"
-            title="Git Subprocess Terminal Output"
+            title="Manual Git CLI & Command Execution"
           >
-            <VerbatimOutput label="Git Execution Output" output={output} />
+            <div className="space-y-4">
+              {/* Interactive Command Input Form */}
+              <div className="space-y-2.5">
+                <div className="flex flex-wrap items-center justify-between gap-1 font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
+                  <span>Manual Command Prompt</span>
+                  <span>Press Enter ↵ to Execute · ↑↓ History</span>
+                </div>
+
+                <form
+                  className="flex items-center gap-2"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleExecuteGit();
+                  }}
+                >
+                  <div className="relative flex flex-1 items-center">
+                    <span className="pointer-events-none absolute left-3 select-none font-bold font-mono text-emerald-500 text-xs sm:text-sm">
+                      git
+                    </span>
+                    <Input
+                      className="h-9 rounded-none border-border/80 bg-background/80 pl-11 font-mono text-xs text-foreground placeholder:text-muted-foreground/50 focus-visible:ring-1 focus-visible:ring-primary"
+                      disabled={executingGit}
+                      onChange={(e) => setManualCommand(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "ArrowUp") {
+                          e.preventDefault();
+                          if (cmdHistory.length > 0) {
+                            const nextIdx = Math.min(
+                              historyIndex + 1,
+                              cmdHistory.length - 1
+                            );
+                            setHistoryIndex(nextIdx);
+                            setManualCommand(cmdHistory[nextIdx]);
+                          }
+                        } else if (e.key === "ArrowDown") {
+                          e.preventDefault();
+                          if (historyIndex > 0) {
+                            const nextIdx = historyIndex - 1;
+                            setHistoryIndex(nextIdx);
+                            setManualCommand(cmdHistory[nextIdx]);
+                          } else if (historyIndex === 0) {
+                            setHistoryIndex(-1);
+                            setManualCommand("");
+                          }
+                        }
+                      }}
+                      placeholder="status, log -n 5 --oneline, branch -a, checkout main, stash..."
+                      value={manualCommand}
+                    />
+                  </div>
+                  <Button
+                    className="h-9 shrink-0 rounded-none px-4 font-mono text-xs uppercase tracking-wider"
+                    disabled={executingGit || !manualCommand.trim()}
+                    type="submit"
+                    variant="default"
+                  >
+                    {executingGit ? "Running..." : "Execute ↵"}
+                  </Button>
+                </form>
+
+                {/* Preset Chips */}
+                <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                  <span className="mr-1 font-mono text-[10px] text-muted-foreground/60 uppercase tracking-wider">
+                    Presets:
+                  </span>
+                  {GIT_QUICK_ACTIONS.map((preset) => (
+                    <button
+                      className="border border-border/70 bg-muted/20 px-2 py-1 font-mono text-[11px] text-muted-foreground transition-colors hover:border-primary/50 hover:bg-muted/40 hover:text-foreground disabled:opacity-50"
+                      disabled={executingGit}
+                      key={preset.command}
+                      onClick={() => handleExecuteGit(preset.command)}
+                      title={preset.description}
+                      type="button"
+                    >
+                      git {preset.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Subprocess Output Stream */}
+              <div className="border-border/40 border-t pt-1">
+                <VerbatimOutput
+                  emptyText="No git command executed yet. Run an action above or execute a manual git command."
+                  label={lastExecutedCmd ? `$ ${lastExecutedCmd}` : "Git Execution Output"}
+                  ok={lastCmdStatus ?? true}
+                  output={output}
+                />
+              </div>
+            </div>
           </CadCell>
 
           <GridCornerDots

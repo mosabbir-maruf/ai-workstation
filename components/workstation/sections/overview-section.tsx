@@ -292,7 +292,7 @@ function CommandAndServicesMatrix({
 
             <Button
               className="h-6 shrink-0 rounded-none px-2 font-mono text-[10px] uppercase tracking-tight sm:px-2.5 sm:tracking-wider"
-              disabled={loading || actionInProgress !== null}
+              disabled={loading || actionInProgress !== null || !appRunning}
               onClick={onRestart}
               size="xs"
               variant="outline"

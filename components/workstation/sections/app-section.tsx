@@ -150,7 +150,7 @@ export function AppSection() {
                 <div className="grid grid-cols-2 gap-2.5">
                   <Button
                     className="h-9 rounded-none font-mono text-xs uppercase tracking-wider"
-                    disabled={loading}
+                    disabled={loading || telemetry.isRunning}
                     onClick={() => handleAction(workstationApi.appRun)}
                     size="sm"
                     variant="default"
@@ -159,7 +159,7 @@ export function AppSection() {
                   </Button>
                   <Button
                     className="h-9 rounded-none font-mono text-xs uppercase tracking-wider"
-                    disabled={loading}
+                    disabled={loading || !telemetry.isRunning}
                     onClick={() => handleAction(workstationApi.appRestart)}
                     size="sm"
                     variant="outline"
@@ -168,7 +168,7 @@ export function AppSection() {
                   </Button>
                   <Button
                     className="h-9 rounded-none font-mono text-xs uppercase tracking-wider"
-                    disabled={loading}
+                    disabled={loading || !telemetry.isRunning}
                     onClick={() => handleAction(workstationApi.appStop)}
                     size="sm"
                     variant="destructive"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { GridCornerDots } from "@/components/design/line-grid";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,6 +36,10 @@ export function TunnelSection() {
   useEffect(() => {
     fetchStatus();
   }, [fetchStatus]);
+
+  const isTunnelOnline = useMemo(() => {
+    return /(Connector|Tunnel):\s*running/i.test(tunnelStatus ?? "");
+  }, [tunnelStatus]);
 
   const handleStart = async () => {
     try {
@@ -187,7 +191,7 @@ export function TunnelSection() {
                 <div className="grid grid-cols-2 gap-2.5">
                   <Button
                     className="h-9 rounded-none font-mono text-xs uppercase tracking-wider"
-                    disabled={loading}
+                    disabled={loading || isTunnelOnline}
                     onClick={handleStart}
                     size="sm"
                     variant="default"
@@ -196,7 +200,7 @@ export function TunnelSection() {
                   </Button>
                   <Button
                     className="h-9 rounded-none font-mono text-xs uppercase tracking-wider"
-                    disabled={loading}
+                    disabled={loading || !isTunnelOnline}
                     onClick={handleStop}
                     size="sm"
                     variant="destructive"

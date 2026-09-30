@@ -198,7 +198,7 @@ export function HarnessSection() {
                   <div className="grid grid-cols-3 gap-2">
                     <Button
                       className="h-8 rounded-none font-mono text-xs uppercase tracking-wider"
-                      disabled={loading}
+                      disabled={loading || isHarnessOnline}
                       onClick={() =>
                         handleAction(
                           "Start Harness",
@@ -213,7 +213,7 @@ export function HarnessSection() {
                     </Button>
                     <Button
                       className="h-8 rounded-none font-mono text-xs uppercase tracking-wider"
-                      disabled={loading}
+                      disabled={loading || !isHarnessOnline}
                       onClick={() =>
                         handleAction("Stop Harness", workstationApi.harnessStop)
                       }
@@ -225,7 +225,7 @@ export function HarnessSection() {
                     </Button>
                     <Button
                       className="h-8 rounded-none font-mono text-xs uppercase tracking-wider"
-                      disabled={loading}
+                      disabled={loading || !isHarnessOnline}
                       onClick={() =>
                         handleAction(
                           "Restart Bridge",

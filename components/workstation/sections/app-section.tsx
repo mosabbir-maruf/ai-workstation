@@ -159,7 +159,7 @@ export function AppSection() {
                   </Button>
                   <Button
                     className="h-9 rounded-none font-mono text-xs uppercase tracking-wider"
-                    disabled={loading || !telemetry.isRunning}
+                    disabled={loading}
                     onClick={() => handleAction(workstationApi.appRestart)}
                     size="sm"
                     variant="outline"

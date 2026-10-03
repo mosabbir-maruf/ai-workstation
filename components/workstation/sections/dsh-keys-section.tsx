@@ -517,7 +517,7 @@ export function DshKeysSection() {
           <div className="grid w-full grid-cols-1 md:grid-cols-12">
             {/* [K-01] Model Provider & Auto-Discovery Console (Flows Design) */}
             <CadCell
-              bodyClassName="flex flex-col justify-between gap-4 p-5"
+              bodyClassName="flex flex-col gap-4 p-5"
               className="md:col-span-6"
               footerLeft="Runtime: runtime/dsh/settings.yaml"
               footerRight="AES-256 VAULT"
@@ -869,7 +869,7 @@ export function DshKeysSection() {
 
             {/* [K-02] dsh-settings Configuration Payload */}
             <CadCell
-              bodyClassName="flex flex-col justify-between gap-4 p-5"
+              bodyClassName="flex flex-col gap-4 p-5"
               className="md:col-span-6"
               footerLeft={`Modified: ${mtime || "unknown"}`}
               footerRight="GET/POST /api/dsh-settings"
@@ -911,7 +911,7 @@ export function DshKeysSection() {
               title="dsh-settings Configuration Payload"
             >
               {/* Top: 3-Column JSON Schema Telemetry */}
-              <div className="space-y-2">
+              <div className="space-y-2 shrink-0">
                 <div className="flex items-center justify-between">
                   <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
                     Payload Schema Telemetry
@@ -956,8 +956,8 @@ export function DshKeysSection() {
               </div>
 
               {/* Middle & Bottom: Raw JSON Configuration Editor */}
-              <div className="space-y-1.5 border-border/50 border-t pt-4">
-                <div className="flex items-center justify-between">
+              <div className="flex flex-1 flex-col min-h-0 space-y-1.5 border-border/50 border-t pt-4">
+                <div className="flex items-center justify-between shrink-0">
                   <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
                     Raw DSH Provider Routing & Quota JSON
                   </span>
@@ -966,7 +966,7 @@ export function DshKeysSection() {
                   </span>
                 </div>
                 <Textarea
-                  className="h-[200px] resize-none rounded-none font-mono text-base sm:text-xs leading-relaxed"
+                  className="flex-1 min-h-[220px] resize-none rounded-none font-mono text-base sm:text-xs leading-relaxed"
                   disabled={loading}
                   onChange={(e) => setContent(e.target.value)}
                   placeholder='{"api_providers": {"deepseek": {"api_key": "..."}}}'
@@ -975,7 +975,7 @@ export function DshKeysSection() {
                 />
 
                 {lastAction === "payload" && actionOutput && (
-                  <div className="border-border/50 border-t pt-3">
+                  <div className="border-border/50 border-t pt-3 shrink-0">
                     <VerbatimOutput
                       label="POST /api/dsh-settings"
                       ok={actionOk ?? true}

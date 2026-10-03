@@ -22,6 +22,26 @@ function maskSecret(secret: string): string {
   return `${trimmed.slice(0, 4)}••••${trimmed.slice(-4)}`;
 }
 
+function parseHeaders(raw: string): Record<string, string> | undefined {
+  const trimmed = raw.trim();
+  if (!trimmed) return undefined;
+  try {
+    const parsed = JSON.parse(trimmed);
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      const clean: Record<string, string> = {};
+      for (const [k, v] of Object.entries(parsed)) {
+        if (typeof k === "string" && k.trim() && typeof v === "string" && v.trim()) {
+          clean[k.trim()] = v.trim();
+        }
+      }
+      return Object.keys(clean).length > 0 ? clean : undefined;
+    }
+  } catch {
+    // Non-JSON or syntax error
+  }
+  return undefined;
+}
+
 type ProviderId =
   | "deepseek"
   | "openai"
@@ -53,6 +73,18 @@ export function DshKeysSection() {
   const [customApiKey, setCustomApiKey] = useState("");
   const [customBaseUrl, setCustomBaseUrl] = useState("");
   const [customModel, setCustomModel] = useState("");
+  const [customHeaders, setCustomHeaders] = useState("");
+
+  const isCustomHeadersValid = useMemo(() => {
+    const trimmed = customHeaders.trim();
+    if (!trimmed) return true;
+    try {
+      const p = JSON.parse(trimmed);
+      return Boolean(p && typeof p === "object" && !Array.isArray(p));
+    } catch {
+      return false;
+    }
+  }, [customHeaders]);
 
   // Model discovery & identifiers
   const [providerModels, setProviderModels] = useState<Record<string, string>>({
@@ -90,6 +122,11 @@ export function DshKeysSection() {
           setCustomApiKey(providers.custom?.api_key ?? "");
           setCustomBaseUrl(providers.custom?.base_url ?? "");
           setCustomModel(providers.custom?.model ?? "");
+          if (providers.custom?.headers && typeof providers.custom.headers === "object") {
+            setCustomHeaders(JSON.stringify(providers.custom.headers, null, 2));
+          } else {
+            setCustomHeaders("");
+          }
 
           setProviderModels({
             deepseek: providers.deepseek?.model ?? "",
@@ -134,11 +171,13 @@ export function DshKeysSection() {
       setModelFetchNotice(null);
       const apiKey = getProviderApiKey(prov).trim();
       const baseUrl = prov === "custom" ? customBaseUrl.trim() : undefined;
+      const headers = prov === "custom" ? parseHeaders(customHeaders) : undefined;
 
       const res = await workstationApi.fetchAvailableModels({
         provider: prov,
         apiKey: apiKey || undefined,
         baseUrl: baseUrl || undefined,
+        headers,
       });
 
       if (res.ok && res.models && res.models.length > 0) {
@@ -172,12 +211,26 @@ export function DshKeysSection() {
           parsed.api_providers = {};
         }
 
-        const syncProv = (prov: string, keyVal: string, modelVal?: string, baseUrlVal?: string) => {
-          if (keyVal?.trim() || modelVal?.trim() || baseUrlVal?.trim()) {
-            const nextEntry: Record<string, string> = {};
+        const syncProv = (
+          prov: string,
+          keyVal: string,
+          modelVal?: string,
+          baseUrlVal?: string,
+          headersVal?: string
+        ) => {
+          const existing = parsed.api_providers[prov] || {};
+          const parsedH = headersVal !== undefined ? parseHeaders(headersVal) : existing.headers;
+          const cleanH = parsedH && typeof parsedH === "object" && Object.keys(parsedH).length > 0 ? parsedH : undefined;
+
+          if (keyVal?.trim() || modelVal?.trim() || baseUrlVal?.trim() || cleanH) {
+            const nextEntry: Record<string, unknown> = {};
             if (keyVal?.trim()) nextEntry.api_key = keyVal.trim();
             if (modelVal?.trim()) nextEntry.model = modelVal.trim();
             if (baseUrlVal?.trim()) nextEntry.base_url = baseUrlVal.trim();
+            if (cleanH) nextEntry.headers = cleanH;
+            if (existing.compat && typeof existing.compat === "object") {
+              nextEntry.compat = existing.compat;
+            }
             parsed.api_providers[prov] = nextEntry;
           } else {
             delete parsed.api_providers[prov];
@@ -193,7 +246,7 @@ export function DshKeysSection() {
         syncProv("gemini", geminiKey, providerModels.gemini);
         syncProv("openrouter", openrouterKey, providerModels.openrouter);
         syncProv("groq", groqKey, providerModels.groq);
-        syncProv("custom", customApiKey, customModel || providerModels.custom, customBaseUrl);
+        syncProv("custom", customApiKey, customModel || providerModels.custom, customBaseUrl, customHeaders);
 
         return JSON.stringify(parsed, null, 2);
       } catch {
@@ -204,6 +257,7 @@ export function DshKeysSection() {
       anthropicKey,
       customApiKey,
       customBaseUrl,
+      customHeaders,
       customModel,
       deepseekKey,
       geminiKey,
@@ -215,6 +269,14 @@ export function DshKeysSection() {
   );
 
   const handleStageToJson = () => {
+    if (customHeaders.trim() && !isCustomHeadersValid) {
+      setLastAction("keys");
+      setActionOk(false);
+      setActionOutput(
+        "[Stage Provider Keys Error]\nCustom HTTP Headers must be a valid JSON object (e.g. {\"Header-Name\": \"value\"})."
+      );
+      return;
+    }
     const nextJson = buildSyncedJson(content);
     setContent(nextJson);
     setLastAction("keys");
@@ -269,6 +331,7 @@ export function DshKeysSection() {
         setCustomApiKey("");
         setCustomBaseUrl("");
         setCustomModel("");
+        setCustomHeaders("");
         break;
     }
     setProviderModels((prev) => ({ ...prev, [provId]: "" }));
@@ -293,6 +356,14 @@ export function DshKeysSection() {
 
   const handleSyncAndSave = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    if (customHeaders.trim() && !isCustomHeadersValid) {
+      setLastAction("keys");
+      setActionOk(false);
+      setActionOutput(
+        "[Sync Provider Keys Error]\nCustom HTTP Headers must be a valid JSON object (e.g. {\"Header-Name\": \"value\"})."
+      );
+      return;
+    }
     const nextJson = buildSyncedJson(content);
     setContent(nextJson);
     await handleSave(nextJson, "[POST /api/dsh-settings]", "keys");
@@ -329,7 +400,8 @@ export function DshKeysSection() {
         (key) =>
           Boolean(providers?.[key]?.api_key?.trim?.()) ||
           Boolean(providers?.[key]?.base_url?.trim?.()) ||
-          Boolean(providers?.[key]?.model?.trim?.())
+          Boolean(providers?.[key]?.model?.trim?.()) ||
+          Boolean(providers?.[key]?.headers && typeof providers[key].headers === "object" && Object.keys(providers[key].headers).length > 0)
       ).length;
       return {
         valid: true,
@@ -412,7 +484,8 @@ export function DshKeysSection() {
           customApiKey.trim() ||
             customBaseUrl.trim() ||
             customModel.trim() ||
-            providerModels.custom?.trim()
+            providerModels.custom?.trim() ||
+            customHeaders.trim()
         ),
       },
     ],
@@ -420,6 +493,7 @@ export function DshKeysSection() {
       anthropicKey,
       customApiKey,
       customBaseUrl,
+      customHeaders,
       customModel,
       deepseekKey,
       geminiKey,
@@ -614,13 +688,13 @@ export function DshKeysSection() {
                     <div className="space-y-3">
                       <div className="space-y-1">
                         <label className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
-                          Base URL (Ollama, vLLM, LM Studio)
+                          Base URL (Ollama, vLLM, LM Studio, Gateway)
                         </label>
                         <Input
                           type="text"
                           value={customBaseUrl}
                           onChange={(e) => setCustomBaseUrl(e.target.value)}
-                          placeholder="http://localhost:11434/v1 or http://localhost:11434"
+                          placeholder="http://localhost:11434/v1 or https://ai.example.com/v1"
                           className="h-9 sm:h-8 rounded-none font-mono text-base sm:text-xs"
                         />
                       </div>
@@ -634,6 +708,28 @@ export function DshKeysSection() {
                           onChange={(e) => setCustomApiKey(e.target.value)}
                           placeholder="sk-..."
                           className="h-9 sm:h-8 rounded-none font-mono text-base sm:text-xs"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between">
+                          <label className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
+                            Custom HTTP Headers (optional JSON)
+                          </label>
+                          {!isCustomHeadersValid && customHeaders.trim() && (
+                            <span className="font-mono text-[9px] text-destructive uppercase">
+                              Invalid JSON
+                            </span>
+                          )}
+                        </div>
+                        <Textarea
+                          value={customHeaders}
+                          onChange={(e) => setCustomHeaders(e.target.value)}
+                          placeholder={'{\n  "CF-Access-Client-Id": "...",\n  "CF-Access-Client-Secret": "..."\n}'}
+                          spellCheck={false}
+                          className={cn(
+                            "h-20 resize-none rounded-none font-mono text-xs leading-relaxed",
+                            !isCustomHeadersValid && customHeaders.trim() && "border-destructive focus-visible:ring-destructive"
+                          )}
                         />
                       </div>
                     </div>

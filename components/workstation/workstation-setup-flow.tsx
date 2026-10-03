@@ -20,6 +20,26 @@ type ProviderId =
   | "groq"
   | "custom";
 
+function parseHeaders(raw: string): Record<string, string> | undefined {
+  const trimmed = raw.trim();
+  if (!trimmed) return undefined;
+  try {
+    const parsed = JSON.parse(trimmed);
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      const clean: Record<string, string> = {};
+      for (const [k, v] of Object.entries(parsed)) {
+        if (typeof k === "string" && k.trim() && typeof v === "string" && v.trim()) {
+          clean[k.trim()] = v.trim();
+        }
+      }
+      return Object.keys(clean).length > 0 ? clean : undefined;
+    }
+  } catch {
+    // Non-JSON or syntax error
+  }
+  return undefined;
+}
+
 interface WorkstationSetupFlowProps {
   onComplete: () => void;
 }
@@ -59,6 +79,7 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
   const [customBaseUrl, setCustomBaseUrl] = useState("");
   const [customApiKey, setCustomApiKey] = useState("");
   const [customModel, setCustomModel] = useState("");
+  const [customHeaders, setCustomHeaders] = useState("");
   const [revealKey, setRevealKey] = useState(false);
 
   // Model Auto-Discovery and Identifier state
@@ -149,10 +170,15 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
           }
           if (providers.openrouter?.api_key) setOpenrouterKey(providers.openrouter.api_key);
           if (providers.groq?.api_key) setGroqKey(providers.groq.api_key);
-          if (providers.custom?.api_key || providers.custom?.base_url) {
+          if (providers.custom?.api_key || providers.custom?.base_url || providers.custom?.headers) {
             setCustomApiKey(providers.custom.api_key || "");
             setCustomBaseUrl(providers.custom.base_url || "");
             setCustomModel(providers.custom.model || "");
+            if (providers.custom?.headers && typeof providers.custom.headers === "object") {
+              setCustomHeaders(JSON.stringify(providers.custom.headers, null, 2));
+            } else {
+              setCustomHeaders("");
+            }
           }
 
           setProviderModels({
@@ -174,7 +200,8 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
             providers.openrouter?.api_key ||
             providers.groq?.api_key ||
             providers.custom?.api_key ||
-            providers.custom?.base_url
+            providers.custom?.base_url ||
+            (providers.custom?.headers && typeof providers.custom.headers === "object" && Object.keys(providers.custom.headers).length > 0)
           );
           setDshKeysConfigured(hasAny);
         } catch {
@@ -281,11 +308,13 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
       setModelFetchNotice(null);
       const apiKey = getProviderApiKey(prov).trim();
       const baseUrl = prov === "custom" ? customBaseUrl.trim() : undefined;
+      const headers = prov === "custom" ? parseHeaders(customHeaders) : undefined;
 
       const res = await workstationApi.fetchAvailableModels({
         provider: prov,
         apiKey: apiKey || undefined,
         baseUrl: baseUrl || undefined,
+        headers,
       });
 
       if (res.ok && res.models && res.models.length > 0) {
@@ -384,13 +413,18 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
           ...(providerModels.groq?.trim() ? { model: providerModels.groq.trim() } : {}),
         };
       }
-      if (customApiKey.trim() || customBaseUrl.trim() || customModel.trim() || providerModels.custom?.trim()) {
+      if (customApiKey.trim() || customBaseUrl.trim() || customModel.trim() || providerModels.custom?.trim() || customHeaders.trim()) {
+        const cleanHeaders = parseHeaders(customHeaders);
         parsedSettings.api_providers.custom = {
           ...parsedSettings.api_providers.custom,
           api_key: customApiKey.trim(),
           base_url: customBaseUrl.trim(),
           model: (customModel || providerModels.custom || "").trim(),
+          ...(cleanHeaders ? { headers: cleanHeaders } : {}),
         };
+        if (!cleanHeaders && parsedSettings.api_providers.custom?.headers) {
+          delete parsedSettings.api_providers.custom.headers;
+        }
       }
 
       const res = await workstationApi.saveDshSettings(JSON.stringify(parsedSettings, null, 2));
@@ -962,7 +996,7 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
                   { id: "gemini" as ProviderId, name: "Google Gemini", keyVal: geminiKey || providerModels.gemini },
                   { id: "openrouter" as ProviderId, name: "OpenRouter", keyVal: openrouterKey || providerModels.openrouter },
                   { id: "groq" as ProviderId, name: "Groq", keyVal: groqKey || providerModels.groq },
-                  { id: "custom" as ProviderId, name: "Custom / Local", keyVal: customApiKey || customBaseUrl || customModel || providerModels.custom },
+                  { id: "custom" as ProviderId, name: "Custom / Local", keyVal: customApiKey || customBaseUrl || customModel || providerModels.custom || customHeaders },
                 ].map((prov) => {
                   const isSelected = selectedProvider === prov.id;
                   const isConfigured = Boolean(prov.keyVal?.trim());
@@ -1110,6 +1144,18 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
                         className="text-base sm:text-xs font-mono"
                       />
                     </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-foreground">
+                        Custom HTTP Headers (optional JSON)
+                      </label>
+                      <Textarea
+                        value={customHeaders}
+                        onChange={(e) => setCustomHeaders(e.target.value)}
+                        placeholder={'{\n  "CF-Access-Client-Id": "...",\n  "CF-Access-Client-Secret": "..."\n}'}
+                        spellCheck={false}
+                        className="h-20 resize-none rounded-none font-mono text-xs leading-relaxed"
+                      />
+                    </div>
                   </div>
                 )}
 
@@ -1216,7 +1262,7 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
                     { name: "Gemini", has: Boolean(geminiKey.trim() || providerModels.gemini?.trim()) },
                     { name: "OpenRouter", has: Boolean(openrouterKey.trim() || providerModels.openrouter?.trim()) },
                     { name: "Groq", has: Boolean(groqKey.trim() || providerModels.groq?.trim()) },
-                    { name: "Custom", has: Boolean(customApiKey.trim() || customBaseUrl.trim() || customModel.trim() || providerModels.custom?.trim()) },
+                    { name: "Custom", has: Boolean(customApiKey.trim() || customBaseUrl.trim() || customModel.trim() || providerModels.custom?.trim() || customHeaders.trim()) },
                   ]
                     .filter((p) => p.has)
                     .map((p) => (
@@ -1238,6 +1284,7 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
                     customApiKey,
                     customBaseUrl,
                     customModel,
+                    customHeaders,
                     ...Object.values(providerModels),
                   ].some((k) => Boolean(k?.trim())) && (
                     <span className="italic text-muted-foreground/60">No keys configured yet</span>
@@ -1259,6 +1306,7 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
                         customApiKey,
                         customBaseUrl,
                         customModel,
+                        customHeaders,
                         ...Object.values(providerModels),
                       ].some((k) => Boolean(k?.trim()))
                     }

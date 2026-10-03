@@ -559,6 +559,7 @@ export const workstationApi = {
     provider: string;
     apiKey?: string;
     baseUrl?: string;
+    headers?: Record<string, string>;
   }) =>
     requestJson<FetchModelsResponse>("/api/models/fetch", {
       method: "POST",

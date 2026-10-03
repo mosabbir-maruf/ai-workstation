@@ -5,6 +5,7 @@ interface FetchRequestBody {
   provider?: string;
   apiKey?: string;
   baseUrl?: string;
+  headers?: Record<string, string>;
 }
 
 interface ModelItem {
@@ -77,6 +78,13 @@ export async function POST(request: Request) {
         ];
 
         const headers: Record<string, string> = { Accept: "application/json" };
+        if (body.headers && typeof body.headers === "object") {
+          for (const [k, v] of Object.entries(body.headers)) {
+            if (typeof k === "string" && k.trim() && typeof v === "string" && v.trim()) {
+              headers[k.trim()] = v.trim();
+            }
+          }
+        }
         if (apiKey) {
           headers["Authorization"] = `Bearer ${apiKey}`;
         }

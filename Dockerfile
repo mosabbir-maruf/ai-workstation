@@ -17,7 +17,7 @@ RUN npm install -g corepack@latest && corepack enable
 FROM base AS deps
 WORKDIR /app
 
-COPY package.json pnpm-lock.yaml* ./
+COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml* ./
 COPY source.config.ts ./
 COPY content ./content
 COPY lib ./lib

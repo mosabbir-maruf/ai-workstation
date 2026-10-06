@@ -403,8 +403,8 @@ export function PreviewSection() {
                   </div>
                   <p className="max-w-md text-xs text-muted-foreground">
                     {viewportMode === "app"
-                      ? "Ensure your application is running (ai run) and Cloudflare Tunnel is configured with CLOUDFLARED_APP_HOSTNAME."
-                      : "Ensure DeepSeek Harness is running (ai harness start) and Cloudflare Tunnel is configured with CLOUDFLARED_DSH_HOSTNAME."}
+                      ? "Ensure your application is running (aiws run) and Cloudflare Tunnel is configured with CLOUDFLARED_APP_HOSTNAME."
+                      : "Ensure DeepSeek Harness is running (aiws harness start) and Cloudflare Tunnel is configured with CLOUDFLARED_DSH_HOSTNAME."}
                   </p>
                   <Button
                     className="h-6 rounded-none px-3 font-mono text-[10px] uppercase tracking-wider"

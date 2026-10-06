@@ -1,5 +1,5 @@
 /**
- * Zero-dependency, Web Crypto-based secure session manager for AI Workstation.
+ * Zero-dependency, Web Crypto-based secure session manager for AIWS.
  * Employs HMAC-SHA256 signatures with constant-time equality checks.
  * Works natively in Node.js 18+, Next.js Edge Runtime, and V8 isolates.
  */

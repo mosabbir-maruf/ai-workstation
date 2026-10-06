@@ -1,31 +1,31 @@
 <p align="center">
-  <img src="public/logo.svg" alt="AI Workstation Logo" width="120" height="120" />
+  <img src="public/logo.svg" alt="AIWS Logo" width="120" height="120" />
 </p>
 
-<h1 align="center">AI Workstation</h1>
+<h1 align="center">AIWS</h1>
 
 <p align="center">
-  The standalone, production-ready Next.js web application for AI Workstation — providing a direct visual control plane, live telemetry monitoring, project hot-swapping, Git sync controls, and complete documentation.
+  The standalone, production-ready Next.js web application for AIWS — providing a direct visual control plane, live telemetry monitoring, project hot-swapping, Git sync controls, and complete documentation.
   <br />
-  <em>Looking for the CLI backend? Check out the <a href="https://github.com/mosabbir-maruf/ai-workstation-cli">AI Workstation CLI</a>.</em>
+  <em>Looking for the CLI backend? Check out the <a href="https://github.com/mosabbir-maruf/aiws-cli">AIWS CLI</a>.</em>
 </p>
 
 <p align="center">
-  <a href="https://github.com/mosabbir-maruf/ai-workstation/actions/workflows/ci.yml"><img src="https://github.com/mosabbir-maruf/ai-workstation/actions/workflows/ci.yml/badge.svg" alt="CI/CD Pipeline" /></a>
-  <a href="https://github.com/mosabbir-maruf/ai-workstation/pkgs/container/ai-workstation"><img src="https://img.shields.io/badge/GHCR-ai--workstation-blue?logo=docker" alt="Docker Image" /></a>
+  <a href="https://github.com/mosabbir-maruf/aiws/actions/workflows/ci.yml"><img src="https://github.com/mosabbir-maruf/aiws/actions/workflows/ci.yml/badge.svg" alt="CI/CD Pipeline" /></a>
+  <a href="https://github.com/mosabbir-maruf/aiws/pkgs/container/aiws"><img src="https://img.shields.io/badge/GHCR-ai--workstation-blue?logo=docker" alt="Docker Image" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT" /></a>
   <a href="https://github.com/mosabbir-maruf"><img src="https://img.shields.io/badge/maintainer-Mosabbir%20Maruf-181717?logo=github" alt="Maintainer" /></a>
 </p>
 
 <p align="center">
-  <img src="public/mockup.webp" alt="AI Workstation Dashboard" width="720" />
+  <img src="public/mockup.webp" alt="AIWS Dashboard" width="720" />
 </p>
 
 ---
 
 ## Architecture
 
-This frontend is designed to run as an independent web application that communicates with the `ai-workstation` daemon through a configurable HTTP/SSE API:
+This frontend is designed to run as an independent web application that communicates with the `aiws` daemon through a configurable HTTP/SSE API:
 
 ```
 ┌─────────────────────────────────┐
@@ -42,8 +42,8 @@ This frontend is designed to run as an independent web application that communic
                  │ Authenticated Backend Proxy (Bearer WORKSTATION_API_KEY)
                  ▼
 ┌─────────────────────────────────┐
-│    AI Workstation Backend/API   │ ◀── Separate CLI/daemon repository
-│    (VPS / Local Machine)        │     (https://github.com/mosabbir-maruf/ai-workstation-cli)
+│    AIWS Backend/API   │ ◀── Separate CLI/daemon repository
+│    (VPS / Local Machine)        │     (https://github.com/mosabbir-maruf/aiws-cli)
 └────────────────┬────────────────┘
                  │
                  ├── Docker Engine & Isolation Containers
@@ -56,10 +56,10 @@ This frontend is designed to run as an independent web application that communic
 
 | Repository | Purpose | Primary Interface |
 | :--- | :--- | :--- |
-| **[ai-workstation-cli](https://github.com/mosabbir-maruf/ai-workstation-cli)** | Backend daemon, container harness, and CLI engine | Terminal CLI (`ai`) |
-| **[ai-workstation](https://github.com/mosabbir-maruf/ai-workstation)** | Graphical web console, live telemetry, and documentation | Web Browser (`/workstation`, `/docs`) |
+| **[aiws-cli](https://github.com/mosabbir-maruf/aiws-cli)** | Backend daemon, container harness, and CLI engine | Terminal CLI (`aiws`) |
+| **[aiws](https://github.com/mosabbir-maruf/aiws)** | Graphical web console, live telemetry, and documentation | Web Browser (`/workstation`, `/docs`) |
 
-- **CLI-only users**: Can use the backend `ai-workstation-cli` repository directly without the web frontend.
+- **CLI-only users**: Can use the backend `aiws-cli` repository directly without the web frontend.
 - **Web Console users**: Can run or deploy this frontend to manage their workstation graphically against their remote VPS or local backend.
 
 ---
@@ -89,7 +89,7 @@ This frontend is designed to run as an independent web application that communic
 - **Node.js**: `>= 20.0.0`
 - **Package Manager**: `pnpm >= 9.0.0`
 - **Docker** (optional): For containerized deployments
-- **Backend Service**: Running instance of [ai-workstation-cli](https://github.com/mosabbir-maruf/ai-workstation-cli)
+- **Backend Service**: Running instance of [aiws-cli](https://github.com/mosabbir-maruf/aiws-cli)
 
 ---
 
@@ -97,8 +97,8 @@ This frontend is designed to run as an independent web application that communic
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/mosabbir-maruf/ai-workstation.git
-   cd ai-workstation
+   git clone https://github.com/mosabbir-maruf/aiws.git
+   cd aiws
    ```
 
 2. **Install dependencies**:
@@ -112,7 +112,7 @@ This frontend is designed to run as an independent web application that communic
    ```
    Configure your environment variables:
    - `WORKSTATION_PASSWORD`: Master passphrase to unlock the `/workstation` console.
-   - `WORKSTATION_API_KEY`: Server-side Bearer token matching your `ai-workstation` daemon.
+   - `WORKSTATION_API_KEY`: Server-side Bearer token matching your `aiws` daemon.
    - `WORKSTATION_BACKEND_URL`: Internal address (e.g. `http://127.0.0.1:8000`).
    - `NEXT_PUBLIC_API_URL`: Optional public API endpoint for cross-origin setups.
 
@@ -149,7 +149,7 @@ WORKSTATION_PASSWORD=your-console-password
 ```
 
 ### Scenario 2: Remote VPS Backend via Cloudflare Tunnel
-The frontend runs on a managed host (Vercel, Railway, or Docker) and proxies to an `ai-workstation` daemon exposed via a private Cloudflare Tunnel:
+The frontend runs on a managed host (Vercel, Railway, or Docker) and proxies to an `aiws` daemon exposed via a private Cloudflare Tunnel:
 ```env
 WORKSTATION_BACKEND_URL=https://api.workstation.yourdomain.com
 WORKSTATION_API_KEY=your-daemon-api-key
@@ -172,7 +172,7 @@ WORKSTATION_PASSWORD=your-console-password
 | :--- | :--- | :--- | :--- |
 | `WORKSTATION_PASSWORD` | Server-only | Master passphrase for `/login` gate | `super-secret-passphrase` |
 | `WORKSTATION_API_KEY` | Server-only | Daemon Bearer token for `/api/*` proxies | `daemon-secret-key` |
-| `WORKSTATION_BACKEND_URL`| Server-only | Internal URL to `ai-workstation` daemon | `http://127.0.0.1:8000` |
+| `WORKSTATION_BACKEND_URL`| Server-only | Internal URL to `aiws` daemon | `http://127.0.0.1:8000` |
 | `NEXT_PUBLIC_API_URL` | Client/Server| Public API fallback URL (optional) | `https://api.workstation.yourdomain.com` |
 | `NEXT_PUBLIC_SITE_URL` | Client/Server| Canonical website URL for SEO | `https://workstation.yourdomain.com` |
 
@@ -193,24 +193,24 @@ When the frontend and backend are hosted on different origins:
 
 1. **Pull the official container image**:
    ```bash
-   docker pull ghcr.io/mosabbir-maruf/ai-workstation:latest
+   docker pull ghcr.io/mosabbir-maruf/aiws:latest
    ```
 
 2. **Run the container**:
    ```bash
    docker run -d \
-     --name ai-workstation \
+     --name aiws \
      --restart unless-stopped \
      -p 3000:3000 \
      -e NEXT_PUBLIC_API_URL=https://api.workstation.yourdomain.com \
      -e NEXT_PUBLIC_SITE_URL=https://workstation.yourdomain.com \
-     ghcr.io/mosabbir-maruf/ai-workstation:latest
+     ghcr.io/mosabbir-maruf/aiws:latest
    ```
 
 3. **Or build locally**:
    ```bash
-   docker build -t ai-workstation .
-   docker run -p 3000:3000 ai-workstation
+   docker build -t aiws .
+   docker run -p 3000:3000 aiws
    ```
 
 ### Option B: Node.js Standalone Server
@@ -234,7 +234,7 @@ The GitHub Actions workflow (`.github/workflows/ci.yml`) automates verification 
    - Next.js production build (`pnpm build`)
 2. **Docker Build Validation**: Verifies the container build on every pull request.
 3. **Publish to GitHub Container Registry (GHCR)**:
-   - Publishes to `ghcr.io/<owner>/ai-workstation` on pushes to `main` and release tags (`v*.*.*`).
+   - Publishes to `ghcr.io/<owner>/aiws` on pushes to `main` and release tags (`v*.*.*`).
    - Image tags: `latest`, `sha-<short_sha>`, and semver tags.
 4. **Safe Image Retention Policy**:
    - Retains strictly **`latest`** and the **previous release image** for safe rollbacks.
@@ -266,7 +266,7 @@ pnpm start
 
 ## License
 
-This project is licensed under the MIT License. See [LICENSE](https://github.com/mosabbir-maruf/ai-workstation/blob/main/LICENSE) for the full license text.
+This project is licensed under the MIT License. See [LICENSE](https://github.com/mosabbir-maruf/aiws/blob/main/LICENSE) for the full license text.
 
 ---
 

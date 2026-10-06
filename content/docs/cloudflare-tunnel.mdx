@@ -3,7 +3,7 @@ title: Cloudflare Tunnel
 description: Local-only port bindings, SSH port-forwarding, Cloudflare Zero Trust Anywhere URLs, automatic 0.0.0.0 host binding, and DSH loopback settings rules.
 ---
 
-Development ports in AI Workstation are never exposed directly to the public internet. Operators connect either via **SSH port-forwarding** (default, zero public attack surface) or an opt-in **Cloudflare Zero Trust Tunnel** for browser access from anywhere.
+Development ports in AIWS are never exposed directly to the public internet. Operators connect either via **SSH port-forwarding** (default, zero public attack surface) or an opt-in **Cloudflare Zero Trust Tunnel** for browser access from anywhere.
 
 ---
 
@@ -20,10 +20,10 @@ Fixed host loopback bindings in `docker/compose.yml`:
 127.0.0.1:4090 -> container:4091 (DSH TCP bridge)
 ```
 
-Run `ai preview` on the VPS to inspect the active container IP, auto-detected application listening port(s), and generated SSH tunnel command:
+Run `aiws preview` on the VPS to inspect the active container IP, auto-detected application listening port(s), and generated SSH tunnel command:
 
 ```bash
-ai preview
+aiws preview
 ```
 
 Example output:
@@ -49,7 +49,7 @@ The container IP and app ports are runtime values and must not be hard-coded.
 
 ## Auto Host Binding
 
-`ai run` binds the project development server to `0.0.0.0` inside the container automatically so both SSH preview and Cloudflare Tunnel can reach it — no `package.json` edits required:
+`aiws run` binds the project development server to `0.0.0.0` inside the container automatically so both SSH preview and Cloudflare Tunnel can reach it — no `package.json` edits required:
 
 - **Vite / Astro / SvelteKit / Nuxt / Angular**: automatically appends `--host 0.0.0.0`.
 - **Next.js**: automatically appends `-H 0.0.0.0`.
@@ -57,7 +57,7 @@ The container IP and app ports are runtime values and must not be hard-coded.
 - **Backend apps (Express / Nest / Fastify / Hono)**: no flag is injected; these bind all interfaces by default or respect the `HOST=0.0.0.0` environment variable exported by `docker/compose.yml`.
 - **Non-JS backends (Python / Go)**: bind `0.0.0.0` manually (`Flask --host=0.0.0.0`, `uvicorn --host 0.0.0.0`, `Django runserver 0.0.0.0:8000` plus `ALLOWED_HOSTS`).
 
-`ai run` prints the active mode at startup: `Bind: auto (--host 0.0.0.0)` or `Bind: project config`.
+`aiws run` prints the active mode at startup: `Bind: auto (--host 0.0.0.0)` or `Bind: project config`.
 
 ---
 
@@ -74,7 +74,7 @@ Cloudflare Tunnel is the opt-in path for using the active app and DSH from any d
 
 ### Create Tunnel
 
-1. Navigate to **Cloudflare Dashboard -> Zero Trust -> Networks -> Tunnels -> Create tunnel** -> select **Cloudflared** -> name it (e.g. `ai-workstation`).
+1. Navigate to **Cloudflare Dashboard -> Zero Trust -> Networks -> Tunnels -> Create tunnel** -> select **Cloudflared** -> name it (e.g. `aiws`).
 2. On the **Install and run a connector** screen, select the VPS platform:
    - **OS**: **Debian** (for Ubuntu/Debian VPS).
    - **Architecture**: **64-bit** on `amd64` (`uname -m` shows `x86_64`), or **arm64-bit** on an ARM VPS.
@@ -84,11 +84,11 @@ Cloudflare Tunnel is the opt-in path for using the active app and DSH from any d
 ### Install Connector
 
 ```bash
-ai tunnel setup
-ai tunnel status
+aiws tunnel setup
+aiws tunnel status
 ```
 
-`ai tunnel setup` prompts for the connector token (stored at `secrets/cloudflared-token` with mode `600`), the App hostname, the DSH hostname, and the App local port (defaults to the detected listening port). It auto-installs `cloudflared` if missing (`amd64`/`arm64`), registers the systemd service, and writes `CLOUDFLARED_APP_HOSTNAME`, `CLOUDFLARED_DSH_HOSTNAME`, `CLOUDFLARED_APP_PORT`, `DSH_TRUSTED_HOSTS`, and `ALLOWED_HOSTS` into `.env`.
+`aiws tunnel setup` prompts for the connector token (stored at `secrets/cloudflared-token` with mode `600`), the App hostname, the DSH hostname, and the App local port (defaults to the detected listening port). It auto-installs `cloudflared` if missing (`amd64`/`arm64`), registers the systemd service, and writes `CLOUDFLARED_APP_HOSTNAME`, `CLOUDFLARED_DSH_HOSTNAME`, `CLOUDFLARED_APP_PORT`, `DSH_TRUSTED_HOSTS`, and `ALLOWED_HOSTS` into `.env`.
 
 ### Public Hostnames
 
@@ -122,7 +122,7 @@ paradinha.example.com -> http://127.0.0.1:3000
 dsh.example.com       -> http://127.0.0.1:4090
 ```
 
-Inactive projects return `502` until you run `ai use <project>` and `ai run`.
+Inactive projects return `502` until you run `aiws use <project>` and `aiws run`.
 
 ---
 
@@ -137,15 +137,15 @@ This is an upstream client-side gate in DSH:
 ### Key Entry Methods
 
 1. **Via SSH Tunnel (One Time)**:
-   Run `ssh -N -L 4090:<container-ip>:4091 <vps>` (using the container IP and token from `ai preview`), open `http://127.0.0.1:4090` -> **Settings -> Models -> Apply**. Keys persist server-side in `runtime/dsh/`.
+   Run `ssh -N -L 4090:<container-ip>:4091 <vps>` (using the container IP and token from `aiws preview`), open `http://127.0.0.1:4090` -> **Settings -> Models -> Apply**. Keys persist server-side in `runtime/dsh/`.
 2. **Direct File / Console Edit (`runtime/dsh/settings.yaml`)**:
-   Keys live in `~/ai-workstation/runtime/dsh/settings.yaml` on the VPS (or via the **DSH Model Keys** tab in the Workstation Console) and are hot-reloaded without restarting the container.
+   Keys live in `~/aiws/runtime/dsh/settings.yaml` on the VPS (or via the **DSH Model Keys** tab in the Workstation Console) and are hot-reloaded without restarting the container.
 
 ---
 
 ## Port Sync & Tokens
 
-`ai preview` auto-detects the listening app port and prints the Anywhere URLs on every invocation, including a ready-to-open `DSH open:` URL containing DSH's startup login token:
+`aiws preview` auto-detects the listening app port and prints the Anywhere URLs on every invocation, including a ready-to-open `DSH open:` URL containing DSH's startup login token:
 
 ```text
 Anywhere URLs:
@@ -154,24 +154,24 @@ Anywhere URLs:
   DSH open: https://dsh.example.com/?token=...
 ```
 
-If the detected app port changes, `ai preview` automatically runs `ai tunnel sync <port>` and prints the exact Cloudflare dashboard hostname update needed.
+If the detected app port changes, `aiws preview` automatically runs `aiws tunnel sync <port>` and prints the exact Cloudflare dashboard hostname update needed.
 
 ### Tunnel Commands
 
 ```bash
-ai tunnel setup
-ai tunnel sync [port]
-ai tunnel status
-ai tunnel start
-ai tunnel stop
-ai tunnel logs
+aiws tunnel setup
+aiws tunnel sync [port]
+aiws tunnel status
+aiws tunnel start
+aiws tunnel stop
+aiws tunnel logs
 ```
 
 ---
 
 ## Allowed Hosts
 
-Tunnels change the HTTP `Host` header. `ai tunnel setup` stores the app hostname in `ALLOWED_HOSTS`, which `docker/compose.yml` passes into the container:
+Tunnels change the HTTP `Host` header. `aiws tunnel setup` stores the app hostname in `ALLOWED_HOSTS`, which `docker/compose.yml` passes into the container:
 
 - **Vite (`vite.config.js`)**:
   ```js
@@ -192,11 +192,11 @@ Tunnels change the HTTP `Host` header. `ai tunnel setup` stores the app hostname
 ## Tunnel Troubleshooting
 
 ```bash
-ai tunnel status
+aiws tunnel status
 sudo journalctl -u cloudflared -n 50
-ai preview
+aiws preview
 ```
 
-- **Cloudflare error 1033 / 502**: Connector stopped or wrong origin port (compare `ai preview` port with the Cloudflare dashboard route).
-- **DSH page loads but `/api/*` returns `forbidden`**: Ensure `DSH_TRUSTED_HOSTS=<dsh-host>` is set in `~/ai-workstation/.env` and recreate the container (`ai stop && ai start`).
+- **Cloudflare error 1033 / 502**: Connector stopped or wrong origin port (compare `aiws preview` port with the Cloudflare dashboard route).
+- **DSH page loads but `/api/*` returns `forbidden`**: Ensure `DSH_TRUSTED_HOSTS=<dsh-host>` is set in `~/aiws/.env` and recreate the container (`aiws stop && aiws start`).
 - **App 403 Invalid Host**: Add `$ALLOWED_HOSTS` to your framework dev server config.

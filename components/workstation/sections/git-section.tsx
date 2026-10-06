@@ -876,11 +876,11 @@ export function GitSection() {
                   </p>
                   <div className="flex flex-wrap items-center gap-2">
                     <code className="border border-border/80 bg-background/80 px-2.5 py-1 font-mono text-xs text-foreground select-all">
-                      ai daemon restart
+                      aiws daemon restart
                     </code>
                     <span className="font-mono text-[10px] text-muted-foreground/60 uppercase">or</span>
                     <code className="border border-border/80 bg-background/80 px-2.5 py-1 font-mono text-xs text-foreground select-all">
-                      sudo systemctl restart ai-workstation-daemon
+                      sudo systemctl restart aiws-daemon
                     </code>
                   </div>
                   <div className="pt-1">

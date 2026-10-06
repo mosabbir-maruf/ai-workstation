@@ -9,7 +9,7 @@ export const DEFAULT_DESCRIPTION =
   "Ai Workstation is a mission-control dashboard and container orchestrator for development environments, DeepSeek Harness (DSH), and real-time edge telemetry.";
 
 export const DEFAULT_KEYWORDS = [
-  "AI Workstation",
+  "AIWS",
   "DeepSeek Harness",
   "DSH",
   "Docker runtime",
@@ -42,7 +42,7 @@ export const DEFAULT_OG_IMAGE_WEBP = {
 };
 
 export const SOCIAL_LINKS = {
-  github: "https://github.com/mosabbir-maruf/ai-workstation",
+  github: "https://github.com/mosabbir-maruf/aiws",
   telegram: "https://t.me/aiws_dev",
 };
 

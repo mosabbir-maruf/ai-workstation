@@ -511,7 +511,7 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
             </span>
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-            Let&apos;s set up your AI Workstation
+            Let&apos;s set up your AIWS
           </h1>
           <p className="text-sm text-muted-foreground">
             Complete these 5 essential modules to get your workstation ready for development and agent workloads.
@@ -695,7 +695,7 @@ export function WorkstationSetupFlow({ onComplete }: WorkstationSetupFlowProps) 
                 <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 space-y-2 text-xs font-mono text-amber-700 dark:text-amber-300">
                   <p className="font-bold">To start daemon on your VPS:</p>
                   <pre className="p-2 bg-black text-amber-300 rounded overflow-x-auto">
-                    sudo systemctl restart ai-workstation-daemon
+                    sudo systemctl restart aiws-daemon
                   </pre>
                   <p>
                     Verify that your <code>WORKSTATION_API_KEY</code> is set in <code>.env</code>.

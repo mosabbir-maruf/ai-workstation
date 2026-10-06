@@ -83,7 +83,7 @@ export interface ActionFeedbackInfo {
 
 function WorkstationGuardedAction({
   workstationRunning,
-  tooltip = "First start AI Workstation",
+  tooltip = "First start AIWS",
   children,
 }: {
   workstationRunning: boolean;
@@ -304,7 +304,7 @@ function CommandAndServicesMatrix({
                 disabled={loading || actionInProgress !== null || !workstationRunning}
                 onClick={onRestart}
                 size="xs"
-                title="Restart dev application (ai app restart)"
+                title="Restart dev application (aiws app restart)"
                 variant="outline"
               >
                 {actionInProgress === "App Restart" ? "Restarting..." : "Restart App"}
@@ -458,7 +458,7 @@ function WorkspaceAndIngressGrid({
   }, []);
 
   const anywhereAppUrl =
-    previewData?.anywhereApp || "Not configured (run 'ai tunnel setup')";
+    previewData?.anywhereApp || "Not configured (run 'aiws tunnel setup')";
   const anywhereDshUrl =
     previewData?.anywhereDsh || "Not configured";
   const worktreePath = activeProject
@@ -1191,23 +1191,23 @@ export function OverviewSection({ onSelectTab }: OverviewSectionProps) {
         onStart={() =>
           executeQuickAction(
             "Start Workstation",
-            "ai start",
+            "aiws start",
             workstationApi.startWorkstation
           )
         }
         onStop={() =>
           executeQuickAction(
             "Stop Workstation",
-            "ai stop",
+            "aiws stop",
             workstationApi.stopWorkstation
           )
         }
-        onRun={() => executeQuickAction("Run App", "ai run", workstationApi.appRun)}
+        onRun={() => executeQuickAction("Run App", "aiws run", workstationApi.appRun)}
         onStopApp={() =>
-          executeQuickAction("Stop App", "ai app stop", workstationApi.appStop)
+          executeQuickAction("Stop App", "aiws app stop", workstationApi.appStop)
         }
         onRestart={() =>
-          executeQuickAction("App Restart", "ai app restart", workstationApi.appRestart)
+          executeQuickAction("App Restart", "aiws app restart", workstationApi.appRestart)
         }
         tunnelOnline={tunnelOnline}
         tunnelState={tunnelState}

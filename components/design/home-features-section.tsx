@@ -91,8 +91,8 @@ const marqueeData = [
   "Zero-PAT container Git authentication",
   "Host-isolated `secrets/github-app.pem` (`chmod 600`)",
   "Loopback-bound DeepSeek Harness (`127.0.0.1:4090`)",
-  "Unified `ai` host operator CLI",
-  "Instant repository switching via `ai use`",
+  "Unified `aiws` host operator CLI",
+  "Instant repository switching via `aiws use`",
   "SSH port-forwarding & Cloudflare Zero-Trust tunnels",
   "Concurrent DSH bridge & project app runner",
   "Automated runtime state backup & recovery",
@@ -127,9 +127,9 @@ const features = [
   {
     code: "FEAT-04",
     category: "ORCHESTRATION",
-    title: "Host 'ai' CLI & Tunneling",
+    title: "Host 'aiws' CLI & Tunneling",
     description:
-      "Switch projects via `ai use`, control DSH and app runner processes, manage caches, and generate loopback SSH or Cloudflare tunnels on your Linux VPS from a single `ai` CLI.",
+      "Switch projects via `aiws use`, control DSH and app runner processes, manage caches, and generate loopback SSH or Cloudflare tunnels on your Linux VPS from a single `aiws` CLI.",
     icon: TerminalIcon,
   },
 ];

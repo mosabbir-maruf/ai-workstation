@@ -7,7 +7,7 @@ export async function GET(request: Request) {
       {
         ok: false,
         output:
-          "AI Workstation backend is offline or unreachable. Ensure the workstation daemon is running and NEXT_PUBLIC_API_URL or WORKSTATION_BACKEND_URL is configured.",
+          "AIWS backend is offline or unreachable. Ensure the workstation daemon is running and NEXT_PUBLIC_API_URL or WORKSTATION_BACKEND_URL is configured.",
       },
       { status: 503 }
     );

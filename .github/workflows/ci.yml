@@ -17,7 +17,7 @@ permissions:
   packages: write
 
 env:
-  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/ai-workstation
+  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/aiws
   RETAIN_IMAGE_VERSIONS: 2
 
 jobs:
@@ -100,8 +100,8 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: |
-            org.opencontainers.image.title=AI Workstation
-            org.opencontainers.image.description=Standalone Next.js web application for AI Workstation
+            org.opencontainers.image.title=AIWS
+            org.opencontainers.image.description=Standalone Next.js web application for AIWS
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.licenses=MIT
           cache-from: type=gha
@@ -125,7 +125,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const packageName = "ai-workstation";
+            const packageName = "aiws";
             const keepImages = Number(process.env.RETAIN_IMAGE_VERSIONS || "2");
 
             console.log(`Package: ${packageName}`);

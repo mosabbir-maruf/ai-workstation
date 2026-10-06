@@ -66,13 +66,13 @@ const workflowSteps: WorkflowStep[] = [
     duration: "T+02:00m",
     title: "Clone & Run the Installer",
     description:
-      "Clone the repository onto your Linux VPS and run the install script. It validates Docker, Git, and Python, wires up runtime directories, and symlinks the `ai` CLI globally.",
+      "Clone the repository onto your Linux VPS and run the install script. It validates Docker, Git, and Python, wires up runtime directories, and symlinks the `aiws` CLI globally.",
     terminalTitle: "bash — install",
     terminalLines: [
       {
         prefix: "$",
         content:
-          "git clone https://github.com/mosabbir-maruf/ai-workstation.git ~/ai-workstation",
+          "git clone https://github.com/mosabbir-maruf/aiws.git ~/aiws",
         highlight: "muted",
       },
       {
@@ -87,7 +87,7 @@ const workflowSteps: WorkflowStep[] = [
       },
       {
         prefix: "✓",
-        content: "ai CLI → /usr/local/bin/ai",
+        content: "aiws CLI → /usr/local/bin/aiws",
         highlight: "emerald",
       },
       {
@@ -110,12 +110,12 @@ const workflowSteps: WorkflowStep[] = [
     duration: "T+00:30s",
     title: "Add a Project & Start the Workstation",
     description:
-      "Add any GitHub repository with `ai add`, select it with `ai use`, then spin up the isolated Docker workstation. Switch projects any time — no image rebuild needed.",
+      "Add any GitHub repository with `aiws add`, select it with `aiws use`, then spin up the isolated Docker workstation. Switch projects any time — no image rebuild needed.",
     terminalTitle: "bash — workstation",
     terminalLines: [
       {
         prefix: "$",
-        content: "ai add https://github.com/you/my-app",
+        content: "aiws add https://github.com/you/my-app",
         highlight: "muted",
       },
       {
@@ -125,7 +125,7 @@ const workflowSteps: WorkflowStep[] = [
       },
       {
         prefix: "$",
-        content: "ai use my-app && ai start",
+        content: "aiws use my-app && aiws start",
         highlight: "muted",
       },
       {
@@ -135,7 +135,7 @@ const workflowSteps: WorkflowStep[] = [
       },
       {
         prefix: "$",
-        content: "ai run",
+        content: "aiws run",
         highlight: "muted",
       },
       {
@@ -158,12 +158,12 @@ const workflowSteps: WorkflowStep[] = [
     duration: "REAL-TIME",
     title: "Code with DSH, Preview from Anywhere",
     description:
-      "Start DeepSeek Harness for AI-assisted coding. Use `ai preview` for instant SSH-tunnel access, or enable Cloudflare Tunnel to reach your app and DSH from any browser.",
+      "Start DeepSeek Harness for AI-assisted coding. Use `aiws preview` for instant SSH-tunnel access, or enable Cloudflare Tunnel to reach your app and DSH from any browser.",
     terminalTitle: "bash — preview",
     terminalLines: [
       {
         prefix: "$",
-        content: "ai harness start",
+        content: "aiws harness start",
         highlight: "muted",
       },
       {
@@ -173,7 +173,7 @@ const workflowSteps: WorkflowStep[] = [
       },
       {
         prefix: "$",
-        content: "ai preview",
+        content: "aiws preview",
         highlight: "muted",
       },
       {
@@ -205,7 +205,7 @@ const architectureNodes = [
   {
     id: "NODE_01",
     label: "HOST CLI",
-    detail: "ai · Docker · Git",
+    detail: "aiws · Docker · Git",
   },
   {
     id: "NODE_02",

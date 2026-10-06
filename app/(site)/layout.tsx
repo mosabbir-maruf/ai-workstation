@@ -9,7 +9,7 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen flex-col">
       <ScrollToTopOnNavigate />
       <SiteHeader
-        githubUrl="https://github.com/mosabbir-maruf/ai-workstation"
+        githubUrl="https://github.com/mosabbir-maruf/aiws"
         links={[...siteNavLinks]}
         telegramUrl="https://t.me/hello_vamp"
       />

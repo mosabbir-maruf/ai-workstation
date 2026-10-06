@@ -22,7 +22,7 @@ runtime/harness/
     └── Ephemeral PID/log/runtime metadata (dsh.pid, bridge.pid, harness.log)
 ```
 
-Inside the `ai-workstation` container (`docker/harness.sh`):
+Inside the `aiws` container (`docker/harness.sh`):
 
 ```text
 DSH
@@ -43,14 +43,14 @@ This architecture keeps the DSH service bound strictly to container-internal loo
 ### Harness Commands
 
 ```bash
-ai harness start
-ai harness stop
-ai harness restart
-ai harness status
+aiws harness start
+aiws harness stop
+aiws harness restart
+aiws harness status
 
-ai dsh version
-ai dsh update
-ai dsh update <version>
+aiws dsh version
+aiws dsh update
+aiws dsh update <version>
 ```
 
 ---
@@ -60,52 +60,52 @@ ai dsh update <version>
 ### Storage Audit
 
 ```bash
-ai cache
+aiws cache
 ```
 
-`ai cache` is strictly read-only and reports three footprints:
+`aiws cache` is strictly read-only and reports three footprints:
 1. `=== Docker ===` — `docker system df`
-2. `=== AI runtime ===` — `du -sh ~/ai-workstation/runtime`
+2. `=== AI runtime ===` — `du -sh ~/aiws/runtime`
 3. `=== Project node_modules ===` — `find ~/projects -type d -name node_modules -prune -exec du -sh {} \;`
 
 ### Safe Cache Purge
 
 ```bash
-ai cache clear
+aiws cache clear
 ```
 
 Cleans reclaimable **Docker builder cache** (`docker builder prune -af`) and **in-container npm cache** (`npm cache clean --force`) when the workstation is running.
 
-`ai cache clear` intentionally **never removes**:
+`aiws cache clear` intentionally **never removes**:
 - DSH state (`runtime/dsh`)
 - DSH installation (`runtime/npm-global`)
 - `.env`
 - Git repositories (`~/projects/*`)
-- Docker images (`ghcr.io/mosabbir-maruf/ai-workstation`)
-- Docker containers (`ai-workstation`)
+- Docker images (`ghcr.io/mosabbir-maruf/aiws`)
+- Docker containers (`aiws`)
 - Docker volumes
 
 ### Dependency Reset
 
 ```bash
-ai cache clear --deps
+aiws cache clear --deps
 ```
 
 Removes `node_modules` directories across `~/projects/*` after confirmation (or non-interactively with `--yes`):
 
 ```bash
-ai cache clear --deps --yes
+aiws cache clear --deps --yes
 ```
 
 Recommended dependency reset flow:
 
 ```bash
-ai app stop
-ai cache clear --deps
-ai run
+aiws app stop
+aiws cache clear --deps
+aiws run
 ```
 
-When `ai run` starts next, dependencies are reinstalled automatically from the project's lockfile (`npm ci`, `pnpm install --frozen-lockfile`, `yarn install --immutable`, or `bun install --frozen-lockfile`).
+When `aiws run` starts next, dependencies are reinstalled automatically from the project's lockfile (`npm ci`, `pnpm install --frozen-lockfile`, `yarn install --immutable`, or `bun install --frozen-lockfile`).
 
 ---
 
@@ -116,10 +116,10 @@ Project source code is protected by GitHub. DSH workflow state (`runtime/dsh`) a
 ### Export State
 
 ```bash
-ai state export
+aiws state export
 ```
 
-Creates a `0600` permissioned archive at `~/ai-state-backups/ai-state-<timestamp>.tar.gz` containing:
+Creates a `0600` permissioned archive at `~/aiws-state-backups/aiws-state-<timestamp>.tar.gz` containing:
 - `manifest` (format version, ISO timestamp, and `DSH_VERSION`)
 - `.env`
 - `dsh/` (`runtime/dsh`)
@@ -129,47 +129,47 @@ Store exported state archives off-host in encrypted storage.
 ### Import State
 
 ```bash
-ai state import <archive>
+aiws state import <archive>
 ```
 
 Recommended recovery workflow:
 
 ```bash
-ai stop
-ai state import /path/to/backup.tar.gz
-ai start
-ai dsh version
+aiws stop
+aiws state import /path/to/backup.tar.gz
+aiws start
+aiws dsh version
 ```
 
 ---
 
 ## Update Layers
 
-AI Workstation separates updates into three independent layers:
+AIWS separates updates into three independent layers:
 
 ### CLI Update
 
 ```bash
-ai update
+aiws update
 ```
 
-or `./update.sh` — runs `git pull --ff-only` on `~/ai-workstation` and `docker compose pull`.
+or `./update.sh` — runs `git pull --ff-only` on `~/aiws` and `docker compose pull`.
 
 ### Image Upgrade
 
 ```bash
-ai upgrade
+aiws upgrade
 ```
 
-Pulls the latest multi-arch image from GHCR, recreates the `ai-workstation` container, and starts the Harness.
+Pulls the latest multi-arch image from GHCR, recreates the `aiws` container, and starts the Harness.
 
 ### DSH Update
 
 ```bash
-ai state export
-ai dsh update
-ai harness restart
-ai dsh version
+aiws state export
+aiws dsh update
+aiws harness restart
+aiws dsh version
 ```
 
 DSH updates do not require rebuilding the base Docker image because the installation lives in persistent `runtime/npm-global`.
@@ -200,14 +200,14 @@ Push to main
 Published image references:
 
 ```text
-ghcr.io/mosabbir-maruf/ai-workstation:latest
-ghcr.io/mosabbir-maruf/ai-workstation:<commit-sha>
+ghcr.io/mosabbir-maruf/aiws:latest
+ghcr.io/mosabbir-maruf/aiws:<commit-sha>
 ```
 
 For deterministic production deployments, pin the SHA tag in `.env`:
 
 ```dotenv
-IMAGE=ghcr.io/mosabbir-maruf/ai-workstation:<commit-sha>
+IMAGE=ghcr.io/mosabbir-maruf/aiws:<commit-sha>
 ```
 
 ---
@@ -217,35 +217,35 @@ IMAGE=ghcr.io/mosabbir-maruf/ai-workstation:<commit-sha>
 ### Start of Day
 
 ```bash
-ai doctor
-ai start
-ai status
-ai run
-ai preview
+aiws doctor
+aiws start
+aiws status
+aiws run
+aiws preview
 ```
 
 ### During Development
 
 ```bash
-ai status
-ai app logs
-ai harness status
-ai shell
+aiws status
+aiws app logs
+aiws harness status
+aiws shell
 ```
 
 ### Switch Project
 
 ```bash
-ai use another-project
-ai run
-ai preview
+aiws use another-project
+aiws run
+aiws preview
 ```
 
 ### End of Day
 
 ```bash
-ai app stop
-ai stop
+aiws app stop
+aiws stop
 ```
 
 ---
@@ -255,34 +255,34 @@ ai stop
 ### Container Stopped
 
 ```bash
-ai start
-ai status
+aiws start
+aiws status
 ```
 
 ### Harness Stopped
 
 ```bash
-ai harness status
-ai harness restart
+aiws harness status
+aiws harness restart
 ```
 
 ### App Startup Error
 
 ```bash
-ai app status
-ai app logs
+aiws app status
+aiws app logs
 
 # Clean dependency reinstall if needed:
-ai app stop
-ai cache clear --deps
-ai run
+aiws app stop
+aiws cache clear --deps
+aiws run
 ```
 
 ### GitHub Auth Error
 
 ```bash
-ai github status
-ai github test
+aiws github status
+aiws github test
 ```
 
 Never copy a PAT or host SSH private key into the container as a workaround. Verify `ai-github-broker` and `secrets/github-app.pem`.
@@ -290,6 +290,6 @@ Never copy a PAT or host SSH private key into the container as a workaround. Ver
 ### Image Inspection
 
 ```bash
-docker image ls ghcr.io/mosabbir-maruf/ai-workstation
-ai doctor
+docker image ls ghcr.io/mosabbir-maruf/aiws
+aiws doctor
 ```

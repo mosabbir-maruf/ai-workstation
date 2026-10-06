@@ -25,7 +25,7 @@ export function createBackendErrorResponse(
         targetUrl
           ? ` Failed connecting to ${targetUrl}.`
           : " No backend URL configured."
-      } Ensure the ai-workstation daemon is running and NEXT_PUBLIC_API_URL or WORKSTATION_BACKEND_URL is set.${
+      } Ensure the aiws daemon is running and NEXT_PUBLIC_API_URL or WORKSTATION_BACKEND_URL is set.${
         errorDetail ? ` Details: ${errorDetail}` : ""
       }`,
     }),
@@ -170,7 +170,7 @@ export function createUnavailableSseStream(endpointPath: string): Response {
       const timestamp = new Date().toISOString().slice(11, 19);
       controller.enqueue(
         TEXT_ENCODER.encode(
-          `event: message\ndata: [${timestamp}] [ERROR] Backend stream unavailable for ${endpointPath}. Ensure ai-workstation is running and NEXT_PUBLIC_API_URL is configured.\n\n`
+          `event: message\ndata: [${timestamp}] [ERROR] Backend stream unavailable for ${endpointPath}. Ensure aiws is running and NEXT_PUBLIC_API_URL is configured.\n\n`
         )
       );
       controller.enqueue(

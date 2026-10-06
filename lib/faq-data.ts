@@ -31,14 +31,14 @@ export const CATEGORIES: {
 
 export const FAQ_ITEMS: FaqItem[] = [
   {
-    id: "what-is-ai-workstation",
+    id: "what-is-aiws",
     code: "FAQ-01",
     category: "architecture",
     categoryLabel: "Architecture",
-    question: "What is AI Workstation and how is it architected?",
+    question: "What is AIWS and how is it architected?",
     answer:
-      "AI Workstation (ai-workstation) is a Docker-first local development runtime that unifies a Web Control Center (port 3001), a live preview reverse proxy (port 3000), the dsh AI terminal harness powered by opencode, Cloudflare Tunnel public sharing, GitHub App / PAT authentication, and host-mounted package caches in a single container environment.",
-    command: "./scripts/ai setup && ./scripts/ai console",
+      "AIWS is a Docker-first local development runtime that unifies a Web Control Center (port 3001), a live preview reverse proxy (port 3000), the dsh AI terminal harness powered by opencode, Cloudflare Tunnel public sharing, GitHub App / PAT authentication, and host-mounted package caches in a single container environment.",
+    command: "aiws setup && aiws",
     docHref: "/docs",
     docLabel: "Read Overview",
   },
@@ -50,8 +50,8 @@ export const FAQ_ITEMS: FaqItem[] = [
     question:
       "What is the difference between localhost:3001 and localhost:3000?",
     answer:
-      "Port 3001 hosts the AI Workstation Control Center UI and JSON REST API (/api/*). Port 3000 is the dedicated live preview reverse proxy that automatically detects and routes traffic to whichever application dev server is active inside the container (scanning ports 3002, 5173, 4321, 8080, 8000, 4000, and 3003) or a custom target URL.",
-    command: "./scripts/ai preview status",
+      "Port 3001 hosts the AIWS Control Center UI and JSON REST API (/api/*). Port 3000 is the dedicated live preview reverse proxy that automatically detects and routes traffic to whichever application dev server is active inside the container (scanning ports 3002, 5173, 4321, 8080, 8000, 4000, and 3003) or a custom target URL.",
+    command: "aiws preview",
     docHref: "/docs/installation",
     docLabel: "Port Mapping Guide",
   },
@@ -77,7 +77,7 @@ export const FAQ_ITEMS: FaqItem[] = [
       "Should I use a GitHub App or a Personal Access Token (PAT) for Git authentication?",
     answer:
       "A GitHub App is strongly recommended. It mints RS256 JWTs signed with your local private key (data/secrets/github-app.pem) to exchange for short-lived 1-hour installation tokens, which the workstation background daemon refreshes every 45 minutes. PAT mode is supported as a quick fallback for personal repositories.",
-    command: "./scripts/ai github-status",
+    command: "aiws github status",
     docHref: "/docs/github-app-setup",
     docLabel: "GitHub App Setup",
   },
@@ -90,7 +90,7 @@ export const FAQ_ITEMS: FaqItem[] = [
       "How do Quick Tunnel and Named Tunnel modes differ for public previews?",
     answer:
       "Quick Tunnel (CF_TUNNEL_MODE=quick) requires zero account setup and generates a temporary *.trycloudflare.com HTTPS URL pointing to port 3000. Named Tunnel (CF_TUNNEL_MODE=token) uses your CF_TUNNEL_TOKEN stored in data/secrets/cloudflare-tunnel-token to bind a persistent custom domain that survives restarts.",
-    command: "./scripts/ai tunnel-start",
+    command: "aiws tunnel start",
     docHref: "/docs/cloudflare-tunnel",
     docLabel: "Cloudflare Tunnel Guide",
   },
@@ -104,7 +104,7 @@ export const FAQ_ITEMS: FaqItem[] = [
     answer:
       "Ensure the downloaded .pem file is placed at data/secrets/github-app.pem with strict owner-only permissions (chmod 600), contains a valid RSA header (-----BEGIN RSA PRIVATE KEY-----), and that GITHUB_APP_ID in .env matches your numeric App ID rather than the app slug.",
     command:
-      "chmod 600 data/secrets/github-app.pem && ./scripts/ai github-init",
+      "chmod 600 data/secrets/github-app.pem && aiws github setup",
     docHref: "/docs/github-app-setup",
     docLabel: "Troubleshooting Auth",
   },
@@ -116,7 +116,7 @@ export const FAQ_ITEMS: FaqItem[] = [
     question: "What is dsh and how does it work inside the container?",
     answer:
       "dsh (Developer Shell) is an interactive AI-assisted shell inside the container that wraps opencode. You can execute standard Linux/Git commands directly or type natural language requests that are routed to your configured LLM provider. Built-in slash commands include /model, /status, /help, and /exit.",
-    command: "./scripts/ai dsh",
+    command: "aiws dsh",
     docHref: "/docs/harness-and-dsh",
     docLabel: "Harness & DSH Docs",
   },
@@ -127,8 +127,8 @@ export const FAQ_ITEMS: FaqItem[] = [
     categoryLabel: "Harness & DSH",
     question: "Which AI model providers can I configure for dsh and opencode?",
     answer:
-      "AI Workstation supports 8 provider backends out of the box: OpenRouter (default), OpenAI, Anthropic, Google Gemini, DeepSeek, Groq, xAI (Grok), and Custom OpenAI-compatible endpoints (such as Ollama, vLLM, or LiteLLM). Keys are stored in data/secrets/dsh-provider.env.",
-    command: "./scripts/ai dsh-config",
+      "AIWS supports 8 provider backends out of the box: OpenRouter (default), OpenAI, Anthropic, Google Gemini, DeepSeek, Groq, xAI (Grok), and Custom OpenAI-compatible endpoints (such as Ollama, vLLM, or LiteLLM). Keys are stored in data/secrets/dsh-provider.env.",
+    command: "aiws dsh",
     docHref: "/docs/harness-and-dsh",
     docLabel: "Provider Matrix",
   },
@@ -140,8 +140,8 @@ export const FAQ_ITEMS: FaqItem[] = [
     question:
       "Can I switch AI providers or models without rebuilding the Docker image?",
     answer:
-      "Yes. You can switch providers and default models anytime from the Console's DSH Model Keys tab, by running ./scripts/ai dsh-config from your host terminal, or by running /model inside an active dsh session. Changes apply immediately.",
-    command: "./scripts/ai harness-status",
+      "Yes. You can switch providers and default models anytime from the Console's DSH Model Keys tab, by running aiws dsh from your host terminal, or by running /model inside an active dsh session. Changes apply immediately.",
+    command: "aiws harness status",
     docHref: "/docs/harness-and-dsh",
     docLabel: "Switching Models",
   },
@@ -153,8 +153,8 @@ export const FAQ_ITEMS: FaqItem[] = [
     question:
       "How do I back up my workstation configuration or migrate to a new host?",
     answer:
-      "Use ./scripts/ai state-export (or the State Backup module in the Console) to create a timestamped .tar.gz archive of data/state/. By default, data/secrets/ is excluded so backups are safe to store; pass --include-secrets only when migrating to a trusted encrypted volume.",
-    command: "./scripts/ai state-export",
+      "Use aiws state export (or the State Backup module in the Console) to create a timestamped .tar.gz archive of data/state/. By default, data/secrets/ is excluded so backups are safe to store; pass --include-secrets only when migrating to a trusted encrypted volume.",
+    command: "aiws state export",
     docHref: "/docs/cache-and-state",
     docLabel: "Backup & Restore",
   },
@@ -166,8 +166,8 @@ export const FAQ_ITEMS: FaqItem[] = [
     question:
       "Does clearing caches or pruning Docker resources affect my code in ./workspace?",
     answer:
-      "No. Running ./scripts/ai cache-clear [pnpm|npm|yarn|pip|all] or triggering Docker Builder / Image / Log cleanup from the Console Maintenance tab only purges dependency stores, log files, or dangling Docker layers. Your repositories inside ./workspace/ are never modified.",
-    command: "./scripts/ai cache-status",
+      "No. Running aiws cache clear [pnpm|npm|yarn|pip|all] or triggering Docker Builder / Image / Log cleanup from the Console Maintenance tab only purges dependency stores, log files, or dangling Docker layers. Your repositories inside ./workspace/ are never modified.",
+    command: "aiws cache",
     docHref: "/docs/cache-and-state",
     docLabel: "Cache Maintenance",
   },
@@ -179,8 +179,8 @@ export const FAQ_ITEMS: FaqItem[] = [
     question:
       "How do I diagnose container health, port conflicts, or daemon logs?",
     answer:
-      "Run ./scripts/ai doctor for an automated 7-stage diagnostic audit covering Docker daemon availability, Compose v2, container running state, GitHub credentials, Cloudflare Tunnel status, and workspace permissions. For machine-readable output, use ./scripts/ai status --json.",
-    command: "./scripts/ai doctor",
+      "Run aiws doctor for an automated 7-stage diagnostic audit covering Docker daemon availability, Compose v2, container running state, GitHub credentials, Cloudflare Tunnel status, and workspace permissions. For machine-readable output, use aiws status --json.",
+    command: "aiws doctor",
     docHref: "/docs/operations",
     docLabel: "Operations Runbook",
   },
@@ -202,7 +202,7 @@ export const HOME_FAQ_ITEMS: HomeFaqItem[] = [
     question:
       "How does single-project workspace mounting work on the host VPS?",
     answer:
-      "All repositories remain standard Git working copies on your host Linux VPS under `~/projects/`. When you switch projects with `ai use <project>`, only that active repository is bind-mounted into the workstation container at `/workspace` — keeping inactive repositories completely unmounted and unreachable from the container runtime.",
+      "All repositories remain standard Git working copies on your host Linux VPS under `~/projects/`. When you switch projects with `aiws use <project>`, only that active repository is bind-mounted into the workstation container at `/workspace` — keeping inactive repositories completely unmounted and unreachable from the container runtime.",
   },
   {
     id: "dsh-persistence",
@@ -238,7 +238,7 @@ export const HOME_FAQ_ITEMS: HomeFaqItem[] = [
     question:
       "How do I access DeepSeek Harness (`127.0.0.1:4090`) and dev servers from my Mac or browser?",
     answer:
-      "DSH binds strictly to loopback (`127.0.0.1:4090`) so it is never publicly exposed on your VPS interface. Run `ai preview` or `ai tunnel` to generate ready-to-run SSH local port-forwarding commands or route traffic through an authenticated Cloudflare Zero-Trust tunnel.",
+      "DSH binds strictly to loopback (`127.0.0.1:4090`) so it is never publicly exposed on your VPS interface. Run `aiws preview` or `aiws tunnel` to generate ready-to-run SSH local port-forwarding commands or route traffic through an authenticated Cloudflare Zero-Trust tunnel.",
   },
   {
     id: "concurrent-workflows",
@@ -247,7 +247,7 @@ export const HOME_FAQ_ITEMS: HomeFaqItem[] = [
     question:
       "Can I run my project's dev server and DeepSeek Harness simultaneously?",
     answer:
-      "Yes. The container entrypoint uses `tini` as PID 1 and manages separate process lifecycles for the DSH runtime (`ai dsh start`) and your project's application runner (`ai app start`), with independent PID tracking and log streams accessible via `ai status` and `ai logs`.",
+      "Yes. The container entrypoint uses `tini` as PID 1 and manages separate process lifecycles for the DSH runtime (`aiws dsh start`) and your project's application runner (`aiws app start`), with independent PID tracking and log streams accessible via `aiws status` and `aiws logs`.",
   },
 ];
 

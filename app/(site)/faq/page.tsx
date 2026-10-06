@@ -277,7 +277,6 @@ export default function FaqPage() {
           {/* 2. Accordion Specification Items */}
           <CadGridFrame showRulers>
             <CadCell
-              bodyClassName="p-0"
               footerLeft="CLICK ANY ROW TO EXPAND CLI COMMANDS & ARCHITECTURE REFERENCES"
               footerRight="STATUS: VERIFIED"
               index="F-03"
@@ -306,7 +305,7 @@ export default function FaqPage() {
                   </Button>
                 </div>
               ) : (
-                <div className="-m-4 divide-y divide-border sm:-m-5">
+                <div className="flex flex-col divide-y divide-border">
                   {filteredItems.map((item) => {
                     const isOpen = Boolean(openIds[item.id]);
                     return (
@@ -322,10 +321,10 @@ export default function FaqPage() {
                         >
                           <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
                             <div className="flex shrink-0 flex-wrap items-center gap-1.5 sm:gap-2">
-                              <span className="w-16 border border-border bg-muted/30 px-2 py-0.5 text-center font-mono text-[10px] text-muted-foreground uppercase tracking-wider">
+                              <span className="inline-block w-16 border border-border bg-muted/30 px-2 pb-[6px] pt-1 text-center font-mono text-[10px] leading-normal text-muted-foreground uppercase tracking-wider">
                                 {item.code}
                               </span>
-                              <span className="min-w-28 border border-border/60 bg-muted/20 px-2 py-0.5 text-center font-mono text-[10px] text-emerald-500 uppercase tracking-wider sm:w-32">
+                              <span className="inline-block min-w-28 border border-border/60 bg-muted/20 px-2 pb-[6px] pt-1 text-center font-mono text-[10px] leading-normal text-emerald-500 uppercase tracking-wider sm:w-32">
                                 [{item.categoryLabel}]
                               </span>
                             </div>
@@ -354,8 +353,8 @@ export default function FaqPage() {
                                     <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
                                       CLI VERIFICATION COMMAND
                                     </span>
-                                    <pre className="max-w-full overflow-x-auto border border-border bg-background px-3.5 py-2.5 font-mono text-emerald-500 text-xs">
-                                      <code>$ {item.command}</code>
+                                    <pre className="max-w-full overflow-x-auto border border-border bg-background font-mono text-emerald-500 text-[13px] leading-loose">
+                                      <code className="inline-block px-3.5 py-3">$ {item.command}</code>
                                     </pre>
                                   </div>
                                 )}

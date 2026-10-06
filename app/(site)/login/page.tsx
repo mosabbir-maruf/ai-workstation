@@ -164,14 +164,14 @@ export default function LoginPage() {
         {/* Minimalist Logo & Brand Identity */}
         <div className="mb-6 flex flex-col items-center text-center">
           <Link
-            aria-label="AI Workstation Home"
+            aria-label="AIWS Home"
             className="mb-3 transition-opacity hover:opacity-80"
             href="/"
           >
             <AiwsLogo size={32} />
           </Link>
           <h1 className="font-bold text-foreground text-lg tracking-tight">
-            AI Workstation
+            AIWS
           </h1>
           <p className="mt-1 font-mono text-[11px] text-muted-foreground">
             Enter operator passphrase to unlock console

@@ -26,7 +26,7 @@ async function handleGitDiffRequest(request: Request) {
           ...FALLBACK_DIFF_PAYLOAD,
           ok: false,
           needsDaemonRestart: true,
-          output: "Host daemon endpoint /api/git/diff not loaded. The running host daemon instance on the server must be restarted to register the new endpoint: run 'ai daemon restart' or 'sudo systemctl restart ai-workstation-daemon'.",
+          output: "Host daemon endpoint /api/git/diff not loaded. The running host daemon instance on the server must be restarted to register the new endpoint: run 'aiws daemon restart' or 'sudo systemctl restart aiws-daemon'.",
         });
       }
     } catch {

@@ -18,13 +18,13 @@ interface CommandHistoryItem {
 }
 
 const QUICK_COMMANDS = [
-  { label: "ai status", cmd: "ai status", target: "host" },
-  { label: "ai doctor", cmd: "ai doctor", target: "host" },
+  { label: "aiws status", cmd: "aiws status", target: "host" },
+  { label: "aiws doctor", cmd: "aiws doctor", target: "host" },
   { label: "docker ps", cmd: "docker ps", target: "host" },
   { label: "ls -la /workspace", cmd: "ls -la /workspace", target: "workstation" },
   { label: "git status", cmd: "git status", target: "workstation" },
   { label: "node -v", cmd: "node -v && npm -v", target: "workstation" },
-  { label: "systemctl status", cmd: "systemctl status ai-workstation-daemon --no-pager", target: "host" },
+  { label: "systemctl status", cmd: "systemctl status aiws-daemon --no-pager", target: "host" },
 ] as const;
 
 const INTERACTIVE_CONFIRM_REGEX =
@@ -37,7 +37,7 @@ export function TerminalSection() {
   const [history, setHistory] = useState<CommandHistoryItem[]>([
     {
       id: "initial",
-      command: "ai status",
+      command: "aiws status",
       target: "host",
       output: "Workstation terminal active. Select Host or Container target and run commands.",
       ok: true,
@@ -299,7 +299,7 @@ export function TerminalSection() {
                 </div>
               }
               bodyClassName="p-0"
-              footerLeft={`Active environment: ${target === "host" ? "Host Debian / Ubuntu OS ($HOME/ai-workstation-cli)" : "Workstation Sandbox Container (/workspace)"}`}
+              footerLeft={`Active environment: ${target === "host" ? "Host Debian / Ubuntu OS ($HOME/aiws-cli)" : "Workstation Sandbox Container (/workspace)"}`}
               footerRight={
                 <Badge variant="outline" className="text-[10px] font-mono uppercase">
                   <span className="sm:hidden">Tunnel Active</span>
@@ -461,7 +461,7 @@ export function TerminalSection() {
                         confirmPromptPending
                           ? `Type 'y' to confirm '${confirmPromptPending.command}' or 'n' to cancel...`
                           : target === "host"
-                            ? "Run host CLI command (e.g. ai status, docker ps)..."
+                            ? "Run host CLI command (e.g. aiws status, docker ps)..."
                             : "Run container command (e.g. npm test, ls -la)..."
                       }
                       className="flex-1 min-w-0 bg-transparent border-none outline-none text-zinc-100 placeholder:text-zinc-600 font-mono text-base sm:text-xs focus:ring-0"

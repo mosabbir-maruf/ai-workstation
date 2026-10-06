@@ -27,7 +27,7 @@ function SidebarCTA() {
       </Button>
       <a
         className="absolute inset-0"
-        href="https://github.com/mosabbir-maruf/ai-workstation"
+        href="https://github.com/mosabbir-maruf/aiws"
         rel="noreferrer"
         target="_blank"
       >

@@ -17,7 +17,7 @@ interface CopyPageButtonProps {
 }
 
 function getPromptUrl(baseURL: string, url: string, content: string) {
-  const prompt = `I'm looking at the AI Workstation documentation page: ${url}
+  const prompt = `I'm looking at the AIWS documentation page: ${url}
 
 Here is the markdown content:
 

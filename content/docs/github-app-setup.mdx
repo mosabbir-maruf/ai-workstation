@@ -3,7 +3,7 @@ title: GitHub Setup
 description: How GitHub access is brokered through a GitHub App and host Unix domain socket without copying PATs or SSH keys into the container.
 ---
 
-GitHub access in AI Workstation is brokered through a **GitHub App**. No Personal Access Token (PAT) or SSH private key is copied into the workstation container.
+GitHub access in AIWS is brokered through a **GitHub App**. No Personal Access Token (PAT) or SSH private key is copied into the workstation container.
 
 ```text
 Git inside container
@@ -92,25 +92,25 @@ or:
 
 ## Copy Key to VPS
 
-`ai github setup` runs on the VPS and expects a VPS-local `.pem` path. Copy the downloaded file from your local machine first.
+`aiws github setup` runs on the VPS and expects a VPS-local `.pem` path. Copy the downloaded file from your local machine first.
 
 From your local machine:
 
 ```bash
-ssh <user>@<vps-host> "mkdir -p ~/ai-workstation/secrets && chmod 700 ~/ai-workstation/secrets"
+ssh <user>@<vps-host> "mkdir -p ~/aiws/secrets && chmod 700 ~/aiws/secrets"
 
 scp /path/to/<app-name>.<date>.private-key.pem \
-  <user>@<vps-host>:~/ai-workstation/secrets/github-app.pem
+  <user>@<vps-host>:~/aiws/secrets/github-app.pem
 ```
 
 Example:
 
 ```bash
 scp "/Users/mosabbirmaruf/Downloads/ai-dev-workstation.2026-09-23.private-key.pem" \
-  mosabbir-cloud:~/ai-workstation/secrets/github-app.pem
+  mosabbir-cloud:~/aiws/secrets/github-app.pem
 ```
 
-Alternatively, copy to a temporary VPS path and let `ai github setup` install it:
+Alternatively, copy to a temporary VPS path and let `aiws github setup` install it:
 
 ```bash
 scp "/Users/mosabbirmaruf/Downloads/ai-dev-workstation.2026-09-23.private-key.pem" \
@@ -130,7 +130,7 @@ On macOS, if `scp` fails with `Operation not permitted` for a file under `~/Down
 chmod 600 ~/ai-dev-workstation.2026-09-23.private-key.pem
 
 scp ~/ai-dev-workstation.2026-09-23.private-key.pem \
-  mosabbir-cloud:~/ai-workstation/secrets/github-app.pem
+  mosabbir-cloud:~/aiws/secrets/github-app.pem
 ```
 
 Do not use `cp` in Terminal to move it from `~/Downloads` — the same macOS TCC block will hit. Use Finder drag/copy.
@@ -138,15 +138,15 @@ Do not use `cp` in Terminal to move it from `~/Downloads` — the same macOS TCC
 Then, on the VPS, verify permissions (`600`):
 
 ```bash
-chmod 600 ~/ai-workstation/secrets/github-app.pem
-ls -l ~/ai-workstation/secrets/github-app.pem
-head -1 ~/ai-workstation/secrets/github-app.pem
+chmod 600 ~/aiws/secrets/github-app.pem
+ls -l ~/aiws/secrets/github-app.pem
+head -1 ~/aiws/secrets/github-app.pem
 ```
 
 The final private key belongs at:
 
 ```text
-~/ai-workstation/secrets/github-app.pem
+~/aiws/secrets/github-app.pem
 ```
 
 ---
@@ -156,15 +156,15 @@ The final private key belongs at:
 On the VPS:
 
 ```bash
-ai github setup
-ai github status
-ai github test
+aiws github setup
+aiws github status
+aiws github test
 ```
 
-When `ai github setup` prompts for `Private key (.pem) path:`, enter either:
+When `aiws github setup` prompts for `Private key (.pem) path:`, enter either:
 
 ```text
-~/ai-workstation/secrets/github-app.pem
+~/aiws/secrets/github-app.pem
 ```
 
 or, if you used the temporary-path method:
@@ -175,7 +175,7 @@ or, if you used the temporary-path method:
 
 (`~/...` tilde expansion is handled automatically by `scripts/lib/github.sh`.)
 
-Setup copies the key to `~/ai-workstation/secrets/github-app.pem` (`0600`), saves `GITHUB_APP_ID`, `GITHUB_INSTALLATION_ID`, `GITHUB_BROKER_SOCKET`, and `GITHUB_BROKER_GID` to `.env`, configures the `ai-broker` group (`770` on `runtime/github-broker`), and starts the `ai-github-broker` systemd service.
+Setup copies the key to `~/aiws/secrets/github-app.pem` (`0600`), saves `GITHUB_APP_ID`, `GITHUB_INSTALLATION_ID`, `GITHUB_BROKER_SOCKET`, and `GITHUB_BROKER_GID` to `.env`, configures the `ai-broker` group (`770` on `runtime/github-broker`), and starts the `ai-github-broker` systemd service.
 
 A successful authentication test reports:
 
@@ -190,13 +190,13 @@ GitHub authentication: READY ✓
 
 ## Troubleshooting
 
-If `ai github test` fails with `Algorithm 'RS256' could not be found`, the Python `cryptography` backend is missing in `.venv`:
+If `aiws github test` fails with `Algorithm 'RS256' could not be found`, the Python `cryptography` backend is missing in `.venv`:
 
 ```bash
-~/ai-workstation/.venv/bin/pip install "PyJWT[crypto]"
-~/ai-workstation/.venv/bin/python -c 'from jwt.api_jws import PyJWS; PyJWS().get_algorithm_by_name("RS256"); print("RS256 OK")'
+~/aiws/.venv/bin/pip install "PyJWT[crypto]"
+~/aiws/.venv/bin/python -c 'from jwt.api_jws import PyJWS; PyJWS().get_algorithm_by_name("RS256"); print("RS256 OK")'
 sudo systemctl restart ai-github-broker
-ai github test
+aiws github test
 ```
 
 New installations configure this automatically via `./install.sh`.

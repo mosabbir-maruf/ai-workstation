@@ -11,12 +11,12 @@ import { VerbatimOutput } from "../verbatim-output";
 
 const QUICK_REPO_PRESETS = [
   {
-    label: "+ ai-workstation",
-    url: "https://github.com/mosabbir-maruf/ai-workstation.git",
+    label: "+ aiws",
+    url: "https://github.com/mosabbir-maruf/aiws.git",
   },
   {
-    label: "+ ai-workstation-cli",
-    url: "https://github.com/mosabbir-maruf/ai-workstation.git",
+    label: "+ aiws-cli",
+    url: "https://github.com/mosabbir-maruf/aiws.git",
   },
 ] as const;
 
@@ -259,7 +259,7 @@ export function ProjectsSection() {
                     <p className="font-mono text-muted-foreground text-xs">
                       {loading
                         ? "Loading project registry from backend..."
-                        : "No projects registered yet. Use the form on the left or 'ai add <repo>' to mount a workspace."}
+                        : "No projects registered yet. Use the form on the left or 'aiws add <repo>' to mount a workspace."}
                     </p>
                   </div>
                 ) : (

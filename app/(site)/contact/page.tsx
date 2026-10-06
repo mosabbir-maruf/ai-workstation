@@ -117,7 +117,7 @@ const CHANNELS = [
     badge: "PRIMARY",
     description:
       "Report container build failures, CLI script regressions, port forwarding bugs, or request new workstation features.",
-    href: "https://github.com/mosabbir-maruf/ai-workstation/issues",
+    href: "https://github.com/mosabbir-maruf/aiws/issues",
     cta: "Open Issue Tracker",
     footerLeft: "GITHUB ISSUES",
   },
@@ -126,8 +126,8 @@ const CHANNELS = [
     title: "Community Discussions",
     badge: "COMMUNITY",
     description:
-      "Share custom `dsh` workflows, ask architecture questions, and connect with other AI Workstation builders.",
-    href: "https://github.com/mosabbir-maruf/ai-workstation/discussions",
+      "Share custom `dsh` workflows, ask architecture questions, and connect with other AIWS builders.",
+    href: "https://github.com/mosabbir-maruf/aiws/discussions",
     cta: "Join Discussions",
     footerLeft: "FORUM & Q&A",
   },
@@ -137,7 +137,7 @@ const CHANNELS = [
     badge: "72H SLA",
     description:
       "Privately disclose vulnerabilities involving `secrets/`, GitHub App tokens, or Cloudflare Tunnel exposure.",
-    href: "https://github.com/mosabbir-maruf/ai-workstation/security/advisories/new",
+    href: "https://github.com/mosabbir-maruf/aiws/security/advisories/new",
     cta: "Report Vulnerability",
     footerLeft: "CONFIDENTIAL CHANNEL",
   },
@@ -147,7 +147,7 @@ const CHANNELS = [
     badge: "MAINTAINER",
     description:
       "Follow release notes, inspect source blueprints, or reach out directly to `@mosabbir-maruf`.",
-    href: "https://github.com/mosabbir-maruf/ai-workstation",
+    href: "https://github.com/mosabbir-maruf/aiws",
     cta: "View Repository",
     footerLeft: "MOSABBIR-MARUF",
   },
@@ -191,7 +191,7 @@ export default function ContactPage() {
     CATEGORY_OPTIONS.find((c) => c.id === category) ?? defaultCategory;
 
   const formattedPayload = useMemo(() => {
-    const titleLine = `${selectedCategoryMeta.tag} ${subject || "AI Workstation Inquiry"}`;
+    const titleLine = `${selectedCategoryMeta.tag} ${subject || "AIWS Inquiry"}`;
     return [
       `# ${titleLine}`,
       "",
@@ -218,7 +218,7 @@ export default function ContactPage() {
       `${selectedCategoryMeta.tag} ${subject || "Workstation Inquiry"}`
     );
     const body = encodeURIComponent(formattedPayload);
-    return `https://github.com/mosabbir-maruf/ai-workstation/issues/new?title=${title}&body=${body}`;
+    return `https://github.com/mosabbir-maruf/aiws/issues/new?title=${title}&body=${body}`;
   }, [selectedCategoryMeta, subject, formattedPayload]);
 
   const handleSubmit = (e: FormEvent) => {
@@ -491,7 +491,7 @@ export default function ContactPage() {
                       className="min-h-[140px] border border-border bg-muted/20 p-3 font-mono text-foreground text-xs leading-relaxed placeholder:text-muted-foreground focus:border-foreground/40 focus:bg-background focus:outline-none"
                       id="contact-message"
                       onChange={(e) => setMessage(e.target.value)}
-                      placeholder="Describe the behavior, expected outcome, or paste output from ./scripts/ai doctor..."
+                      placeholder="Describe the behavior, expected outcome, or paste output from ./scripts/aiws doctor..."
                       required
                       value={message}
                     />
@@ -510,7 +510,7 @@ export default function ContactPage() {
                           Cloudflare tokens in public issues. Use the{" "}
                           <a
                             className="underline hover:text-foreground"
-                            href="https://github.com/mosabbir-maruf/ai-workstation/security/advisories/new"
+                            href="https://github.com/mosabbir-maruf/aiws/security/advisories/new"
                             rel="noreferrer"
                             target="_blank"
                           >
@@ -564,7 +564,7 @@ export default function ContactPage() {
 
               <CadCell
                 className="lg:col-span-5"
-                footerLeft="DIAGNOSTIC TIP: ATTACH ./scripts/ai status --json"
+                footerLeft="DIAGNOSTIC TIP: ATTACH ./scripts/aiws status --json"
                 footerRight="MARKDOWN FORMAT"
                 headerAction={
                   <Button

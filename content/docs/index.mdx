@@ -3,7 +3,7 @@ title: Overview
 description: A reusable, isolated AI coding workstation for running DeepSeek Harness (DSH) and project development workloads on a remote Linux VPS.
 ---
 
-AI Workstation provides one reusable, defense-in-depth development environment on a remote Linux VPS (`linux/amd64` and `linux/arm64`) powered by Docker and **DeepSeek Harness (DSH)**.
+AIWS provides one reusable, defense-in-depth development environment on a remote Linux VPS (`linux/amd64` and `linux/arm64`) powered by Docker and **DeepSeek Harness (DSH)**.
 
 Projects remain ordinary Git repositories on the host under `~/projects/`. Only the currently selected project is mounted into the workstation container at `/workspace`.
 
@@ -13,7 +13,7 @@ The workstation contains the common developer runtime and DeepSeek Harness. DSH 
 
 The system enforces four distinct boundaries:
 
-1. **Host management layer** — Docker, projects (`~/projects/`), runtime state (`runtime/`), secrets (`secrets/`, `.env`), and the `ai` CLI (`scripts/ai`).
+1. **Host management layer** — Docker, projects (`~/projects/`), runtime state (`runtime/`), secrets (`secrets/`, `.env`), and the `aiws` CLI (`scripts/aiws`).
 2. **Workstation container** — Isolated developer runtime (`sandbox` UID `1001`) plus only the selected project mounted at `/workspace`.
 3. **GitHub broker** — GitHub App credential flow through a host Unix domain socket (`github.sock`) instead of a Personal Access Token (PAT) or host SSH private key inside the container.
 4. **Existing infrastructure & network boundary** — The existing gateway/reverse-proxy stack remains separate, and all development ports bind exclusively to `127.0.0.1` on the host.
@@ -43,8 +43,8 @@ The system enforces four distinct boundaries:
 │                         Ubuntu VPS / Host                        │
 │                                                                  │
 │  ┌──────────────────────┐       ┌─────────────────────────────┐  │
-│  │ ~/projects/          │       │ ~/ai-workstation/           │  │
-│  │  project-a/          │       │  scripts/ai     docker/     │  │
+│  │ ~/projects/          │       │ ~/aiws/           │  │
+│  │  project-a/          │       │  scripts/aiws     docker/     │  │
 │  │  project-b/          │       │  runtime/       secrets/    │  │
 │  │  active-project/ ────┼──────►│  .env           config/     │  │
 │  └──────────┬───────────┘       └──────────────┬──────────────┘  │
@@ -52,7 +52,7 @@ The system enforces four distinct boundaries:
 │             │ /workspace mount                 │ Docker Compose  │
 │             ▼                                  ▼                 │
 │  ┌────────────────────────────────────────────────────────────┐  │
-│  │                       ai-workstation                       │  │
+│  │                       aiws                       │  │
 │  │                                                            │  │
 │  │  User: sandbox (UID 1001)                                  │  │
 │  │  Node.js + Git + SSH client + ripgrep + fd + procps + tini │  │
@@ -80,7 +80,7 @@ Mac / operator
      │
      │ SSH
      ▼
-Host CLI: ai
+Host CLI: aiws
      │
      ├── project selection
      ├── Git operations
@@ -107,7 +107,7 @@ Docker workstation
 
 | Component | Responsibility | Persistence |
 |---|---|---|
-| `scripts/ai` | Main operator CLI | Git |
+| `scripts/aiws` | Main operator CLI | Git |
 | `docker/Dockerfile` | Base workstation image | Git / GHCR |
 | `docker/compose.yml` | Runtime, mounts, limits, ports | Git |
 | `docker/entrypoint.sh` | Container bootstrap and DSH installation | Git |
@@ -125,14 +125,14 @@ Docker workstation
 | `runtime/github-broker/` | Broker socket/runtime | Runtime |
 | `~/projects/` | Git working copies | Host persistent |
 | GitHub Actions | Multi-arch (`amd64`/`arm64`) image build/publish | CI |
-| GHCR | Container image registry (`ghcr.io/mosabbir-maruf/ai-workstation`) | External |
+| GHCR | Container image registry (`ghcr.io/mosabbir-maruf/aiws`) | External |
 
 ---
 
 ## Repository Structure
 
 ```text
-ai-workstation/
+aiws/
 ├── .env.example                     # Environment template
 ├── .gitignore                       # Ignored secrets, runtime, and OS files
 ├── CONTRIBUTING.md                  # Contributor guidelines
@@ -170,7 +170,7 @@ ai-workstation/
 │   └── github-app-credential-helper # Container-side credential helper
 │
 └── scripts/
-    ├── ai                           # Main CLI
+    ├── aiws                           # Main CLI
     ├── github-app-credential-helper # Host-side credential helper
     └── lib/
         ├── github.sh                # GitHub App/broker helpers
@@ -186,7 +186,7 @@ Note: `runtime/`, `.env`, `.venv/`, `secrets/`, and project checkouts under `~/p
 
 ```text
 ~/
-├── ai-workstation/
+├── aiws/
 │   ├── .env
 │   ├── .venv/
 │   ├── runtime/
@@ -218,13 +218,13 @@ Common developer tooling belongs inside the base container image (`Dockerfile`).
 Only the active repository is exposed to the workstation container at `/workspace`. Inactive repositories under `~/projects/` remain unmounted and unreachable from inside the container.
 
 ### Persistent Binary
-DeepSeek Harness is installed into `runtime/npm-global` (`~/.npm-global` in container) so DSH can be updated independently via `ai dsh update` without rebuilding container layers.
+DeepSeek Harness is installed into `runtime/npm-global` (`~/.npm-global` in container) so DSH can be updated independently via `aiws dsh update` without rebuilding container layers.
 
 ### Persistent State
 DSH configuration and session history (`settings.yaml`, `.credentials.yaml`, `storages/workspace.json`) live in host-persistent `runtime/dsh/` (`~/.dsh` in container), surviving image teardowns and rebuilds.
 
 ### No Host Docker Socket
-Mounting `/var/run/docker.sock` would give the container root-equivalent control over the host Docker daemon. AI Workstation strictly prohibits mounting the host Docker socket.
+Mounting `/var/run/docker.sock` would give the container root-equivalent control over the host Docker daemon. AIWS strictly prohibits mounting the host Docker socket.
 
 ### No Host SSH Keys
 GitHub access is brokered through short-lived GitHub App installation tokens over a Unix domain socket (`github.sock`) instead of mounting `~/.ssh` or copying long-lived PATs into the workstation.
@@ -236,7 +236,7 @@ Development servers (`127.0.0.1:3000`, `3001`, `5173`, `8080`, `8000`, `4090:409
 
 ## Next Steps
 
-- [Installation & CLI Reference](/docs/installation) — Host prerequisites, `./install.sh`, `.env` configuration, and all `ai` CLI subcommands.
+- [Installation & CLI Reference](/docs/installation) — Host prerequisites, `./install.sh`, `.env` configuration, and all `aiws` CLI subcommands.
 - [GitHub App & Broker Setup](/docs/github-app-setup) — Creating the GitHub App, generating `.pem` keys, `scp` transfer, and Unix socket credential brokering.
 - [Cloudflare Tunnel & Preview](/docs/cloudflare-tunnel) — SSH port-forwarding, Cloudflare Zero Trust Anywhere URLs, and DSH loopback settings behavior.
 - [Operations, Cache & State Runbook](/docs/operations) — Harness/DSH lifecycle, safe cache pruning, state archive export/import, CI/CD, and troubleshooting.

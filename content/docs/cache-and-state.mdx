@@ -3,7 +3,7 @@ title: Cache & State Backup
 description: Read-only cache inspection, safe Docker builder and npm cache cleanup, dependency pruning, and portable state archive export/import.
 ---
 
-AI Workstation provides built-in commands to reclaim disk space safely (`ai cache`) and back up or restore DSH state (`ai state`).
+AIWS provides built-in commands to reclaim disk space safely (`aiws cache`) and back up or restore DSH state (`aiws state`).
 
 ---
 
@@ -12,31 +12,31 @@ AI Workstation provides built-in commands to reclaim disk space safely (`ai cach
 ### Storage Inspection
 
 ```bash
-ai cache
+aiws cache
 ```
 
 Outputs three storage reports:
 - **`=== Docker ===`** — `docker system df` (images, containers, local volumes, and build cache).
-- **`=== AI runtime ===`** — `du -sh ~/ai-workstation/runtime`.
+- **`=== AI runtime ===`** — `du -sh ~/aiws/runtime`.
 - **`=== Project node_modules ===`** — Disk usage of every `node_modules` directory under `~/projects/*`.
 
 ### Safe Cleanup
 
 ```bash
-ai cache clear
+aiws cache clear
 ```
 
 Cleans reclaimable **Docker builder cache** (`docker builder prune -af`) and **in-container npm cache** (`npm cache clean --force`).
 
 ### Protected Paths
 
-`ai cache clear` is designed so it **never removes**:
+`aiws cache clear` is designed so it **never removes**:
 - DSH state (`runtime/dsh`)
 - DSH installation (`runtime/npm-global`)
 - `.env` configuration
 - Git repositories (`~/projects/*`)
-- Docker images (`ghcr.io/mosabbir-maruf/ai-workstation`)
-- Docker containers (`ai-workstation`)
+- Docker images (`ghcr.io/mosabbir-maruf/aiws`)
+- Docker containers (`aiws`)
 - Docker volumes
 
 ### Dependency Purge
@@ -45,21 +45,21 @@ To remove `node_modules` directories across all repositories in `~/projects/*`:
 
 ```bash
 # Interactive confirmation
-ai cache clear --deps
+aiws cache clear --deps
 
 # Non-interactive
-ai cache clear --deps --yes
+aiws cache clear --deps --yes
 ```
 
 Recommended dependency reset sequence:
 
 ```bash
-ai app stop
-ai cache clear --deps
-ai run
+aiws app stop
+aiws cache clear --deps
+aiws run
 ```
 
-When `ai run` executes next, dependencies are cleanly reinstalled from the project lockfile (`npm ci`, `pnpm install --frozen-lockfile`, `yarn install --immutable`, or `bun install --frozen-lockfile`).
+When `aiws run` executes next, dependencies are cleanly reinstalled from the project lockfile (`npm ci`, `pnpm install --frozen-lockfile`, `yarn install --immutable`, or `bun install --frozen-lockfile`).
 
 ---
 
@@ -70,10 +70,10 @@ Project source code lives in GitHub, while DSH workflow state (`runtime/dsh`) an
 ### Export Snapshot
 
 ```bash
-ai state export
+aiws state export
 ```
 
-Creates `~/ai-state-backups/ai-state-<timestamp>.tar.gz` (permissions `0600`).
+Creates `~/aiws-state-backups/aiws-state-<timestamp>.tar.gz` (permissions `0600`).
 
 ### Archive Manifest
 
@@ -87,10 +87,10 @@ Creates `~/ai-state-backups/ai-state-<timestamp>.tar.gz` (permissions `0600`).
 ### Import Snapshot
 
 ```bash
-ai stop
-ai state import ~/ai-state-backups/ai-state-20260925-020000.tar.gz
-ai start
-ai dsh version
+aiws stop
+aiws state import ~/aiws-state-backups/aiws-state-20260925-020000.tar.gz
+aiws start
+aiws dsh version
 ```
 
-During import, `ai state import` validates archive member names (`manifest`, `.env`, `dsh/*`), blocks relative/absolute path traversal (`..`), rejects hardlinks, verifies symlinks point strictly within `/home/sandbox/.npm-global/*`, backs up the existing state before replacement, and restores `0600`/`0700` file permissions.
+During import, `aiws state import` validates archive member names (`manifest`, `.env`, `dsh/*`), blocks relative/absolute path traversal (`..`), rejects hardlinks, verifies symlinks point strictly within `/home/sandbox/.npm-global/*`, backs up the existing state before replacement, and restores `0600`/`0700` file permissions.

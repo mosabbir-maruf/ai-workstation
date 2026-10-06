@@ -3,7 +3,7 @@ title: Contributing
 description: Development workflow, branch naming, Conventional Commits, shell and Docker standards, static validation commands, and pull request checklist.
 ---
 
-We welcome contributions to **AI Workstation** that improve stability, security, documentation, and operator ergonomics while preserving the four foundational isolation boundaries (Host Management Layer, Unprivileged `sandbox` Container, Unix Socket GitHub Broker, and Localhost/Zero-Trust Network Boundary).
+We welcome contributions to **AIWS** that improve stability, security, documentation, and operator ergonomics while preserving the four foundational isolation boundaries (Host Management Layer, Unprivileged `sandbox` Container, Unix Socket GitHub Broker, and Localhost/Zero-Trust Network Boundary).
 
 ---
 
@@ -11,8 +11,8 @@ We welcome contributions to **AI Workstation** that improve stability, security,
 
 1. **Fork and Clone**:
    ```bash
-   git clone https://github.com/<your-username>/ai-workstation.git
-   cd ai-workstation
+   git clone https://github.com/<your-username>/aiws.git
+   cd aiws
    ```
 2. **Create a Feature Branch**:
    ```bash
@@ -27,7 +27,7 @@ We welcome contributions to **AI Workstation** that improve stability, security,
    ```
 6. **Commit with Conventional Messages**:
    ```bash
-   git commit -m "feat(cli): add diagnostic flag to ai doctor"
+   git commit -m "feat(cli): add diagnostic flag to aiws doctor"
    ```
 
 ---
@@ -74,8 +74,8 @@ Allowed types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`.
   - `${ACTIVE_PROJECT_PATH}:/workspace`
   - `runtime/dsh:/home/sandbox/.dsh`
   - `runtime/npm-global:/home/sandbox/.npm-global`
-  - `runtime/app:/run/ai-workstation/app`
-  - `runtime/harness:/run/ai-workstation/harness`
+  - `runtime/app:/run/aiws/app`
+  - `runtime/harness:/run/aiws/harness`
   - `runtime/github-broker:/run/ai-github-broker`
 
 ---
@@ -86,7 +86,7 @@ Run these verification commands before opening any pull request:
 
 ```bash
 # 1. Validate all bash scripts
-bash -n install.sh update.sh scripts/ai scripts/lib/*.sh docker/*.sh docker/github-app-credential-helper
+bash -n install.sh update.sh scripts/aiws scripts/lib/*.sh docker/*.sh docker/github-app-credential-helper
 
 # 2. Validate Python scripts
 python3 -m py_compile broker/github_broker.py scripts/github-app-credential-helper
@@ -101,11 +101,11 @@ git diff --check
 On a test Linux VPS environment, also verify:
 
 ```bash
-ai doctor
-ai status
-ai harness status
-ai github status
-ai github test
+aiws doctor
+aiws status
+aiws harness status
+aiws github status
+aiws github test
 ```
 
 ---
@@ -119,7 +119,7 @@ Before submitting a pull request, verify every item:
 - [ ] All modified bash scripts pass `bash -n <script>`.
 - [ ] All Python scripts pass `python3 -m py_compile`.
 - [ ] `docker compose -f docker/compose.yml config` validates cleanly.
-- [ ] `ai doctor` passes on a live test workstation host.
+- [ ] `aiws doctor` passes on a live test workstation host.
 - [ ] **No secrets, tokens, private keys (`*.pem`), credentials, or `.env` files are committed**.
 - [ ] **No host runtime state (`runtime/`, `secrets/`, `*.tar.gz`) is committed**.
 - [ ] The security model (`sandbox` UID `1001`, no Docker socket, no host `~/.ssh`) is preserved.

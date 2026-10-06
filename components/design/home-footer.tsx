@@ -42,7 +42,7 @@ const communityLinks = [
   { text: "Contributing Guide", href: "/docs/contributing" },
   {
     text: "GitHub Repository",
-    href: "https://github.com/mosabbir-maruf/ai-workstation",
+    href: "https://github.com/mosabbir-maruf/aiws",
     external: true,
   },
   {

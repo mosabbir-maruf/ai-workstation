@@ -1,9 +1,9 @@
 ---
 title: Installation
-description: Host requirements, installation walkthrough, environment variables, daily workflow, and complete CLI reference for AI Workstation.
+description: Host requirements, installation walkthrough, environment variables, daily workflow, and complete CLI reference for AIWS.
 ---
 
-Follow the steps below to provision AI Workstation on your remote Linux VPS (`linux/amd64` or `linux/arm64`) and operate projects with the `ai` CLI.
+Follow the steps below to provision AIWS on your remote Linux VPS (`linux/amd64` or `linux/arm64`) and operate projects with the `aiws` CLI.
 
 ## Requirements
 
@@ -15,7 +15,7 @@ Follow the steps below to provision AI Workstation on your remote Linux VPS (`li
 - Python 3 (`3.10+`) with `venv` support (`python3-venv`).
 - `sudo`.
 - GitHub access to the repositories you will manage.
-- Linux host (`amd64` or `arm64`) for the published multi-arch image (`ghcr.io/mosabbir-maruf/ai-workstation:latest`), or a local Docker build otherwise.
+- Linux host (`amd64` or `arm64`) for the published multi-arch image (`ghcr.io/mosabbir-maruf/aiws:latest`), or a local Docker build otherwise.
 
 The included installer validates Docker, Git, Python 3, Docker daemon access, and Python virtual-environment support automatically.
 
@@ -33,8 +33,8 @@ The included installer validates Docker, Git, Python 3, Docker daemon access, an
 ## Clone Repository
 
 ```bash
-git clone https://github.com/mosabbir-maruf/ai-workstation.git ~/ai-workstation
-cd ~/ai-workstation
+git clone https://github.com/mosabbir-maruf/aiws.git ~/aiws
+cd ~/aiws
 ```
 
 ---
@@ -54,16 +54,16 @@ The installer executes the following steps:
 3. Creates runtime (`runtime/`), project (`~/projects/`), and secret (`secrets/`) directories with strict permissions (`700`).
 4. Creates `.env` from `.env.example` (mode `600`).
 5. Creates the Python virtual environment (`.venv/`) and installs `PyJWT[crypto]`.
-6. Symlinks `ai` at `/usr/local/bin/ai`.
+6. Symlinks `aiws` at `/usr/local/bin/aiws`.
 7. Validates the resulting installation.
 
 After installation completes, verify the environment, start the dashboard daemon, and initialize GitHub App authentication:
 
 ```bash
-ai doctor
-ai daemon status    # Confirms the HTTP bridge for the Web Console is active
-ai github setup     # Optional: configure GitHub App credentials
-ai github test
+aiws doctor
+aiws daemon status    # Confirms the HTTP bridge for the Web Console is active
+aiws github setup     # Optional: configure GitHub App credentials
+aiws github test
 ```
 
 ---
@@ -73,11 +73,11 @@ ai github test
 `.env.example` contains the workstation runtime variables:
 
 ```dotenv
-IMAGE=ghcr.io/mosabbir-maruf/ai-workstation:latest
+IMAGE=ghcr.io/mosabbir-maruf/aiws:latest
 DSH_VERSION=0.1.2-rc.1
 ACTIVE_PROJECT=
 ACTIVE_PROJECT_PATH=
-AI_WORKSTATION_ROOT=
+AIWS_ROOT=
 DSH_TRUSTED_HOSTS=
 ALLOWED_HOSTS=
 GITHUB_APP_ID=
@@ -90,7 +90,7 @@ CLOUDFLARED_DSH_HOSTNAME=
 CLOUDFLARED_APP_PORT=
 ```
 
-The `ai` CLI automatically updates project, GitHub broker, and Cloudflare Tunnel keys in `.env` when configured.
+The `aiws` CLI automatically updates project, GitHub broker, and Cloudflare Tunnel keys in `.env` when configured.
 
 ### Permission Rules
 
@@ -98,7 +98,7 @@ The `ai` CLI automatically updates project, GitHub broker, and Cloudflare Tunnel
 - Keep `secrets/github-app.pem` private (mode `600`).
 - Keep `secrets/cloudflared-token` private (mode `600`).
 - Keep `runtime/dsh/` at mode `700` and `runtime/dsh/.credentials.yaml` / `settings.yaml` at mode `600`.
-- Prefer SHA-pinned image references (`IMAGE=ghcr.io/mosabbir-maruf/ai-workstation:<commit-sha>`) for deterministic production deployments.
+- Prefer SHA-pinned image references (`IMAGE=ghcr.io/mosabbir-maruf/aiws:<commit-sha>`) for deterministic production deployments.
 - Pin `DSH_VERSION` when deterministic agent behavior is required.
 
 ### Web Console Frontend Environment Variables
@@ -119,30 +119,30 @@ NEXT_PUBLIC_SITE_URL=https://workstation.example.com
 ### Operator Session
 
 ```bash
-ai doctor
-ai start
-ai run
-ai preview
+aiws doctor
+aiws start
+aiws run
+aiws preview
 
 # Work with DSH / editor / browser
 
-ai app logs
-ai status
+aiws app logs
+aiws status
 
-ai app stop
-ai stop
+aiws app stop
+aiws stop
 ```
 
 ### Core Commands
 
 | Task | Command |
 |---|---|
-| Start workstation container & Harness | `ai start` |
-| Check container, DSH, Bridge & App status | `ai status` |
-| Start active project dev server (`0.0.0.0` auto-bind) | `ai run` |
-| Print SSH port-forwarding & Cloudflare Anywhere URLs | `ai preview` |
-| Stop active project dev server | `ai app stop` |
-| Stop workstation container, App & Harness | `ai stop` |
+| Start workstation container & Harness | `aiws start` |
+| Check container, DSH, Bridge & App status | `aiws status` |
+| Start active project dev server (`0.0.0.0` auto-bind) | `aiws run` |
+| Print SSH port-forwarding & Cloudflare Anywhere URLs | `aiws preview` |
+| Stop active project dev server | `aiws app stop` |
+| Stop workstation container, App & Harness | `aiws stop` |
 
 ---
 
@@ -152,142 +152,142 @@ ai stop
 GitHub repository
        │
        ▼
-ai add <github-url>
+aiws add <github-url>
        │
        ▼
 ~/projects/project-name
        │
        ▼
-ai use project-name
+aiws use project-name
        │
        ▼
 ACTIVE_PROJECT / ACTIVE_PROJECT_PATH
        │
        ▼
-ai start
+aiws start
        │
        ▼
 Docker workstation
        │
        ▼
-ai run
+aiws run
        │
        ▼
 Development server
        │
        ▼
-ai preview
+aiws preview
        │
        ▼
 Mac browser through SSH tunnel (or Cloudflare Anywhere URL)
 ```
 
-Switching projects with `ai use <project>` reuses the same workstation image and recreates the `/workspace` volume binding cleanly.
+Switching projects with `aiws use <project>` reuses the same workstation image and recreates the `/workspace` volume binding cleanly.
 
 ---
 
 ## Command Groups
 
-Run `ai` or `ai help` for the built-in command summary.
+Run `aiws` or `aiws help` for the built-in command summary.
 
 ### Projects
 
 ```bash
-ai add <github-url>
-ai remove <project>
-ai list
-ai use <project>
+aiws add <github-url>
+aiws remove <project>
+aiws list
+aiws use <project>
 ```
 
-- `ai add` clones a valid GitHub HTTPS repository (`https://github.com/<owner>/<repo>`) into `~/projects/<name>`.
-- `ai use` selects which project is mounted into `/workspace` and recreates the container mount if `ai-workstation` is already running.
-- `ai remove` stops the workstation if removing the active project and deletes `~/projects/<name>`.
+- `aiws add` clones a valid GitHub HTTPS repository (`https://github.com/<owner>/<repo>`) into `~/projects/<name>`.
+- `aiws use` selects which project is mounted into `/workspace` and recreates the container mount if `aiws` is already running.
+- `aiws remove` stops the workstation if removing the active project and deletes `~/projects/<name>`.
 
 ### Git
 
 ```bash
-ai pull
-ai push "commit message"
+aiws pull
+aiws push "commit message"
 ```
 
-- `ai pull` runs `git pull --ff-only` inside the active project directory.
-- `ai push` stages changes (`git add -A`), scans staged filenames for sensitive patterns (`.env`, `.env.*`, `*.pem`, `*.key`, `*.p12`, `*.pfx`, `credentials.json`, `service-account*.json`), aborts and resets staging if any secret file is detected, and otherwise commits and pushes.
+- `aiws pull` runs `git pull --ff-only` inside the active project directory.
+- `aiws push` stages changes (`git add -A`), scans staged filenames for sensitive patterns (`.env`, `.env.*`, `*.pem`, `*.key`, `*.p12`, `*.pfx`, `credentials.json`, `service-account*.json`), aborts and resets staging if any secret file is detected, and otherwise commits and pushes.
 
 ### Workstation
 
 ```bash
-ai start
-ai stop
-ai restart
-ai status
-ai logs
-ai shell
-ai run
-ai preview
+aiws start
+aiws stop
+aiws restart
+aiws status
+aiws logs
+aiws shell
+aiws run
+aiws preview
 ```
 
 ### App
 
 ```bash
-ai app stop
-ai app restart
-ai app status
-ai app logs
+aiws app stop
+aiws app restart
+aiws app status
+aiws app logs
 ```
 
 ### Harness
 
 ```bash
-ai harness start
-ai harness stop
-ai harness restart
-ai harness status
+aiws harness start
+aiws harness stop
+aiws harness restart
+aiws harness status
 ```
 
 ### DSH
 
 ```bash
-ai dsh version
-ai dsh update
-ai dsh update <version>
+aiws dsh version
+aiws dsh update
+aiws dsh update <version>
 ```
 
 ### Maintenance
 
 ```bash
-ai cache
-ai cache clear
-ai cache clear --deps
-ai cache clear --deps --yes
-ai update
-ai upgrade
-ai doctor
+aiws cache
+aiws cache clear
+aiws cache clear --deps
+aiws cache clear --deps --yes
+aiws update
+aiws upgrade
+aiws doctor
 ```
 
 ### GitHub
 
 ```bash
-ai github setup
-ai github status
-ai github test
+aiws github setup
+aiws github status
+aiws github test
 ```
 
 ### Tunnel
 
 ```bash
-ai tunnel setup
-ai tunnel sync [port]
-ai tunnel status
-ai tunnel start
-ai tunnel stop
-ai tunnel logs
+aiws tunnel setup
+aiws tunnel sync [port]
+aiws tunnel status
+aiws tunnel start
+aiws tunnel stop
+aiws tunnel logs
 ```
 
 ### State
 
 ```bash
-ai state export
-ai state import <archive>
+aiws state export
+aiws state import <archive>
 ```
 
 ---
@@ -296,64 +296,64 @@ ai state import <archive>
 
 ```text
 PROJECTS
-  ai add <github-url>
-  ai remove <project>
-  ai list
-  ai use <project>
+  aiws add <github-url>
+  aiws remove <project>
+  aiws list
+  aiws use <project>
 
 GIT
-  ai pull
-  ai push "commit message"
+  aiws pull
+  aiws push "commit message"
 
 WORKSTATION
-  ai start
-  ai stop
-  ai restart
-  ai status
-  ai logs
-  ai shell
-  ai run
-  ai preview
+  aiws start
+  aiws stop
+  aiws restart
+  aiws status
+  aiws logs
+  aiws shell
+  aiws run
+  aiws preview
 
 APP
-  ai app stop
-  ai app restart
-  ai app status
-  ai app logs
+  aiws app stop
+  aiws app restart
+  aiws app status
+  aiws app logs
 
 HARNESS
-  ai harness start
-  ai harness stop
-  ai harness restart
-  ai harness status
+  aiws harness start
+  aiws harness stop
+  aiws harness restart
+  aiws harness status
 
 DSH
-  ai dsh update [version]
-  ai dsh version
+  aiws dsh update [version]
+  aiws dsh version
 
 MAINTENANCE
-  ai cache
-  ai cache clear
-  ai cache clear --deps
-  ai cache clear --deps --yes
-  ai update
-  ai upgrade
-  ai doctor
+  aiws cache
+  aiws cache clear
+  aiws cache clear --deps
+  aiws cache clear --deps --yes
+  aiws update
+  aiws upgrade
+  aiws doctor
 
 GITHUB
-  ai github setup
-  ai github status
-  ai github test
+  aiws github setup
+  aiws github status
+  aiws github test
 
 TUNNEL
-  ai tunnel setup
-  ai tunnel sync [port]
-  ai tunnel status
-  ai tunnel start
-  ai tunnel stop
-  ai tunnel logs
+  aiws tunnel setup
+  aiws tunnel sync [port]
+  aiws tunnel status
+  aiws tunnel start
+  aiws tunnel stop
+  aiws tunnel logs
 
 STATE
-  ai state export
-  ai state import <archive>
+  aiws state export
+  aiws state import <archive>
 ```

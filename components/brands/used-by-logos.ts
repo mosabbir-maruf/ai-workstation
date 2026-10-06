@@ -22,7 +22,7 @@ export interface UsedByLogo {
 function toolHref(origin: string, brand: string) {
   try {
     const url = new URL(origin);
-    url.searchParams.set("utm_source", "ai-workstation");
+    url.searchParams.set("utm_source", "aiws");
     url.searchParams.set("utm_medium", "website");
     url.searchParams.set("utm_campaign", "homepage");
     url.searchParams.set("utm_term", brand);

@@ -3,7 +3,7 @@ title: Security Policy
 description: Defense-in-depth container isolation, cgroup limits, GitHub App Unix socket credential brokering, state archive validation, and security checklist.
 ---
 
-The **AI Workstation** project prioritizes defense-in-depth isolation of developer environments running on remote Linux servers. Because the workstation executes AI-assisted development tools, arbitrary project builds, and third-party dependencies, security boundaries are engineered to constrain the blast radius of untrusted code while preventing credential leakage into the container runtime.
+The **AIWS** project prioritizes defense-in-depth isolation of developer environments running on remote Linux servers. Because the workstation executes AI-assisted development tools, arbitrary project builds, and third-party dependencies, security boundaries are engineered to constrain the blast radius of untrusted code while preventing credential leakage into the container runtime.
 
 ---
 
@@ -22,7 +22,7 @@ The **AI Workstation** project prioritizes defense-in-depth isolation of develop
 ```text
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │ 1. Host Management Layer                                                    │
-│    - Host OS (Ubuntu), Docker daemon, sudoers, scripts/ai, host user        │
+│    - Host OS (Ubuntu), Docker daemon, sudoers, scripts/aiws, host user        │
 │    - Host-only secrets: .env, secrets/github-app.pem, cloudflared-token     │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 2. Workstation Container                                                    │
@@ -83,7 +83,7 @@ The workstation container runs untrusted dependencies (`npm install`, dev server
 
 ### Secret Scanner
 
-`ai push` scans all staged files before creating a commit and aborts (`git reset`) if any filename matches:
+`aiws push` scans all staged files before creating a commit and aborts (`git reset`) if any filename matches:
 - `.env` or `.env.*` (excluding `.env.example`)
 - `*.pem`, `*.key`, `*.p12`, `*.pfx`
 - `credentials.json`, `service-account*.json`
@@ -106,7 +106,7 @@ The workstation container runs untrusted dependencies (`npm install`, dev server
 
 ## Archive Validation
 
-Because extracting `.tar.gz` archives carries path traversal and symlink risks, `ai state import` enforces six verification gates before touching runtime files:
+Because extracting `.tar.gz` archives carries path traversal and symlink risks, `aiws state import` enforces six verification gates before touching runtime files:
 
 1. **Archive Member Allowlist**: Rejects archives containing any entry outside `manifest`, `.env`, and `dsh/*`.
 2. **Path Traversal Rejection**: Rejects absolute paths (`/*`) and relative traversal segments (`../`, `*/../*`).
@@ -123,7 +123,7 @@ Because extracting `.tar.gz` archives carries path traversal and symlink risks, 
 
 When connecting the Web Dashboard (`bklit-ui`) to the remote host via Cloudflare Tunnel or reverse proxy, the HTTP daemon enforces constant-time Bearer token verification:
 
-- **Token Requirement**: Set `WORKSTATION_API_KEY` in `~/ai-workstation-cli/.env`.
+- **Token Requirement**: Set `WORKSTATION_API_KEY` in `~/aiws-cli/.env`.
 - **Accepted Authentication Vectors**:
   - `Authorization: Bearer <key>` header
   - `X-API-Key: <key>` header
@@ -178,6 +178,6 @@ When hosting the Web Dashboard (`bklit-ui`), the frontend enforces an edge secur
 [ ] Image source is trusted / SHA-pinned
 ```
 
-Run `ai doctor` regularly to audit these invariants automatically.
+Run `aiws doctor` regularly to audit these invariants automatically.
 
 

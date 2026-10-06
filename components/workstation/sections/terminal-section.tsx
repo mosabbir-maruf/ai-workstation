@@ -32,11 +32,13 @@ const INTERACTIVE_CONFIRM_REGEX =
   /(\[y\/n\]|\[n\/y\]|\(y\/n\)|are you sure you want to continue\?|do you want to continue\?)\s*$/i;
 
 function stripAnsi(text: string): string {
-  return text.replace(
-    // eslint-disable-next-line no-control-regex
-    /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
-    ""
+  const esc = String.fromCharCode(27);
+  const csi = String.fromCharCode(155);
+  const ansiRegex = new RegExp(
+    "[" + esc + csi + "][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]",
+    "g"
   );
+  return text.replace(ansiRegex, "");
 }
 
 

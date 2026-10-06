@@ -5,6 +5,7 @@ const withMDX = createMDX();
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   ...(process.env.NETLIFY ? {} : { output: "standalone" }),
+  agentRules: false,
   reactStrictMode: true,
   transpilePackages: ["@aiws/ui", "geist"],
   experimental: {

@@ -30,6 +30,14 @@ const QUICK_COMMANDS = [
 const INTERACTIVE_CONFIRM_REGEX =
   /(\[y\/n\]|\[n\/y\]|\(y\/n\)|are you sure you want to continue\?|do you want to continue\?)\s*$/i;
 
+function stripAnsi(text: string): string {
+  return text.replace(
+    /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
+    ""
+  );
+}
+
+
 export function TerminalSection() {
   const [target, setTarget] = useState<"host" | "workstation">("host");
   const [commandInput, setCommandInput] = useState("");
@@ -348,14 +356,14 @@ export function TerminalSection() {
                           </div>
                           <div className="flex shrink-0 items-center gap-2 ml-auto">
                             <span className="text-[10px]">{item.timestamp}</span>
-                            <CopyButton text={item.output} className="h-5 w-5 p-0.5 text-zinc-400 hover:text-zinc-100" />
+                            <CopyButton text={stripAnsi(item.output)} className="h-5 w-5 p-0.5 text-zinc-400 hover:text-zinc-100" />
                           </div>
                         </div>
                         <pre className={cn(
                           "w-full min-w-0 whitespace-pre-wrap break-all leading-relaxed p-2.5 rounded bg-zinc-950/70 border text-xs",
                           item.ok ? "border-zinc-800/60 text-zinc-300" : "border-rose-950/80 text-rose-300"
                         )}>
-                          {item.output}
+                          {stripAnsi(item.output)}
                         </pre>
                       </div>
                     ))

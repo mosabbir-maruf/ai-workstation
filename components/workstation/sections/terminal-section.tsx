@@ -18,6 +18,7 @@ interface CommandHistoryItem {
 }
 
 const QUICK_COMMANDS = [
+  { label: "aiws", cmd: "aiws", target: "host" },
   { label: "aiws status", cmd: "aiws status", target: "host" },
   { label: "aiws doctor", cmd: "aiws doctor", target: "host" },
   { label: "docker ps", cmd: "docker ps", target: "host" },

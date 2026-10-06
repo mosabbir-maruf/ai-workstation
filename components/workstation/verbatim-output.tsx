@@ -2,6 +2,7 @@
 
 import { CopyButton } from "@/components/copy-button";
 import { cn } from "@/lib/utils";
+import { stripAnsi } from "@/lib/workstation/strip-ansi";
 
 interface VerbatimOutputProps {
   output?: string | null;
@@ -22,7 +23,9 @@ export function VerbatimOutput({
   preClassName,
   onClear,
 }: VerbatimOutputProps) {
-  if (!output) {
+  const cleanOutput = output ? stripAnsi(output) : "";
+
+  if (!cleanOutput) {
     return (
       <div
         className={cn(
@@ -61,7 +64,7 @@ export function VerbatimOutput({
           <CopyButton
             aria-label="Copy output"
             className="h-6 w-6 shrink-0 rounded-none border border-border/60"
-            text={output}
+            text={cleanOutput}
           />
           {onClear && (
             <button
@@ -82,7 +85,7 @@ export function VerbatimOutput({
           preClassName
         )}
       >
-        {output}
+        {cleanOutput}
       </pre>
     </div>
   );

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { workstationApi } from "@/lib/workstation/api";
 import { CopyButton } from "@/components/copy-button";
 import { cn } from "@/lib/utils";
+import { stripAnsi } from "@/lib/workstation/strip-ansi";
 
 interface CommandHistoryItem {
   id: string;
@@ -30,20 +31,6 @@ const QUICK_COMMANDS = [
 
 const INTERACTIVE_CONFIRM_REGEX =
   /(\[y\/n\]|\[n\/y\]|\(y\/n\)|are you sure you want to continue\?|do you want to continue\?)\s*$/i;
-
-function stripAnsi(text: string): string {
-  const esc = String.fromCharCode(27);
-  const csi = String.fromCharCode(155);
-  const ansiRegex = new RegExp(
-    "[" + esc + csi + "][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]",
-    "g"
-  );
-  return text
-    .replace(ansiRegex, "")
-    .replace(/\[(?:\d{1,3}(?:;\d{1,3})*)?m/g, "")
-    .replace(/\[[\d;]*[A-HJKSTfhilnr]/g, "");
-}
-
 
 export function TerminalSection() {
   const [target, setTarget] = useState<"host" | "workstation">("host");

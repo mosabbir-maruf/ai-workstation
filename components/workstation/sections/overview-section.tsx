@@ -10,6 +10,7 @@ import { CopyButton } from "@/components/copy-button";
 import { GridCornerDots } from "@/components/design/line-grid";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { stripAnsi } from "@/lib/workstation/strip-ansi";
 import {
   type ActiveProjectGitInfo,
   type PreviewResponse,
@@ -356,7 +357,7 @@ function CommandAndServicesMatrix({
                   </span>
                   <CopyButton
                     className="h-5 w-5 p-0.5 text-zinc-400 hover:text-zinc-100"
-                    text={actionFeedback.fullOutput}
+                    text={stripAnsi(actionFeedback.fullOutput)}
                   />
                   {onDismissFeedback && (
                     <button
@@ -378,7 +379,7 @@ function CommandAndServicesMatrix({
                     : "border-rose-950/80 bg-zinc-950/70 text-rose-300"
                 )}
               >
-                {actionFeedback.fullOutput}
+                {stripAnsi(actionFeedback.fullOutput)}
               </pre>
             </div>
           </div>

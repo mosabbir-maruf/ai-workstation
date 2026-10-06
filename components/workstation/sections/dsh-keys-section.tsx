@@ -770,7 +770,7 @@ export function DshKeysSection() {
                   <div className="space-y-2 pt-2 border-t border-border/40">
                     <div className="flex items-center justify-between gap-2">
                       <label className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
-                        Model Identifier
+                        Model Identifier <span className="text-[9px] opacity-70 normal-case tracking-normal ml-1">(comma-separated for multiple)</span>
                       </label>
                       <Button
                         type="button"

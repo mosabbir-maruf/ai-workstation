@@ -73,6 +73,7 @@ export function DshKeysSection() {
   const [customApiKey, setCustomApiKey] = useState("");
   const [customBaseUrl, setCustomBaseUrl] = useState("");
   const [customModel, setCustomModel] = useState("");
+  const [modelInputBuffer, setModelInputBuffer] = useState("");
   const [customHeaders, setCustomHeaders] = useState<{id: string; key: string; value: string}[]>([]);
 
   const customHeadersString = useMemo(() => {
@@ -497,6 +498,22 @@ export function DshKeysSection() {
     [providerRows]
   );
 
+  const activeProviderModelsString = selectedProvider === "custom"
+    ? (customModel || providerModels.custom || "")
+    : (providerModels[selectedProvider] || "");
+
+  const activeProviderTags = useMemo(() => {
+    return activeProviderModelsString.split(",").map(t => t.trim()).filter(Boolean);
+  }, [activeProviderModelsString]);
+
+  const updateActiveProviderModels = useCallback((newTags: string[]) => {
+    const nextVal = newTags.join(", ");
+    if (selectedProvider === "custom") {
+      setCustomModel(nextVal);
+    }
+    setProviderModels(prev => ({ ...prev, [selectedProvider]: nextVal }));
+  }, [selectedProvider]);
+
   return (
     <div className="space-y-10 md:space-y-11">
       {/* Row 1: Balanced 6/6 CAD Grid — Interactive Provider & Model Discovery Console + Raw JSON Payload Editor */}
@@ -558,6 +575,7 @@ export function DshKeysSection() {
                         onClick={() => {
                           setSelectedProvider(prov.id);
                           setModelFetchNotice(null);
+                          setModelInputBuffer("");
                         }}
                         className={cn(
                           "flex items-center gap-1.5 px-2 py-1.5 rounded text-xs font-mono transition-all whitespace-nowrap",
@@ -797,37 +815,62 @@ export function DshKeysSection() {
                       </Button>
                     </div>
 
-                    <Input
-                      type="text"
-                      value={
-                        selectedProvider === "custom"
-                          ? (customModel || providerModels.custom || "")
-                          : (providerModels[selectedProvider] || "")
-                      }
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        if (selectedProvider === "custom") {
-                          setCustomModel(val);
-                        }
-                        setProviderModels((prev) => ({ ...prev, [selectedProvider]: val }));
-                      }}
-                      placeholder={
-                        selectedProvider === "deepseek"
-                          ? "deepseek-chat"
-                          : selectedProvider === "openai"
-                          ? "gpt-4o"
-                          : selectedProvider === "anthropic"
-                          ? "claude-3-7-sonnet-20250219"
-                          : selectedProvider === "gemini"
-                          ? "gemini-2.0-flash"
-                          : selectedProvider === "openrouter"
-                          ? "deepseek/deepseek-r1"
-                          : selectedProvider === "groq"
-                          ? "llama-3.3-70b-versatile"
-                          : "deepseek-r1 or qwen2.5-coder"
-                      }
-                      className="h-9 sm:h-8 rounded-none font-mono text-base sm:text-xs"
-                    />
+                    <div className="flex flex-wrap items-center gap-1.5 p-1 min-h-9 sm:min-h-8 border border-input bg-background/50 rounded-none focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 transition-all">
+                      {(() => {
+                        return (
+                          <>
+                            {activeProviderTags.map((tag, i) => (
+                              <span key={`${tag}-${i}`} className="flex items-center gap-1 bg-muted text-foreground text-[11px] font-mono px-2 py-0.5 border border-border/80">
+                                {tag}
+                                <button
+                                  type="button"
+                                  onClick={() => updateActiveProviderModels(activeProviderTags.filter((_, index) => index !== i))}
+                                  className="text-muted-foreground hover:text-destructive shrink-0"
+                                >
+                                  <svg className="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                  </svg>
+                                </button>
+                              </span>
+                            ))}
+                            <input
+                              type="text"
+                              value={modelInputBuffer}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                if (val.includes(",")) {
+                                  const newTags = val.split(",").map(t => t.trim()).filter(Boolean);
+                                  if (newTags.length > 0) {
+                                    updateActiveProviderModels([...activeProviderTags, ...newTags]);
+                                  }
+                                  setModelInputBuffer("");
+                                } else {
+                                  setModelInputBuffer(val);
+                                }
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" && modelInputBuffer.trim()) {
+                                  e.preventDefault();
+                                  updateActiveProviderModels([...activeProviderTags, modelInputBuffer.trim()]);
+                                  setModelInputBuffer("");
+                                } else if (e.key === "Backspace" && !modelInputBuffer && activeProviderTags.length > 0) {
+                                  e.preventDefault();
+                                  updateActiveProviderModels(activeProviderTags.slice(0, -1));
+                                }
+                              }}
+                              onBlur={() => {
+                                if (modelInputBuffer.trim()) {
+                                  updateActiveProviderModels([...activeProviderTags, modelInputBuffer.trim()]);
+                                  setModelInputBuffer("");
+                                }
+                              }}
+                              placeholder={activeProviderTags.length === 0 ? "Type model & press Enter..." : ""}
+                              className="flex-1 bg-transparent border-none outline-none focus:ring-0 text-xs font-mono min-w-[120px] px-1 placeholder:text-muted-foreground/60"
+                            />
+                          </>
+                        );
+                      })()}
+                    </div>
 
                     {/* Custom Themed ModelDropdownSelector */}
                     {availableModels[selectedProvider] && availableModels[selectedProvider].length > 0 && (
@@ -837,16 +880,12 @@ export function DshKeysSection() {
                         </div>
                         <ModelDropdownSelector
                           models={availableModels[selectedProvider]}
-                          selectedModel={
-                            selectedProvider === "custom"
-                              ? (customModel || providerModels.custom || "")
-                              : (providerModels[selectedProvider] || "")
-                          }
+                          selectedModel={activeProviderModelsString}
                           onSelect={(chosenModel) => {
-                            if (selectedProvider === "custom") {
-                              setCustomModel(chosenModel);
+                            if (!activeProviderTags.includes(chosenModel)) {
+                              updateActiveProviderModels([...activeProviderTags, chosenModel]);
                             }
-                            setProviderModels((prev) => ({ ...prev, [selectedProvider]: chosenModel }));
+                            setModelInputBuffer("");
                           }}
                           placeholder={`Choose from ${availableModels[selectedProvider].length} discovered models...`}
                         />

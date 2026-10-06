@@ -73,17 +73,16 @@ export function DshKeysSection() {
   const [customApiKey, setCustomApiKey] = useState("");
   const [customBaseUrl, setCustomBaseUrl] = useState("");
   const [customModel, setCustomModel] = useState("");
-  const [customHeaders, setCustomHeaders] = useState("");
+  const [customHeaders, setCustomHeaders] = useState<{id: string; key: string; value: string}[]>([]);
 
-  const isCustomHeadersValid = useMemo(() => {
-    const trimmed = customHeaders.trim();
-    if (!trimmed) return true;
-    try {
-      const p = JSON.parse(trimmed);
-      return Boolean(p && typeof p === "object" && !Array.isArray(p));
-    } catch {
-      return false;
+  const customHeadersString = useMemo(() => {
+    const obj: Record<string, string> = {};
+    for (const h of customHeaders) {
+      if (h.key.trim()) {
+        obj[h.key.trim()] = h.value.trim();
+      }
     }
+    return Object.keys(obj).length > 0 ? JSON.stringify(obj) : "";
   }, [customHeaders]);
 
   // Model discovery & identifiers
@@ -123,9 +122,14 @@ export function DshKeysSection() {
           setCustomBaseUrl(providers.custom?.base_url ?? "");
           setCustomModel(providers.custom?.model ?? "");
           if (providers.custom?.headers && typeof providers.custom.headers === "object") {
-            setCustomHeaders(JSON.stringify(providers.custom.headers, null, 2));
+            const hList = Object.entries(providers.custom.headers).map(([k, v]) => ({
+              id: Math.random().toString(36).substring(7),
+              key: k,
+              value: String(v)
+            }));
+            setCustomHeaders(hList);
           } else {
-            setCustomHeaders("");
+            setCustomHeaders([]);
           }
 
           setProviderModels({
@@ -171,7 +175,7 @@ export function DshKeysSection() {
       setModelFetchNotice(null);
       const apiKey = getProviderApiKey(prov).trim();
       const baseUrl = prov === "custom" ? customBaseUrl.trim() : undefined;
-      const headers = prov === "custom" ? parseHeaders(customHeaders) : undefined;
+      const headers = prov === "custom" ? parseHeaders(customHeadersString) : undefined;
 
       const res = await workstationApi.fetchAvailableModels({
         provider: prov,
@@ -246,7 +250,7 @@ export function DshKeysSection() {
         syncProv("gemini", geminiKey, providerModels.gemini);
         syncProv("openrouter", openrouterKey, providerModels.openrouter);
         syncProv("groq", groqKey, providerModels.groq);
-        syncProv("custom", customApiKey, customModel || providerModels.custom, customBaseUrl, customHeaders);
+        syncProv("custom", customApiKey, customModel || providerModels.custom, customBaseUrl, customHeadersString);
 
         return JSON.stringify(parsed, null, 2);
       } catch {
@@ -257,7 +261,7 @@ export function DshKeysSection() {
       anthropicKey,
       customApiKey,
       customBaseUrl,
-      customHeaders,
+      customHeadersString,
       customModel,
       deepseekKey,
       geminiKey,
@@ -269,14 +273,6 @@ export function DshKeysSection() {
   );
 
   const handleStageToJson = () => {
-    if (customHeaders.trim() && !isCustomHeadersValid) {
-      setLastAction("keys");
-      setActionOk(false);
-      setActionOutput(
-        "[Stage Provider Keys Error]\nCustom HTTP Headers must be a valid JSON object (e.g. {\"Header-Name\": \"value\"})."
-      );
-      return;
-    }
     const nextJson = buildSyncedJson(content);
     setContent(nextJson);
     setLastAction("keys");
@@ -331,7 +327,7 @@ export function DshKeysSection() {
         setCustomApiKey("");
         setCustomBaseUrl("");
         setCustomModel("");
-        setCustomHeaders("");
+        setCustomHeaders([]);
         break;
     }
     setProviderModels((prev) => ({ ...prev, [provId]: "" }));
@@ -356,14 +352,6 @@ export function DshKeysSection() {
 
   const handleSyncAndSave = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (customHeaders.trim() && !isCustomHeadersValid) {
-      setLastAction("keys");
-      setActionOk(false);
-      setActionOutput(
-        "[Sync Provider Keys Error]\nCustom HTTP Headers must be a valid JSON object (e.g. {\"Header-Name\": \"value\"})."
-      );
-      return;
-    }
     const nextJson = buildSyncedJson(content);
     setContent(nextJson);
     await handleSave(nextJson, "[POST /api/dsh-settings]", "keys");
@@ -485,7 +473,7 @@ export function DshKeysSection() {
             customBaseUrl.trim() ||
             customModel.trim() ||
             providerModels.custom?.trim() ||
-            customHeaders.trim()
+            customHeadersString.trim()
         ),
       },
     ],
@@ -493,7 +481,7 @@ export function DshKeysSection() {
       anthropicKey,
       customApiKey,
       customBaseUrl,
-      customHeaders,
+      customHeadersString,
       customModel,
       deepseekKey,
       geminiKey,
@@ -710,27 +698,70 @@ export function DshKeysSection() {
                           className="h-9 sm:h-8 rounded-none font-mono text-base sm:text-xs"
                         />
                       </div>
-                      <div className="space-y-1">
+                      <div className="space-y-2">
                         <div className="flex items-center justify-between">
                           <label className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
-                            Custom HTTP Headers (optional JSON)
+                            Custom HTTP Headers
                           </label>
-                          {!isCustomHeadersValid && customHeaders.trim() && (
-                            <span className="font-mono text-[9px] text-destructive uppercase">
-                              Invalid JSON
-                            </span>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setCustomHeaders(prev => [...prev, { id: Math.random().toString(36).substring(7), key: "", value: "" }]);
+                            }}
+                            className="h-5 rounded-none px-1.5 font-mono text-[9px] uppercase tracking-wider"
+                          >
+                            <svg className="size-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                            </svg>
+                            Add Header
+                          </Button>
+                        </div>
+                        <div className="space-y-2">
+                          {customHeaders.map((header, index) => (
+                            <div key={header.id} className="flex items-center gap-2">
+                              <Input
+                                type="text"
+                                placeholder="Header Name"
+                                value={header.key}
+                                onChange={(e) => {
+                                  const newKey = e.target.value;
+                                  setCustomHeaders(prev => prev.map((h, i) => i === index ? { ...h, key: newKey } : h));
+                                }}
+                                className="h-8 rounded-none font-mono text-xs flex-1"
+                              />
+                              <Input
+                                type="text"
+                                placeholder="Header Value"
+                                value={header.value}
+                                onChange={(e) => {
+                                  const newVal = e.target.value;
+                                  setCustomHeaders(prev => prev.map((h, i) => i === index ? { ...h, value: newVal } : h));
+                                }}
+                                className="h-8 rounded-none font-mono text-xs flex-1"
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  setCustomHeaders(prev => prev.filter((_, i) => i !== index));
+                                }}
+                                className="h-8 w-8 rounded-none text-muted-foreground hover:text-destructive shrink-0"
+                              >
+                                <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              </Button>
+                            </div>
+                          ))}
+                          {customHeaders.length === 0 && (
+                            <div className="text-xs font-mono text-muted-foreground py-2 border border-dashed border-border/60 text-center">
+                              No custom headers configured.
+                            </div>
                           )}
                         </div>
-                        <Textarea
-                          value={customHeaders}
-                          onChange={(e) => setCustomHeaders(e.target.value)}
-                          placeholder={'{\n  "CF-Access-Client-Id": "...",\n  "CF-Access-Client-Secret": "..."\n}'}
-                          spellCheck={false}
-                          className={cn(
-                            "h-20 resize-none rounded-none font-mono text-xs leading-relaxed",
-                            !isCustomHeadersValid && customHeaders.trim() && "border-destructive focus-visible:ring-destructive"
-                          )}
-                        />
                       </div>
                     </div>
                   )}
